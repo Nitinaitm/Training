@@ -1,0 +1,926 @@
+﻿<%@ Master Language="C#"
+    AutoEventWireup="true"
+    CodeBehind="Site.master.cs"
+    Inherits="Training.Site" %>
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head runat="server">
+
+    <meta charset="utf-8" />
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+    <meta
+        name="description"
+        content="Training Cell, Bihar State Power Holding Company Limited" />
+
+    <title>Training Cell | BSPHCL</title>
+
+    <!-- Favicon -->
+
+    <link
+        href="img/BSPHCL_Logo.jpg"
+        rel="icon" />
+
+
+    <!-- Google Fonts -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com" />
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+        rel="stylesheet" />
+
+
+    <!-- Font Awesome -->
+
+    <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css"
+        rel="stylesheet" />
+
+
+    <!-- Flaticon -->
+
+    <link
+        href="lib/flaticon/font/flaticon.css"
+        rel="stylesheet" />
+
+
+    <!-- Libraries -->
+
+    <link
+        href="lib/owlcarousel/assets/owl.carousel.min.css"
+        rel="stylesheet" />
+
+    <link
+        href="lib/lightbox/css/lightbox.min.css"
+        rel="stylesheet" />
+
+
+    <!-- Existing Bootstrap / Template CSS -->
+
+    <link
+        href="css/style.css"
+        rel="stylesheet" />
+
+
+    <style type="text/css">
+        /* =====================================================
+           GENERAL
+        ===================================================== */
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+            background: #f7f9fc;
+            color: #333333;
+            overflow-x: hidden;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
+
+        /* =====================================================
+           TOP STRIP
+        ===================================================== */
+
+        .top-strip {
+            background: #173b67;
+            color: #ffffff;
+            min-height: 34px;
+            padding: 6px 30px;
+            font-size: 13px;
+        }
+
+        .top-strip-inner {
+            max-width: 1500px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .top-strip i {
+            margin-right: 5px;
+            color: #ffd54f;
+        }
+
+        .top-strip-right {
+            white-space: nowrap;
+        }
+
+
+        /* =====================================================
+           HEADER / NAVBAR
+        ===================================================== */
+
+        .site-header {
+            background: #ffffff;
+            box-shadow: 0 3px 14px rgba(0, 0, 0, .08);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .main-navbar {
+            max-width: 1500px;
+            margin: auto;
+            min-height: 82px;
+            padding: 8px 30px;
+        }
+
+
+        /* =====================================================
+           BRAND
+        ===================================================== */
+
+        .site-brand {
+            display: flex;
+            align-items: center;
+            text-decoration: none !important;
+            margin-right: 25px;
+            min-width: 0;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            flex-shrink: 0;
+            margin-right: 13px;
+        }
+
+        .brand-text {
+            min-width: 0;
+        }
+
+        .company-name {
+            display: block;
+            color: #173b67;
+            font-size: 23px;
+            line-height: 27px;
+            font-weight: 800;
+            letter-spacing: .1px;
+        }
+
+        .training-cell {
+            display: block;
+            color: #198754;
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+
+        /* =====================================================
+           NAVIGATION
+        ===================================================== */
+
+        .main-navigation {
+            margin-left: auto;
+        }
+
+            .main-navigation .nav-item {
+                margin: 0 4px;
+            }
+
+            .main-navigation .nav-link {
+                color: #34495e !important;
+                font-size: 15px;
+                font-weight: 700;
+                padding: 11px 16px !important;
+                border-radius: 7px;
+                transition: all .2s ease;
+            }
+
+                .main-navigation .nav-link i {
+                    margin-right: 6px;
+                    color: #198754;
+                }
+
+                .main-navigation .nav-link:hover {
+                    background: #edf5ff;
+                    color: #173b67 !important;
+                }
+
+                .main-navigation .nav-link.active {
+                    background: #173b67;
+                    color: #ffffff !important;
+                }
+
+                    .main-navigation .nav-link.active i {
+                        color: #ffd54f;
+                    }
+
+
+        /* =====================================================
+           NAVBAR TOGGLER
+        ===================================================== */
+
+        .navbar-toggler {
+            border: 1px solid #d5dce5 !important;
+            border-radius: 6px;
+            padding: 7px 10px;
+            outline: none !important;
+        }
+
+            .navbar-toggler:focus {
+                outline: none;
+                box-shadow: none;
+            }
+
+
+        /* =====================================================
+           CONTENT
+        ===================================================== */
+
+        .site-content {
+            width: 100%;
+            min-height: 500px;
+        }
+
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
+        .site-footer {
+            margin-top: 50px;
+            background: #172a46;
+            color: #ffffff;
+        }
+
+        .footer-top {
+            padding: 35px 20px 25px 20px;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .footer-heading {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 22px;
+            color: #ffffff;
+        }
+
+            .footer-heading i {
+                color: #ffd54f;
+                margin-right: 7px;
+            }
+
+
+        /* =====================================================
+           COMPANY LOGOS
+        ===================================================== */
+
+        .company-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .company-link {
+            width: 165px;
+            height: 70px;
+            padding: 8px 10px;
+            background: #ffffff;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+            .company-link:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(0,0,0,.25);
+            }
+
+            .company-link img {
+                max-width: 100%;
+                max-height: 52px;
+                object-fit: contain;
+            }
+
+
+        /* =====================================================
+           FOOTER BOTTOM
+        ===================================================== */
+
+        .footer-bottom {
+            background: #102039;
+            border-top: 1px solid rgba(255,255,255,.10);
+            padding: 15px 20px;
+        }
+
+        .footer-bottom-inner {
+            max-width: 1400px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .copyright-text {
+            margin: 0;
+            font-size: 13px;
+            color: #d8e0eb;
+        }
+
+            .copyright-text strong {
+                color: #ffffff;
+            }
+
+        .developer-text {
+            margin: 0;
+            font-size: 13px;
+            color: #d8e0eb;
+            text-align: right;
+        }
+
+            .developer-text strong {
+                color: #ffd54f;
+            }
+
+
+        /* =====================================================
+           BACK TO TOP
+        ===================================================== */
+
+        .back-to-top {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 44px;
+            height: 44px;
+            padding: 0 !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50% !important;
+            background: #173b67 !important;
+            border-color: #173b67 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,.20);
+            z-index: 999;
+        }
+
+            .back-to-top:hover {
+                background: #198754 !important;
+                border-color: #198754 !important;
+            }
+
+
+        /* =====================================================
+           TABLET
+        ===================================================== */
+
+        @media (max-width: 991.98px) {
+
+            .top-strip {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .main-navbar {
+                padding: 8px 15px;
+                min-height: 72px;
+            }
+
+            .brand-logo {
+                width: 50px;
+                height: 50px;
+                margin-right: 10px;
+            }
+
+            .company-name {
+                font-size: 19px;
+                line-height: 23px;
+            }
+
+            .training-cell {
+                font-size: 13px;
+            }
+
+            .navbar-collapse {
+                margin-top: 10px;
+                padding: 10px 0 15px 0;
+                border-top: 1px solid #eeeeee;
+            }
+
+            .main-navigation {
+                width: 100%;
+            }
+
+                .main-navigation .nav-item {
+                    margin: 2px 0;
+                }
+
+                .main-navigation .nav-link {
+                    width: 100%;
+                    padding: 10px 12px !important;
+                }
+
+            .footer-bottom-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .developer-text {
+                text-align: center;
+            }
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (max-width: 767.98px) {
+
+            .top-strip {
+                padding: 6px 10px;
+            }
+
+            .top-strip-inner {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .top-strip-right {
+                display: none;
+            }
+
+            .main-navbar {
+                padding: 7px 10px;
+            }
+
+            .site-brand {
+                max-width: calc(100% - 55px);
+                margin-right: 5px;
+            }
+
+            .brand-logo {
+                width: 43px;
+                height: 43px;
+                margin-right: 8px;
+            }
+
+            .company-name {
+                font-size: 15px;
+                line-height: 18px;
+                white-space: normal;
+            }
+
+            .training-cell {
+                font-size: 11px;
+                line-height: 15px;
+            }
+
+            .navbar-toggler {
+                padding: 5px 8px;
+            }
+
+            .footer-top {
+                padding: 28px 10px 20px 10px;
+            }
+
+            .footer-heading {
+                font-size: 16px;
+            }
+
+            .company-links {
+                gap: 9px;
+            }
+
+            .company-link {
+                width: calc(50% - 7px);
+                height: 62px;
+            }
+
+                .company-link img {
+                    max-height: 45px;
+                }
+
+            .site-footer {
+                margin-top: 30px;
+            }
+
+            .copyright-text,
+            .developer-text {
+                font-size: 12px;
+                line-height: 18px;
+            }
+
+            .back-to-top {
+                width: 40px;
+                height: 40px;
+                right: 12px;
+                bottom: 12px;
+            }
+        }
+
+
+        /* =====================================================
+           VERY SMALL MOBILE
+        ===================================================== */
+
+        @media (max-width: 400px) {
+
+            .company-name {
+                font-size: 13px;
+                line-height: 16px;
+            }
+
+            .training-cell {
+                font-size: 10px;
+            }
+
+            .brand-logo {
+                width: 38px;
+                height: 38px;
+            }
+
+            .company-link {
+                width: 100%;
+            }
+        }
+    </style>
+
+
+    <asp:ContentPlaceHolder
+        ID="head"
+        runat="server">
+    </asp:ContentPlaceHolder>
+
+</head>
+
+
+<body>
+
+    <form
+        id="form1"
+        runat="server">
+
+
+        <!-- ================================================= -->
+        <!-- TOP STRIP                                         -->
+        <!-- ================================================= -->
+
+        <div class="top-strip">
+
+            <div class="top-strip-inner">
+
+                <div>
+
+                    <i class="fas fa-graduation-cap"></i>
+
+                    Training Management System
+
+                </div>
+
+                <div class="top-strip-right">
+
+                    <i class="fas fa-building"></i>
+
+                    Bihar State Power Holding Company Limited
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- HEADER / NAVBAR                                   -->
+        <!-- ================================================= -->
+
+        <header class="site-header">
+
+            <nav class="navbar navbar-expand-lg navbar-light main-navbar">
+
+
+                <!-- BRAND -->
+
+                <a
+                    href="Default.aspx"
+                    class="navbar-brand site-brand">
+
+                    <img
+                        src="img/BSPHCL_Logo.jpg"
+                        class="brand-logo"
+                        alt="BSPHCL Logo" />
+
+                    <span class="brand-text">
+
+                        <span class="company-name">Bihar State Power Holding Co. Ltd.
+                        </span>
+
+                        <span class="training-cell">Training Cell
+                        </span>
+
+                    </span>
+
+                </a>
+
+
+                <!-- MOBILE BUTTON -->
+
+                <button
+                    type="button"
+                    class="navbar-toggler"
+                    data-toggle="collapse"
+                    data-target="#navbarCollapse"
+                    aria-controls="navbarCollapse"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+
+                    <span class="navbar-toggler-icon"></span>
+
+                </button>
+
+
+                <!-- MENU -->
+
+                <div
+                    class="collapse navbar-collapse"
+                    id="navbarCollapse">
+
+                    <div class="navbar-nav main-navigation">
+
+                        <a
+                            href="Default.aspx"
+                            id="test1"
+                            class="nav-item nav-link"
+                            runat="server">
+
+                            <i class="fas fa-home"></i>
+                            Home
+
+                        </a>
+
+
+                        <a
+                            href="Contact.aspx"
+                            id="test2"
+                            class="nav-item nav-link"
+                            runat="server">
+
+                            <i class="fas fa-address-book"></i>
+                            Contact
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </nav>
+
+        </header>
+
+
+        <!-- ================================================= -->
+        <!-- PAGE CONTENT                                      -->
+        <!-- ================================================= -->
+
+        <main class="site-content">
+
+            <asp:ContentPlaceHolder
+                ID="ContentPlaceHolder1"
+                runat="server">
+            </asp:ContentPlaceHolder>
+
+        </main>
+
+
+        <!-- ================================================= -->
+        <!-- FOOTER                                            -->
+        <!-- ================================================= -->
+
+        <footer class="site-footer">
+
+            <div class="footer-top">
+
+                <div class="footer-container">
+
+                    <div class="footer-heading">
+
+                        <i class="fas fa-link"></i>
+
+                        BSPHCL &amp; Subsidiary Companies
+
+                    </div>
+
+
+                    <div class="company-links">
+
+
+                        <!-- SBPDCL -->
+
+                        <a
+                            href="https://sbpdcl.co.in/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="company-link"
+                            title="South Bihar Power Distribution Company Limited">
+
+                            <img
+                                src="img/SBPDCL.png"
+                                alt="SBPDCL" />
+
+                        </a>
+
+
+                        <!-- NBPDCL -->
+
+                        <a
+                            href="https://nbpdcl.co.in/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="company-link"
+                            title="North Bihar Power Distribution Company Limited">
+
+                            <img
+                                src="img/NBPDCL.png"
+                                alt="NBPDCL" />
+
+                        </a>
+
+
+                        <!-- BSPHCL -->
+
+                        <a
+                            href="https://bsphcl.co.in/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="company-link"
+                            title="Bihar State Power Holding Company Limited">
+
+                            <img
+                                src="img/BSPHCL_Footer.jpg"
+                                alt="BSPHCL" />
+
+                        </a>
+
+
+                        <!-- BSPTCL -->
+
+                        <a
+                            href="https://www.bsptcl.in/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="company-link"
+                            title="Bihar State Power Transmission Company Limited">
+
+                            <img
+                                src="img/BSPTCL.png"
+                                alt="BSPTCL" />
+
+                        </a>
+
+
+                        <!-- BSPGCL -->
+
+                        <a
+                            href="https://bspgcl.bihar.gov.in/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="company-link"
+                            title="Bihar State Power Generation Company Limited">
+
+                            <img
+                                src="img/BSPGCL.png"
+                                alt="BSPGCL" />
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FOOTER BOTTOM -->
+
+            <div class="footer-bottom">
+
+                <div class="footer-bottom-inner">
+
+                    <p class="copyright-text">
+                        &copy;
+                        <span id="currentYear"></span>
+
+                        <strong>Training Cell, BSPHCL
+                        </strong>.
+
+                        All Rights Reserved.
+
+                    </p>
+
+
+                    <p class="developer-text">
+                        Designed &amp; Developed by
+
+                        <strong>Training Cell, BSPHCL
+                        </strong>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </footer>
+
+
+        <!-- ================================================= -->
+        <!-- BACK TO TOP                                       -->
+        <!-- ================================================= -->
+
+        <a
+            href="#"
+            class="btn btn-primary back-to-top"
+            title="Back to top">
+
+            <i class="fa fa-angle-double-up"></i>
+
+        </a>
+
+
+    </form>
+
+
+    <!-- ===================================================== -->
+    <!-- JAVASCRIPT                                            -->
+    <!-- ===================================================== -->
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+
+    <script src="lib/easing/easing.min.js"></script>
+
+    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+
+    <script src="lib/isotope/isotope.pkgd.min.js"></script>
+
+    <script src="lib/lightbox/js/lightbox.min.js"></script>
+
+    <script src="mail/jqBootstrapValidation.min.js"></script>
+
+    <script src="mail/contact.js"></script>
+
+    <script src="js/main.js"></script>
+
+
+    <script type="text/javascript">
+
+                               document.addEventListener(
+                                   "DOMContentLoaded",
+                                   function () {
+
+                                       var year =
+                                           document.getElementById(
+                                               "currentYear");
+
+                                       if (year) {
+
+                                           year.innerHTML =
+                                               new Date().getFullYear();
+                                       }
+
+                                   });
+
+    </script>
+
+</body>
+
+</html>

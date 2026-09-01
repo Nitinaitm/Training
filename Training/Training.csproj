@@ -1,0 +1,2022 @@
+﻿<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.0\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.0\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{3A678011-085A-4170-8C52-57629310FCA2}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Training</RootNamespace>
+    <AssemblyName>Training</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <UseIISExpress>true</UseIISExpress>
+    <Use64BitIISExpress />
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <WebGreaseLibPath>..\packages\WebGrease.1.5.2\lib</WebGreaseLibPath>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Antlr3.Runtime, Version=3.4.1.9004, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="BouncyCastle.Cryptography, Version=2.0.0.0, Culture=neutral, PublicKeyToken=072edcf4a5328938, processorArchitecture=MSIL">
+      <HintPath>..\packages\BouncyCastle.Cryptography.2.6.2\lib\net461\BouncyCastle.Cryptography.dll</HintPath>
+    </Reference>
+    <Reference Include="ClosedXML, Version=0.95.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ClosedXML.0.95.4\lib\net46\ClosedXML.dll</HintPath>
+    </Reference>
+    <Reference Include="ClosedXML.Parser, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1d5f7376574c51ec, processorArchitecture=MSIL">
+      <HintPath>..\packages\ClosedXML.Parser.1.2.0\lib\netstandard2.0\ClosedXML.Parser.dll</HintPath>
+    </Reference>
+    <Reference Include="DocumentFormat.OpenXml, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>..\packages\DocumentFormat.OpenXml.3.1.1\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="DocumentFormat.OpenXml.Framework, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>..\packages\DocumentFormat.OpenXml.Framework.3.1.1\lib\net46\DocumentFormat.OpenXml.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus, Version=7.0.5.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.7.0.5\lib\net35\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus.Interfaces, Version=6.1.1.0, Culture=neutral, PublicKeyToken=a694d7f3b0907a61, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.Interfaces.6.1.1\lib\net35\EPPlus.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus.System.Drawing, Version=6.1.1.0, Culture=neutral, PublicKeyToken=2308d35469c9bac0, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.System.Drawing.6.1.1\lib\net35\EPPlus.System.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelNumberFormat, Version=1.1.0.0, Culture=neutral, PublicKeyToken=23c6f5d73be07eca, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExcelNumberFormat.1.1.0\lib\net20\ExcelNumberFormat.dll</HintPath>
+    </Reference>
+    <Reference Include="itextsharp, Version=5.5.13.5, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
+      <HintPath>..\packages\iTextSharp.5.5.13.5\lib\net461\itextsharp.dll</HintPath>
+    </Reference>
+    <Reference Include="itextsharp.xmlworker, Version=5.5.13.5, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
+      <HintPath>..\packages\itextsharp.xmlworker.5.5.13.5\lib\net461\itextsharp.xmlworker.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.5.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="QRCoder, Version=1.8.0.0, Culture=neutral, PublicKeyToken=c4ed5b9ae8358a28, processorArchitecture=MSIL">
+      <HintPath>..\packages\QRCoder.1.8.0\lib\net40\QRCoder.dll</HintPath>
+    </Reference>
+    <Reference Include="RBush, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RBush.4.0.0\lib\netstandard2.0\RBush.dll</HintPath>
+    </Reference>
+    <Reference Include="SixLabors.Fonts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
+      <HintPath>..\packages\SixLabors.Fonts.1.0.0\lib\netstandard2.0\SixLabors.Fonts.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.7.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.1\lib\net40\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WebGrease, Version=1.5.2.14234, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\WebGrease.1.5.2\lib\WebGrease.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.0\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Admin\AllCategory.aspx" />
+    <Content Include="Admin\AllCourses.aspx" />
+    <Content Include="Admin\AllTopic.aspx" />
+    <Content Include="Admin\AllTrainers.aspx" />
+    <Content Include="Admin\AreaOfExpertiseMaster.aspx" />
+    <Content Include="Admin\AssignFeedback.aspx" />
+    <Content Include="Admin\AssignSession.aspx" />
+    <Content Include="Admin\AssignTrainee.aspx" />
+    <Content Include="Admin\BulkExcelUpload.aspx" />
+    <Content Include="Admin\CertificatePreview.aspx" />
+    <Content Include="Admin\CertificateTemplate.aspx" />
+    <Content Include="Admin\CertificateTemplateMaster.aspx" />
+    <Content Include="Admin\CourseCategoryMaster.aspx" />
+    <Content Include="Admin\CourseMaster.aspx" />
+    <Content Include="Admin\CreateBatch.aspx" />
+    <Content Include="Admin\css\bootstrap.min.css" />
+    <Content Include="Admin\css\bootstrap\mixins\_border-radius.css" />
+    <Content Include="Admin\css\bootstrap\mixins\_screen-reader.css" />
+    <Content Include="Admin\css\bootstrap\mixins\_visibility.css" />
+    <Content Include="Admin\css\bootstrap\utilities\_stretched-link.css" />
+    <Content Include="Admin\css\bootstrap\_media.css" />
+    <Content Include="Admin\css\style.css" />
+    <Content Include="Admin\css\StyleSheet3.css" />
+    <Content Include="Admin\Default.aspx" />
+    <Content Include="Admin\EmpBasicMaster.aspx" />
+    <Content Include="Admin\ExamResultReport.aspx" />
+    <Content Include="Admin\ExternalEmpEntry.aspx" />
+    <Content Include="Admin\FeedbackCategoryMaster.aspx" />
+    <Content Include="Admin\FeedbackMaster.aspx" />
+    <Content Include="Admin\FeedbackReport.aspx" />
+    <Content Include="Admin\FeedbackTrainingRelated.aspx" />
+    <Content Include="Admin\FindTrainingID.aspx" />
+    <Content Include="Admin\GeneratedCertificateList.aspx" />
+    <Content Include="Admin\images\header.jpg" />
+    <Content Include="Admin\images\Header_BSPHCL.jpeg" />
+    <Content Include="Admin\images\Header_BSPHCL2.jpeg" />
+    <Content Include="Admin\images\logo.jpg" />
+    <Content Include="Admin\js\bootstrap.min.js" />
+    <Content Include="Admin\js\jquery.min.js" />
+    <Content Include="Admin\js\main.js" />
+    <Content Include="Admin\js\popper.js" />
+    <Content Include="Admin\js\select2.js" />
+    <Content Include="Admin\LocationEntry.aspx" />
+    <Content Include="Admin\LocationManagement.aspx" />
+    <Content Include="Admin\Logout.aspx" />
+    <Content Include="Admin\OrganizerEntry.aspx" />
+    <Content Include="Admin\OrganizerManagement.aspx" />
+    <Content Include="Admin\QualificationMaster.aspx" />
+    <Content Include="Admin\QuestionApproval.aspx" />
+    <Content Include="Admin\QuestionBank.aspx" />
+    <Content Include="Admin\QuestionBankUpload.aspx" />
+    <Content Include="Admin\SessionAttendance.aspx" />
+    <Content Include="Admin\TopicEntry.aspx" />
+    <Content Include="Admin\TopicManagement.aspx" />
+    <Content Include="Admin\TrainerEntry.aspx" />
+    <Content Include="Admin\TrainerManagement.aspx" />
+    <Content Include="Admin\TrainingAttendance.aspx" />
+    <Content Include="Admin\TrainingAttendance1.aspx" />
+    <Content Include="Admin\TrainingCategoryEntry.aspx" />
+    <Content Include="Admin\TrainingCategoryManagement.aspx" />
+    <Content Include="Admin\TrainingCompletionSummaryReport.aspx" />
+    <Content Include="Admin\TrainingDetailsReport.aspx" />
+    <Content Include="Admin\ManageTraining.aspx" />
+    <Content Include="Admin\TrainingList.aspx" />
+    <Content Include="Admin\TrainingNotAttendedReport.aspx" />
+    <Content Include="Admin\TrainingReAssign.aspx" />
+    <Content Include="Admin\TrainingReports.aspx" />
+    <Content Include="Admin\TrainingSearch.aspx" />
+    <Content Include="Admin\TrainingSummary.ascx" />
+    <Content Include="Admin\TrainingTypeEntry.aspx" />
+    <Content Include="Admin\TrainingTypeManagement.aspx" />
+    <Content Include="Admin\TrainingUnAssign.aspx" />
+    <Content Include="CaptchaImage.aspx" />
+    <Content Include="Contact.aspx" />
+    <Content Include="css\style.css" />
+    <Content Include="css\style.min.css" />
+    <Content Include="Default.aspx" />
+    <Content Include="Employee\css\bootstrap.min.css" />
+    <Content Include="Employee\css\bootstrap\mixins\_border-radius.css" />
+    <Content Include="Employee\css\bootstrap\mixins\_screen-reader.css" />
+    <Content Include="Employee\css\bootstrap\mixins\_visibility.css" />
+    <Content Include="Employee\css\bootstrap\utilities\_stretched-link.css" />
+    <Content Include="Employee\css\bootstrap\_media.css" />
+    <Content Include="Employee\css\style.css" />
+    <Content Include="Employee\css\StyleSheet3.css" />
+    <Content Include="Employee\Default.aspx" />
+    <Content Include="Employee\EmployeeRegistrationIgot.aspx" />
+    <Content Include="Employee\FeedbackOverallEmployee.aspx" />
+    <Content Include="Employee\FeedbackReportTopic.aspx" />
+    <Content Include="Employee\FeedbackTrainingRelatedEmployee.aspx" />
+    <Content Include="Employee\images\header.jpg" />
+    <Content Include="Employee\images\Header_BSPHCL.jpeg" />
+    <Content Include="Employee\images\Header_BSPHCL2.jpeg" />
+    <Content Include="Employee\images\logo.jpg" />
+    <Content Include="Employee\js\bootstrap.min.js" />
+    <Content Include="Employee\js\jquery.min.js" />
+    <Content Include="Employee\js\main.js" />
+    <Content Include="Employee\js\popper.js" />
+    <Content Include="Employee\js\select2.js" />
+    <Content Include="Employee\Logout.aspx" />
+    <Content Include="Error.aspx" />
+    <Content Include="Error404.aspx" />
+    <Content Include="Error500.aspx" />
+    <Content Include="Error503.aspx" />
+    <Content Include="Forget_Password.aspx" />
+    <Content Include="img\BSPGCL.png" />
+    <Content Include="img\BSPGCL2.jpeg" />
+    <Content Include="img\BSPHCL_Footer.jpg" />
+    <Content Include="img\BSPHCL_Logo.jpg" />
+    <Content Include="img\BSPTCL.png" />
+    <Content Include="img\Header_BSPHCL.jpeg" />
+    <Content Include="img\NBPDCL.png" />
+    <Content Include="img\SBPDCL.png" />
+    <Content Include="img\search.jpg" />
+    <Content Include="img\under_construction.jpg" />
+    <Content Include="js\bootstrap.min.js" />
+    <Content Include="js\jquery.min.js" />
+    <Content Include="js\main.js" />
+    <Content Include="js\popper.js" />
+    <Content Include="js\select2.js" />
+    <Content Include="lib\easing\easing.js" />
+    <Content Include="lib\easing\easing.min.js" />
+    <Content Include="lib\flaticon\font\flaticon.css" />
+    <Content Include="lib\flaticon\font\flaticon.html" />
+    <Content Include="lib\flaticon\font\Flaticon.svg" />
+    <Content Include="lib\isotope\isotope.pkgd.js" />
+    <Content Include="lib\isotope\isotope.pkgd.min.js" />
+    <Content Include="lib\lightbox\css\lightbox.css" />
+    <Content Include="lib\lightbox\css\lightbox.min.css" />
+    <Content Include="lib\lightbox\images\close.png" />
+    <Content Include="lib\lightbox\images\loading.gif" />
+    <Content Include="lib\lightbox\images\next.png" />
+    <Content Include="lib\lightbox\images\prev.png" />
+    <Content Include="lib\lightbox\js\lightbox.js" />
+    <Content Include="lib\lightbox\js\lightbox.min.js" />
+    <Content Include="lib\lightbox\links.php" />
+    <Content Include="lib\owlcarousel\assets\ajax-loader.gif" />
+    <Content Include="lib\owlcarousel\assets\owl.carousel.css" />
+    <Content Include="lib\owlcarousel\assets\owl.carousel.min.css" />
+    <Content Include="lib\owlcarousel\assets\owl.theme.default.css" />
+    <Content Include="lib\owlcarousel\assets\owl.theme.default.min.css" />
+    <Content Include="lib\owlcarousel\assets\owl.theme.green.css" />
+    <Content Include="lib\owlcarousel\assets\owl.theme.green.min.css" />
+    <Content Include="lib\owlcarousel\assets\owl.video.play.png" />
+    <Content Include="lib\owlcarousel\owl.carousel.js" />
+    <Content Include="lib\owlcarousel\owl.carousel.min.js" />
+    <Content Include="lib\tempusdominus\css\tempusdominus-bootstrap-4.css" />
+    <Content Include="lib\tempusdominus\css\tempusdominus-bootstrap-4.min.css" />
+    <Content Include="lib\tempusdominus\js\moment-timezone.min.js" />
+    <Content Include="lib\tempusdominus\js\moment.min.js" />
+    <Content Include="lib\tempusdominus\js\tempusdominus-bootstrap-4.js" />
+    <Content Include="lib\tempusdominus\js\tempusdominus-bootstrap-4.min.js" />
+    <Content Include="mail\contact.js" />
+    <Content Include="mail\contact.php" />
+    <Content Include="mail\jqBootstrapValidation.min.js" />
+    <Content Include="CertificateVerification.aspx" />
+    <Content Include="Registration.aspx" />
+    <Content Include="ResetPassword.aspx" />
+    <Content Include="SuperAdmin\AssignTraining.aspx" />
+    <Content Include="SuperAdmin\BasicDetailsUpdate.aspx" />
+    <Content Include="SuperAdmin\BulkExcelUpload.aspx" />
+    <Content Include="SuperAdmin\Check_Password.aspx" />
+    <Content Include="SuperAdmin\CreateTraining.aspx" />
+    <Content Include="SuperAdmin\css\.DS_Store" />
+    <Content Include="SuperAdmin\css\bootstrap.min.css" />
+    <Content Include="SuperAdmin\css\bootstrap\.DS_Store" />
+    <Content Include="SuperAdmin\css\bootstrap\mixins\.DS_Store" />
+    <Content Include="SuperAdmin\css\bootstrap\mixins\_border-radius.css" />
+    <Content Include="SuperAdmin\css\bootstrap\mixins\_screen-reader.css" />
+    <Content Include="SuperAdmin\css\bootstrap\mixins\_visibility.css" />
+    <Content Include="SuperAdmin\css\bootstrap\utilities\_stretched-link.css" />
+    <Content Include="SuperAdmin\css\bootstrap\_media.css" />
+    <Content Include="SuperAdmin\css\style.css" />
+    <Content Include="SuperAdmin\css\StyleSheet3.css" />
+    <Content Include="SuperAdmin\Default.aspx" />
+    <Content Include="SuperAdmin\EmpBasicMaster.aspx" />
+    <Content Include="SuperAdmin\FeedbackReport.aspx" />
+    <Content Include="SuperAdmin\FeedbackTrainingRelated.aspx" />
+    <Content Include="SuperAdmin\FindTrainingID.aspx" />
+    <Content Include="SuperAdmin\fonts\.DS_Store" />
+    <Content Include="SuperAdmin\GeneratePassword.aspx" />
+    <Content Include="SuperAdmin\images\.DS_Store" />
+    <Content Include="SuperAdmin\images\header.jpg" />
+    <Content Include="SuperAdmin\images\Header_BSPHCL.jpeg" />
+    <Content Include="SuperAdmin\images\Header_BSPHCL2.jpeg" />
+    <Content Include="SuperAdmin\images\logo.jpg" />
+    <Content Include="SuperAdmin\js\.DS_Store" />
+    <Content Include="SuperAdmin\js\bootstrap.min.js" />
+    <Content Include="SuperAdmin\js\jquery.min.js" />
+    <Content Include="SuperAdmin\js\main.js" />
+    <Content Include="SuperAdmin\js\popper.js" />
+    <Content Include="SuperAdmin\js\select2.js" />
+    <Content Include="SuperAdmin\Logout.aspx" />
+    <Content Include="SuperAdmin\Registration.aspx" />
+    <Content Include="SuperAdmin\scss\.DS_Store" />
+    <Content Include="SuperAdmin\scss\bootstrap\.DS_Store" />
+    <Content Include="SuperAdmin\scss\bootstrap\bootstrap-grid.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\bootstrap-reboot.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\bootstrap.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_alert.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_background-variant.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_badge.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_border-radius.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_box-shadow.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_breakpoints.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_buttons.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_caret.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_clearfix.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_deprecate.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_float.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_forms.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_gradients.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_grid-framework.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_grid.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_hover.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_image.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_list-group.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_lists.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_nav-divider.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_pagination.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_reset-text.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_resize.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_screen-reader.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_size.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_table-row.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_text-emphasis.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_text-hide.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_text-truncate.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_transition.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_visibility.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_align.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_background.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_borders.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_clearfix.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_display.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_embed.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_flex.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_float.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_overflow.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_position.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_screenreaders.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_shadows.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_sizing.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_spacing.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_stretched-link.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_text.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\utilities\_visibility.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\vendor\_rfs.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_alert.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_badge.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_breadcrumb.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_button-group.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_buttons.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_card.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_carousel.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_close.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_code.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_custom-forms.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_dropdown.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_forms.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_functions.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_grid.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_images.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_input-group.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_jumbotron.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_list-group.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_media.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_mixins.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_modal.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_nav.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_navbar.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_pagination.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_popover.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_print.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_progress.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_reboot.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_root.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_spinners.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_tables.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_toasts.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_tooltip.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_transitions.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_type.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_utilities.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\_variables.scss" />
+    <Content Include="SuperAdmin\scss\style.scss" />
+    <Content Include="SuperAdmin\TrainingAttendance.aspx" />
+    <Content Include="SuperAdmin\TrainingDetailsReport.aspx" />
+    <Content Include="SuperAdmin\TrainingReAssign.aspx" />
+    <Content Include="SuperAdmin\TrainingReports.aspx" />
+    <Content Include="SuperAdmin\TrainingSearch.aspx" />
+    <Content Include="SuperAdmin\TrainingUnAssign.aspx" />
+    <Content Include="Trainee\Attendance.aspx" />
+    <Content Include="Trainee\css\bootstrap.min.css" />
+    <Content Include="Trainee\css\bootstrap\mixins\_border-radius.css" />
+    <Content Include="Trainee\css\bootstrap\mixins\_screen-reader.css" />
+    <Content Include="Trainee\css\bootstrap\mixins\_visibility.css" />
+    <Content Include="Trainee\css\bootstrap\utilities\_stretched-link.css" />
+    <Content Include="Trainee\css\bootstrap\_media.css" />
+    <Content Include="Trainee\css\style.css" />
+    <Content Include="Trainee\css\StyleSheet3.css" />
+    <Content Include="Trainee\Default.aspx" />
+    <Content Include="Trainee\images\header.jpg" />
+    <Content Include="Trainee\images\Header_BSPHCL.jpeg" />
+    <Content Include="Trainee\images\Header_BSPHCL2.jpeg" />
+    <Content Include="Trainee\images\logo.jpg" />
+    <Content Include="Trainee\js\bootstrap.min.js" />
+    <Content Include="Trainee\js\jquery.min.js" />
+    <Content Include="Trainee\js\main.js" />
+    <Content Include="Trainee\js\popper.js" />
+    <Content Include="Trainee\js\select2.js" />
+    <Content Include="Trainee\Logout.aspx" />
+    <Content Include="Trainee\MyCertificate.aspx" />
+    <Content Include="Trainee\MyExamResult.aspx" />
+    <Content Include="Trainee\MySessions.aspx" />
+    <Content Include="Trainee\MyTrainings.aspx" />
+    <Content Include="Trainee\PostTrainingExam.aspx" />
+    <Content Include="Trainee\PreTrainingExam.aspx" />
+    <Content Include="Trainee\SessionSummary.ascx" />
+    <Content Include="Trainee\TraineeFeedback.aspx" />
+    <Content Include="Trainee\TraineeTrainingSummary.ascx" />
+    <Content Include="Trainee\TrainingDetails.aspx" />
+    <Content Include="Trainer\Announcement.aspx" />
+    <Content Include="Trainer\AnswerDetails.aspx" />
+    <Content Include="Trainer\Attendance.aspx" />
+    <Content Include="Trainer\AttendanceReport.aspx" />
+    <Content Include="Trainer\ChangePassword.aspx" />
+    <Content Include="Trainer\css\bootstrap.min.css" />
+    <Content Include="Trainer\css\bootstrap\mixins\_border-radius.css" />
+    <Content Include="Trainer\css\bootstrap\mixins\_screen-reader.css" />
+    <Content Include="Trainer\css\bootstrap\mixins\_visibility.css" />
+    <Content Include="Trainer\css\bootstrap\utilities\_stretched-link.css" />
+    <Content Include="Trainer\css\bootstrap\_media.css" />
+    <Content Include="Trainer\css\style.css" />
+    <Content Include="Trainer\css\StyleSheet3.css" />
+    <Content Include="Trainer\Default.aspx" />
+    <Content Include="Trainer\ExamResultReport.aspx" />
+    <Content Include="Trainer\FeedbackReport.aspx" />
+    <Content Include="Trainer\images\header.jpg" />
+    <Content Include="Trainer\images\Header_BSPHCL.jpeg" />
+    <Content Include="Trainer\images\Header_BSPHCL2.jpeg" />
+    <Content Include="Trainer\images\logo.jpg" />
+    <Content Include="Trainer\js\bootstrap.min.js" />
+    <Content Include="Trainer\js\jquery.min.js" />
+    <Content Include="Trainer\js\main.js" />
+    <Content Include="Trainer\js\popper.js" />
+    <Content Include="Trainer\js\select2.js" />
+    <Content Include="Trainer\Logout.aspx" />
+    <Content Include="Trainer\MySessions.aspx" />
+    <Content Include="Trainer\Notifications.aspx" />
+    <Content Include="Trainer\PostTrainingTest.aspx" />
+    <Content Include="Trainer\PreTrainingTest.aspx" />
+    <Content Include="Trainer\Profile.aspx" />
+    <Content Include="Trainer\QuestionBank.aspx" />
+    <Content Include="Trainer\QuestionBankUpload.aspx" />
+    <Content Include="Trainer\SessionAttendance.aspx" />
+    <Content Include="Trainer\SessionDetails.aspx" />
+    <Content Include="Trainer\SessionFeedback.aspx" />
+    <Content Include="Trainer\SessionMaterials.aspx" />
+    <Content Include="Trainer\SessionSummary.ascx" />
+    <Content Include="Trainer\TestDetails.aspx" />
+    <Content Include="Trainer\TestMaster.aspx" />
+    <Content Include="Trainer\TestResult.aspx" />
+    <Content Include="Trainer\TraineeProgress.aspx" />
+    <Content Include="Trainer\TrainerSummary.ascx" />
+    <Content Include="Trainer\TrainingCalendar.aspx" />
+    <Content Include="Trainer\TrainingMaterial.aspx" />
+    <Content Include="VerifyCertificate.aspx" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="aadharcard.cs" />
+    <Compile Include="AdminMaster.Master.cs">
+      <DependentUpon>AdminMaster.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AdminMaster.Master.designer.cs">
+      <DependentUpon>AdminMaster.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\AllCategory.aspx.cs">
+      <DependentUpon>AllCategory.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\AllCategory.aspx.designer.cs">
+      <DependentUpon>AllCategory.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\AllCourses.aspx.cs">
+      <DependentUpon>AllCourses.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\AllCourses.aspx.designer.cs">
+      <DependentUpon>AllCourses.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\AllTopic.aspx.cs">
+      <DependentUpon>AllTopic.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\AllTopic.aspx.designer.cs">
+      <DependentUpon>AllTopic.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\AllTrainers.aspx.cs">
+      <DependentUpon>AllTrainers.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\AllTrainers.aspx.designer.cs">
+      <DependentUpon>AllTrainers.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\AreaOfExpertiseMaster.aspx.cs">
+      <DependentUpon>AreaOfExpertiseMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\AreaOfExpertiseMaster.aspx.designer.cs">
+      <DependentUpon>AreaOfExpertiseMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\AssignFeedback.aspx.cs">
+      <DependentUpon>AssignFeedback.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\AssignFeedback.aspx.designer.cs">
+      <DependentUpon>AssignFeedback.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\AssignSession.aspx.cs">
+      <DependentUpon>AssignSession.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\AssignSession.aspx.designer.cs">
+      <DependentUpon>AssignSession.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\AssignTrainee.aspx.cs">
+      <DependentUpon>AssignTrainee.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\AssignTrainee.aspx.designer.cs">
+      <DependentUpon>AssignTrainee.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\BulkExcelUpload.aspx.cs">
+      <DependentUpon>BulkExcelUpload.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\BulkExcelUpload.aspx.designer.cs">
+      <DependentUpon>BulkExcelUpload.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\CertificatePreview.aspx.cs">
+      <DependentUpon>CertificatePreview.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\CertificatePreview.aspx.designer.cs">
+      <DependentUpon>CertificatePreview.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\CertificateTemplate.aspx.cs">
+      <DependentUpon>CertificateTemplate.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\CertificateTemplate.aspx.designer.cs">
+      <DependentUpon>CertificateTemplate.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\CertificateTemplateMaster.aspx.cs">
+      <DependentUpon>CertificateTemplateMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\CertificateTemplateMaster.aspx.designer.cs">
+      <DependentUpon>CertificateTemplateMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\CourseCategoryMaster.aspx.cs">
+      <DependentUpon>CourseCategoryMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\CourseCategoryMaster.aspx.designer.cs">
+      <DependentUpon>CourseCategoryMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\CourseMaster.aspx.cs">
+      <DependentUpon>CourseMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\CourseMaster.aspx.designer.cs">
+      <DependentUpon>CourseMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\CreateBatch.aspx.cs">
+      <DependentUpon>CreateBatch.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\CreateBatch.aspx.designer.cs">
+      <DependentUpon>CreateBatch.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\EmpBasicMaster.aspx.cs">
+      <DependentUpon>EmpBasicMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\EmpBasicMaster.aspx.designer.cs">
+      <DependentUpon>EmpBasicMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\ExamResultReport.aspx.cs">
+      <DependentUpon>ExamResultReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\ExamResultReport.aspx.designer.cs">
+      <DependentUpon>ExamResultReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\ExternalEmpEntry.aspx.cs">
+      <DependentUpon>ExternalEmpEntry.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\ExternalEmpEntry.aspx.designer.cs">
+      <DependentUpon>ExternalEmpEntry.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\FeedbackCategoryMaster.aspx.cs">
+      <DependentUpon>FeedbackCategoryMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\FeedbackCategoryMaster.aspx.designer.cs">
+      <DependentUpon>FeedbackCategoryMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\FeedbackMaster.aspx.cs">
+      <DependentUpon>FeedbackMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\FeedbackMaster.aspx.designer.cs">
+      <DependentUpon>FeedbackMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\FeedbackReport.aspx.cs">
+      <DependentUpon>FeedbackReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\FeedbackReport.aspx.designer.cs">
+      <DependentUpon>FeedbackReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\FeedbackTrainingRelated.aspx.cs">
+      <DependentUpon>FeedbackTrainingRelated.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\FeedbackTrainingRelated.aspx.designer.cs">
+      <DependentUpon>FeedbackTrainingRelated.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\FindTrainingID.aspx.cs">
+      <DependentUpon>FindTrainingID.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\FindTrainingID.aspx.designer.cs">
+      <DependentUpon>FindTrainingID.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\GeneratedCertificateList.aspx.cs">
+      <DependentUpon>GeneratedCertificateList.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\GeneratedCertificateList.aspx.designer.cs">
+      <DependentUpon>GeneratedCertificateList.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\LocationEntry.aspx.cs">
+      <DependentUpon>LocationEntry.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\LocationEntry.aspx.designer.cs">
+      <DependentUpon>LocationEntry.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\LocationManagement.aspx.cs">
+      <DependentUpon>LocationManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\LocationManagement.aspx.designer.cs">
+      <DependentUpon>LocationManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\Logout.aspx.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\Logout.aspx.designer.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\OrganizerEntry.aspx.cs">
+      <DependentUpon>OrganizerEntry.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\OrganizerEntry.aspx.designer.cs">
+      <DependentUpon>OrganizerEntry.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\OrganizerManagement.aspx.cs">
+      <DependentUpon>OrganizerManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\OrganizerManagement.aspx.designer.cs">
+      <DependentUpon>OrganizerManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\QualificationMaster.aspx.cs">
+      <DependentUpon>QualificationMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\QualificationMaster.aspx.designer.cs">
+      <DependentUpon>QualificationMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\QuestionApproval.aspx.cs">
+      <DependentUpon>QuestionApproval.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\QuestionApproval.aspx.designer.cs">
+      <DependentUpon>QuestionApproval.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\QuestionBank.aspx.cs">
+      <DependentUpon>QuestionBank.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\QuestionBank.aspx.designer.cs">
+      <DependentUpon>QuestionBank.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\QuestionBankUpload.aspx.cs">
+      <DependentUpon>QuestionBankUpload.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\QuestionBankUpload.aspx.designer.cs">
+      <DependentUpon>QuestionBankUpload.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\SessionAttendance.aspx.cs">
+      <DependentUpon>SessionAttendance.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\SessionAttendance.aspx.designer.cs">
+      <DependentUpon>SessionAttendance.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TopicEntry.aspx.cs">
+      <DependentUpon>TopicEntry.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TopicEntry.aspx.designer.cs">
+      <DependentUpon>TopicEntry.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TopicManagement.aspx.cs">
+      <DependentUpon>TopicManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TopicManagement.aspx.designer.cs">
+      <DependentUpon>TopicManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainerEntry.aspx.cs">
+      <DependentUpon>TrainerEntry.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainerEntry.aspx.designer.cs">
+      <DependentUpon>TrainerEntry.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainerManagement.aspx.cs">
+      <DependentUpon>TrainerManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainerManagement.aspx.designer.cs">
+      <DependentUpon>TrainerManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingAttendance.aspx.cs">
+      <DependentUpon>TrainingAttendance.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingAttendance.aspx.designer.cs">
+      <DependentUpon>TrainingAttendance.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingAttendance1.aspx.cs">
+      <DependentUpon>TrainingAttendance1.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingAttendance1.aspx.designer.cs">
+      <DependentUpon>TrainingAttendance1.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingCategoryEntry.aspx.cs">
+      <DependentUpon>TrainingCategoryEntry.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingCategoryEntry.aspx.designer.cs">
+      <DependentUpon>TrainingCategoryEntry.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingCategoryManagement.aspx.cs">
+      <DependentUpon>TrainingCategoryManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingCategoryManagement.aspx.designer.cs">
+      <DependentUpon>TrainingCategoryManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingCompletionSummaryReport.aspx.cs">
+      <DependentUpon>TrainingCompletionSummaryReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingCompletionSummaryReport.aspx.designer.cs">
+      <DependentUpon>TrainingCompletionSummaryReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingDetailsReport.aspx.cs">
+      <DependentUpon>TrainingDetailsReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingDetailsReport.aspx.designer.cs">
+      <DependentUpon>TrainingDetailsReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\ManageTraining.aspx.cs">
+      <DependentUpon>ManageTraining.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\ManageTraining.aspx.designer.cs">
+      <DependentUpon>ManageTraining.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingList.aspx.cs">
+      <DependentUpon>TrainingList.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingList.aspx.designer.cs">
+      <DependentUpon>TrainingList.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingNotAttendedReport.aspx.cs">
+      <DependentUpon>TrainingNotAttendedReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingNotAttendedReport.aspx.designer.cs">
+      <DependentUpon>TrainingNotAttendedReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingReAssign.aspx.cs">
+      <DependentUpon>TrainingReAssign.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingReAssign.aspx.designer.cs">
+      <DependentUpon>TrainingReAssign.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingReports.aspx.cs">
+      <DependentUpon>TrainingReports.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingReports.aspx.designer.cs">
+      <DependentUpon>TrainingReports.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingSearch.aspx.cs">
+      <DependentUpon>TrainingSearch.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingSearch.aspx.designer.cs">
+      <DependentUpon>TrainingSearch.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingSummary.ascx.cs">
+      <DependentUpon>TrainingSummary.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingSummary.ascx.designer.cs">
+      <DependentUpon>TrainingSummary.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingTypeEntry.aspx.cs">
+      <DependentUpon>TrainingTypeEntry.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingTypeEntry.aspx.designer.cs">
+      <DependentUpon>TrainingTypeEntry.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingTypeManagement.aspx.cs">
+      <DependentUpon>TrainingTypeManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingTypeManagement.aspx.designer.cs">
+      <DependentUpon>TrainingTypeManagement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingUnAssign.aspx.cs">
+      <DependentUpon>TrainingUnAssign.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingUnAssign.aspx.designer.cs">
+      <DependentUpon>TrainingUnAssign.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Business\Training\FeedbackManager.cs" />
+    <Compile Include="Business\Training\TrainingProgressManager.cs" />
+    <Compile Include="Models\AssessmentModel.cs" />
+    <Compile Include="Business\Assessment\AssessmentManager.cs" />
+    <Compile Include="Business\Assessment\QuestionBankManager.cs" />
+    <Compile Include="Business\Assessment\QuestionPaperManager.cs" />
+    <Compile Include="Business\Assessment\ResultManager.cs" />
+    <Compile Include="Business\Assessment\TestEngineManager.cs" />
+    <Compile Include="Models\CertificateVerificationModel.cs" />
+    <Compile Include="Business\Certificate\CertificateManager.cs" />
+    <Compile Include="Business\Certificate\CertificatePDFManager.cs" />
+    <Compile Include="Models\FeedbackDetailModel.cs" />
+    <Compile Include="Models\QuestionModel.cs" />
+    <Compile Include="Models\QuestionPaperModel.cs" />
+    <Compile Include="Models\ResultModel.cs" />
+    <Compile Include="Models\TestAttemptAnswerModel.cs" />
+    <Compile Include="Models\TestAttemptModel.cs" />
+    <Compile Include="Models\TestResultModel.cs" />
+    <Compile Include="Business\Training\AttendanceManager.cs" />
+    <Compile Include="Models\AttendanceModel.cs" />
+    <Compile Include="Models\CertificateModel.cs" />
+    <Compile Include="Models\FeedbackModel.cs" />
+    <Compile Include="Business\Training\SessionManager.cs" />
+    <Compile Include="Models\SessionModel.cs" />
+    <Compile Include="Business\Training\TrainingManager.cs" />
+    <Compile Include="Models\TrainingModel.cs" />
+    <Compile Include="CaptchaImage.aspx.cs">
+      <DependentUpon>CaptchaImage.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="CaptchaImage.aspx.designer.cs">
+      <DependentUpon>CaptchaImage.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="clsDataAccess.cs" />
+    <Compile Include="clsDataAccessSMS.cs" />
+    <Compile Include="clsDataAccessSQLServer.cs" />
+    <Compile Include="clsReport.cs" />
+    <Compile Include="clsTransaction.cs" />
+    <Compile Include="clsWorkflow.cs" />
+    <Compile Include="Common\Constants.cs" />
+    <Compile Include="Common\Messages.cs" />
+    <Compile Include="Contact.aspx.cs">
+      <DependentUpon>Contact.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Contact.aspx.designer.cs">
+      <DependentUpon>Contact.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="css\Login.Master.cs">
+      <DependentUpon>Login.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="css\Login.Master.designer.cs">
+      <DependentUpon>Login.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Employee\Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Employee\Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Employee\EmployeeRegistrationIgot.aspx.cs">
+      <DependentUpon>EmployeeRegistrationIgot.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Employee\EmployeeRegistrationIgot.aspx.designer.cs">
+      <DependentUpon>EmployeeRegistrationIgot.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Employee\FeedbackOverallEmployee.aspx.cs">
+      <DependentUpon>FeedbackOverallEmployee.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Employee\FeedbackOverallEmployee.aspx.designer.cs">
+      <DependentUpon>FeedbackOverallEmployee.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Employee\FeedbackReportTopic.aspx.cs">
+      <DependentUpon>FeedbackReportTopic.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Employee\FeedbackReportTopic.aspx.designer.cs">
+      <DependentUpon>FeedbackReportTopic.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Employee\FeedbackTrainingRelatedEmployee.aspx.cs">
+      <DependentUpon>FeedbackTrainingRelatedEmployee.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Employee\FeedbackTrainingRelatedEmployee.aspx.designer.cs">
+      <DependentUpon>FeedbackTrainingRelatedEmployee.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Employee\Logout.aspx.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Employee\Logout.aspx.designer.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="EmpMaster.Master.cs">
+      <DependentUpon>EmpMaster.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="EmpMaster.Master.designer.cs">
+      <DependentUpon>EmpMaster.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Encryptor.cs" />
+    <Compile Include="Encryptor2.cs" />
+    <Compile Include="Error.aspx.cs">
+      <DependentUpon>Error.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Error404.aspx.cs">
+      <DependentUpon>Error404.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Error500.aspx.cs">
+      <DependentUpon>Error500.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Error503.aspx.cs">
+      <DependentUpon>Error503.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Forget_Password.aspx.cs">
+      <DependentUpon>Forget_Password.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Forget_Password.aspx.designer.cs">
+      <DependentUpon>Forget_Password.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Helper\CommonFunctions.cs" />
+    <Compile Include="Helper\IDGenerator.cs" />
+    <Compile Include="Helper\MessageHelper.cs" />
+    <Compile Include="Helper\Validator.cs" />
+    <Compile Include="MobileNumberValidator.cs" />
+    <Compile Include="Models\TrainingProgressModel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="CertificateVerification.aspx.cs">
+      <DependentUpon>CertificateVerification.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="CertificateVerification.aspx.designer.cs">
+      <DependentUpon>CertificateVerification.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Registration.aspx.cs">
+      <DependentUpon>Registration.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Registration.aspx.designer.cs">
+      <DependentUpon>Registration.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ResetPassword.aspx.cs">
+      <DependentUpon>ResetPassword.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ResetPassword.aspx.designer.cs">
+      <DependentUpon>ResetPassword.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Site.Master.cs">
+      <DependentUpon>Site.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Site.Master.designer.cs">
+      <DependentUpon>Site.Master</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdminMaster.Master.cs">
+      <DependentUpon>SuperAdminMaster.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdminMaster.Master.designer.cs">
+      <DependentUpon>SuperAdminMaster.Master</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\AssignTraining.aspx.cs">
+      <DependentUpon>AssignTraining.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\AssignTraining.aspx.designer.cs">
+      <DependentUpon>AssignTraining.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\BasicDetailsUpdate.aspx.cs">
+      <DependentUpon>BasicDetailsUpdate.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\BasicDetailsUpdate.aspx.designer.cs">
+      <DependentUpon>BasicDetailsUpdate.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\BulkExcelUpload.aspx.cs">
+      <DependentUpon>BulkExcelUpload.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\BulkExcelUpload.aspx.designer.cs">
+      <DependentUpon>BulkExcelUpload.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\Check_Password.aspx.cs">
+      <DependentUpon>Check_Password.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\Check_Password.aspx.designer.cs">
+      <DependentUpon>Check_Password.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\CreateTraining.aspx.cs">
+      <DependentUpon>CreateTraining.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\CreateTraining.aspx.designer.cs">
+      <DependentUpon>CreateTraining.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\EmpBasicMaster.aspx.cs">
+      <DependentUpon>EmpBasicMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\EmpBasicMaster.aspx.designer.cs">
+      <DependentUpon>EmpBasicMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\FeedbackReport.aspx.cs">
+      <DependentUpon>FeedbackReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\FeedbackReport.aspx.designer.cs">
+      <DependentUpon>FeedbackReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\FeedbackTrainingRelated.aspx.cs">
+      <DependentUpon>FeedbackTrainingRelated.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\FeedbackTrainingRelated.aspx.designer.cs">
+      <DependentUpon>FeedbackTrainingRelated.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\FindTrainingID.aspx.cs">
+      <DependentUpon>FindTrainingID.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\FindTrainingID.aspx.designer.cs">
+      <DependentUpon>FindTrainingID.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\GeneratePassword.aspx.cs">
+      <DependentUpon>GeneratePassword.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\GeneratePassword.aspx.designer.cs">
+      <DependentUpon>GeneratePassword.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\Logout.aspx.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\Logout.aspx.designer.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\Registration.aspx.cs">
+      <DependentUpon>Registration.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\Registration.aspx.designer.cs">
+      <DependentUpon>Registration.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingAttendance.aspx.cs">
+      <DependentUpon>TrainingAttendance.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingAttendance.aspx.designer.cs">
+      <DependentUpon>TrainingAttendance.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingDetailsReport.aspx.cs">
+      <DependentUpon>TrainingDetailsReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingDetailsReport.aspx.designer.cs">
+      <DependentUpon>TrainingDetailsReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingReAssign.aspx.cs">
+      <DependentUpon>TrainingReAssign.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingReAssign.aspx.designer.cs">
+      <DependentUpon>TrainingReAssign.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingReports.aspx.cs">
+      <DependentUpon>TrainingReports.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingReports.aspx.designer.cs">
+      <DependentUpon>TrainingReports.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingSearch.aspx.cs">
+      <DependentUpon>TrainingSearch.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingSearch.aspx.designer.cs">
+      <DependentUpon>TrainingSearch.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingUnAssign.aspx.cs">
+      <DependentUpon>TrainingUnAssign.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SuperAdmin\TrainingUnAssign.aspx.designer.cs">
+      <DependentUpon>TrainingUnAssign.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="TraineeMaster.Master.cs">
+      <DependentUpon>TraineeMaster.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="TraineeMaster.Master.designer.cs">
+      <DependentUpon>TraineeMaster.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\Attendance.aspx.cs">
+      <DependentUpon>Attendance.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\Attendance.aspx.designer.cs">
+      <DependentUpon>Attendance.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Business\Certificate\CertificateGenerator.cs" />
+    <Compile Include="Trainee\Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\Logout.aspx.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\Logout.aspx.designer.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\MyCertificate.aspx.cs">
+      <DependentUpon>MyCertificate.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\MyCertificate.aspx.designer.cs">
+      <DependentUpon>MyCertificate.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\MyExamResult.aspx.cs">
+      <DependentUpon>MyExamResult.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\MyExamResult.aspx.designer.cs">
+      <DependentUpon>MyExamResult.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\MySessions.aspx.cs">
+      <DependentUpon>MySessions.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\MySessions.aspx.designer.cs">
+      <DependentUpon>MySessions.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\MyTrainings.aspx.cs">
+      <DependentUpon>MyTrainings.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\MyTrainings.aspx.designer.cs">
+      <DependentUpon>MyTrainings.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\PostTrainingExam.aspx.cs">
+      <DependentUpon>PostTrainingExam.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\PostTrainingExam.aspx.designer.cs">
+      <DependentUpon>PostTrainingExam.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\PreTrainingExam.aspx.cs">
+      <DependentUpon>PreTrainingExam.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\PreTrainingExam.aspx.designer.cs">
+      <DependentUpon>PreTrainingExam.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\SessionSummary.ascx.cs">
+      <DependentUpon>SessionSummary.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\SessionSummary.ascx.designer.cs">
+      <DependentUpon>SessionSummary.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\TraineeFeedback.aspx.cs">
+      <DependentUpon>TraineeFeedback.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\TraineeFeedback.aspx.designer.cs">
+      <DependentUpon>TraineeFeedback.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\TraineeTrainingSummary.ascx.cs">
+      <DependentUpon>TraineeTrainingSummary.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\TraineeTrainingSummary.ascx.designer.cs">
+      <DependentUpon>TraineeTrainingSummary.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainee\TrainingDetails.aspx.cs">
+      <DependentUpon>TrainingDetails.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainee\TrainingDetails.aspx.designer.cs">
+      <DependentUpon>TrainingDetails.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="TrainerMaster.Master.cs">
+      <DependentUpon>TrainerMaster.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="TrainerMaster.Master.designer.cs">
+      <DependentUpon>TrainerMaster.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\Announcement.aspx.cs">
+      <DependentUpon>Announcement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\Announcement.aspx.designer.cs">
+      <DependentUpon>Announcement.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\AnswerDetails.aspx.cs">
+      <DependentUpon>AnswerDetails.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\AnswerDetails.aspx.designer.cs">
+      <DependentUpon>AnswerDetails.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\Attendance.aspx.cs">
+      <DependentUpon>Attendance.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\Attendance.aspx.designer.cs">
+      <DependentUpon>Attendance.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\AttendanceReport.aspx.cs">
+      <DependentUpon>AttendanceReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\AttendanceReport.aspx.designer.cs">
+      <DependentUpon>AttendanceReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\ChangePassword.aspx.cs">
+      <DependentUpon>ChangePassword.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\ChangePassword.aspx.designer.cs">
+      <DependentUpon>ChangePassword.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\ExamResultReport.aspx.cs">
+      <DependentUpon>ExamResultReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\ExamResultReport.aspx.designer.cs">
+      <DependentUpon>ExamResultReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\FeedbackReport.aspx.cs">
+      <DependentUpon>FeedbackReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\FeedbackReport.aspx.designer.cs">
+      <DependentUpon>FeedbackReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\Logout.aspx.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\Logout.aspx.designer.cs">
+      <DependentUpon>Logout.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\MySessions.aspx.cs">
+      <DependentUpon>MySessions.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\MySessions.aspx.designer.cs">
+      <DependentUpon>MySessions.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\Notifications.aspx.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\Notifications.aspx.designer.cs">
+      <DependentUpon>Notifications.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\PostTrainingTest.aspx.cs">
+      <DependentUpon>PostTrainingTest.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\PostTrainingTest.aspx.designer.cs">
+      <DependentUpon>PostTrainingTest.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\PreTrainingTest.aspx.cs">
+      <DependentUpon>PreTrainingTest.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\PreTrainingTest.aspx.designer.cs">
+      <DependentUpon>PreTrainingTest.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\Profile.aspx.cs">
+      <DependentUpon>Profile.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\Profile.aspx.designer.cs">
+      <DependentUpon>Profile.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\QuestionBank.aspx.cs">
+      <DependentUpon>QuestionBank.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\QuestionBank.aspx.designer.cs">
+      <DependentUpon>QuestionBank.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\QuestionBankUpload.aspx.cs">
+      <DependentUpon>QuestionBankUpload.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\QuestionBankUpload.aspx.designer.cs">
+      <DependentUpon>QuestionBankUpload.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\SessionAttendance.aspx.cs">
+      <DependentUpon>SessionAttendance.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\SessionAttendance.aspx.designer.cs">
+      <DependentUpon>SessionAttendance.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\SessionDetails.aspx.cs">
+      <DependentUpon>SessionDetails.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\SessionDetails.aspx.designer.cs">
+      <DependentUpon>SessionDetails.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\SessionFeedback.aspx.cs">
+      <DependentUpon>SessionFeedback.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\SessionFeedback.aspx.designer.cs">
+      <DependentUpon>SessionFeedback.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\SessionMaterials.aspx.cs">
+      <DependentUpon>SessionMaterials.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\SessionMaterials.aspx.designer.cs">
+      <DependentUpon>SessionMaterials.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\SessionSummary.ascx.cs">
+      <DependentUpon>SessionSummary.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\SessionSummary.ascx.designer.cs">
+      <DependentUpon>SessionSummary.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\TestDetails.aspx.cs">
+      <DependentUpon>TestDetails.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\TestDetails.aspx.designer.cs">
+      <DependentUpon>TestDetails.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\TestMaster.aspx.cs">
+      <DependentUpon>TestMaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\TestMaster.aspx.designer.cs">
+      <DependentUpon>TestMaster.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\TestResult.aspx.cs">
+      <DependentUpon>TestResult.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\TestResult.aspx.designer.cs">
+      <DependentUpon>TestResult.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\TraineeProgress.aspx.cs">
+      <DependentUpon>TraineeProgress.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\TraineeProgress.aspx.designer.cs">
+      <DependentUpon>TraineeProgress.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\TrainerSummary.ascx.cs">
+      <DependentUpon>TrainerSummary.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\TrainerSummary.ascx.designer.cs">
+      <DependentUpon>TrainerSummary.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\TrainingCalendar.aspx.cs">
+      <DependentUpon>TrainingCalendar.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\TrainingCalendar.aspx.designer.cs">
+      <DependentUpon>TrainingCalendar.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Trainer\TrainingMaterial.aspx.cs">
+      <DependentUpon>TrainingMaterial.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Trainer\TrainingMaterial.aspx.designer.cs">
+      <DependentUpon>TrainingMaterial.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ValidateInput.cs" />
+    <Compile Include="VerifyCertificate.aspx.cs">
+      <DependentUpon>VerifyCertificate.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="VerifyCertificate.aspx.designer.cs">
+      <DependentUpon>VerifyCertificate.aspx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="lib\flaticon\font\Flaticon.ttf" />
+    <Content Include="lib\flaticon\font\Flaticon.woff" />
+    <Content Include="lib\flaticon\font\Flaticon.woff2" />
+    <Content Include="lib\flaticon\font\_flaticon.scss" />
+    <Content Include="lib\flaticon\license\license.pdf" />
+    <Content Include="lib\owlcarousel\LICENSE" />
+    <Content Include="css\Login.Master" />
+    <Content Include="Doc\ACR_Reporting_Authority.pdf" />
+    <Content Include="Doc\ACR_Timeline.pdf" />
+    <Content Include="Doc\Leave FORMAT.pdf" />
+    <Content Include="Doc\Medical FORMAT.pdf" />
+    <Content Include="Doc\NRC FORMAT.pdf" />
+    <Content Include="Doc\Training FORMAT.pdf" />
+    <Content Include="js\.DS_Store" />
+    <Content Include="AdminMaster.Master" />
+    <Content Include="EmpMaster.Master" />
+    <Content Include="Admin\css\.DS_Store" />
+    <Content Include="Admin\css\bootstrap\.DS_Store" />
+    <Content Include="Admin\css\bootstrap\mixins\.DS_Store" />
+    <Content Include="Admin\fonts\.DS_Store" />
+    <Content Include="Admin\images\.DS_Store" />
+    <Content Include="Admin\js\.DS_Store" />
+    <Content Include="Admin\scss\.DS_Store" />
+    <Content Include="Admin\scss\bootstrap\.DS_Store" />
+    <Content Include="Admin\scss\bootstrap\bootstrap-grid.scss" />
+    <Content Include="Admin\scss\bootstrap\bootstrap-reboot.scss" />
+    <Content Include="Admin\scss\bootstrap\bootstrap.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_alert.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_background-variant.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_badge.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_border-radius.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_box-shadow.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_breakpoints.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_buttons.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_caret.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_clearfix.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_deprecate.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_float.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_forms.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_gradients.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_grid-framework.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_grid.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_hover.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_image.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_list-group.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_lists.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_nav-divider.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_pagination.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_reset-text.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_resize.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_screen-reader.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_size.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_table-row.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_text-emphasis.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_text-hide.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_text-truncate.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_transition.scss" />
+    <Content Include="Admin\scss\bootstrap\mixins\_visibility.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_align.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_background.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_borders.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_clearfix.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_display.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_embed.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_flex.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_float.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_overflow.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_position.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_screenreaders.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_shadows.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_sizing.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_spacing.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_stretched-link.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_text.scss" />
+    <Content Include="Admin\scss\bootstrap\utilities\_visibility.scss" />
+    <Content Include="Admin\scss\bootstrap\vendor\_rfs.scss" />
+    <Content Include="Admin\scss\bootstrap\_alert.scss" />
+    <Content Include="Admin\scss\bootstrap\_badge.scss" />
+    <Content Include="Admin\scss\bootstrap\_breadcrumb.scss" />
+    <Content Include="Admin\scss\bootstrap\_button-group.scss" />
+    <Content Include="Admin\scss\bootstrap\_buttons.scss" />
+    <Content Include="Admin\scss\bootstrap\_card.scss" />
+    <Content Include="Admin\scss\bootstrap\_carousel.scss" />
+    <Content Include="Admin\scss\bootstrap\_close.scss" />
+    <Content Include="Admin\scss\bootstrap\_code.scss" />
+    <Content Include="Admin\scss\bootstrap\_custom-forms.scss" />
+    <Content Include="Admin\scss\bootstrap\_dropdown.scss" />
+    <Content Include="Admin\scss\bootstrap\_forms.scss" />
+    <Content Include="Admin\scss\bootstrap\_functions.scss" />
+    <Content Include="Admin\scss\bootstrap\_grid.scss" />
+    <Content Include="Admin\scss\bootstrap\_images.scss" />
+    <Content Include="Admin\scss\bootstrap\_input-group.scss" />
+    <Content Include="Admin\scss\bootstrap\_jumbotron.scss" />
+    <Content Include="Admin\scss\bootstrap\_list-group.scss" />
+    <Content Include="Admin\scss\bootstrap\_media.scss" />
+    <Content Include="Admin\scss\bootstrap\_mixins.scss" />
+    <Content Include="Admin\scss\bootstrap\_modal.scss" />
+    <Content Include="Admin\scss\bootstrap\_nav.scss" />
+    <Content Include="Admin\scss\bootstrap\_navbar.scss" />
+    <Content Include="Admin\scss\bootstrap\_pagination.scss" />
+    <Content Include="Admin\scss\bootstrap\_popover.scss" />
+    <Content Include="Admin\scss\bootstrap\_print.scss" />
+    <Content Include="Admin\scss\bootstrap\_progress.scss" />
+    <Content Include="Admin\scss\bootstrap\_reboot.scss" />
+    <Content Include="Admin\scss\bootstrap\_root.scss" />
+    <Content Include="Admin\scss\bootstrap\_spinners.scss" />
+    <Content Include="Admin\scss\bootstrap\_tables.scss" />
+    <Content Include="Admin\scss\bootstrap\_toasts.scss" />
+    <Content Include="Admin\scss\bootstrap\_tooltip.scss" />
+    <Content Include="Admin\scss\bootstrap\_transitions.scss" />
+    <Content Include="Admin\scss\bootstrap\_type.scss" />
+    <Content Include="Admin\scss\bootstrap\_utilities.scss" />
+    <Content Include="Admin\scss\bootstrap\_variables.scss" />
+    <Content Include="Admin\scss\style.scss" />
+    <Content Include="Employee\css\.DS_Store" />
+    <Content Include="Employee\css\bootstrap\.DS_Store" />
+    <Content Include="Employee\css\bootstrap\mixins\.DS_Store" />
+    <Content Include="Employee\fonts\.DS_Store" />
+    <Content Include="Employee\images\.DS_Store" />
+    <Content Include="Employee\js\.DS_Store" />
+    <Content Include="Employee\scss\.DS_Store" />
+    <Content Include="Employee\scss\bootstrap\.DS_Store" />
+    <Content Include="Employee\scss\bootstrap\bootstrap-grid.scss" />
+    <Content Include="Employee\scss\bootstrap\bootstrap-reboot.scss" />
+    <Content Include="Employee\scss\bootstrap\bootstrap.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_alert.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_background-variant.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_badge.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_border-radius.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_box-shadow.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_breakpoints.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_buttons.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_caret.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_clearfix.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_deprecate.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_float.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_forms.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_gradients.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_grid-framework.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_grid.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_hover.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_image.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_list-group.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_lists.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_nav-divider.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_pagination.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_reset-text.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_resize.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_screen-reader.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_size.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_table-row.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_text-emphasis.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_text-hide.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_text-truncate.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_transition.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_visibility.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_align.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_background.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_borders.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_clearfix.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_display.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_embed.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_flex.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_float.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_overflow.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_position.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_screenreaders.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_shadows.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_sizing.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_spacing.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_stretched-link.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_text.scss" />
+    <Content Include="Employee\scss\bootstrap\utilities\_visibility.scss" />
+    <Content Include="Employee\scss\bootstrap\vendor\_rfs.scss" />
+    <Content Include="Employee\scss\bootstrap\_alert.scss" />
+    <Content Include="Employee\scss\bootstrap\_badge.scss" />
+    <Content Include="Employee\scss\bootstrap\_breadcrumb.scss" />
+    <Content Include="Employee\scss\bootstrap\_button-group.scss" />
+    <Content Include="Employee\scss\bootstrap\_buttons.scss" />
+    <Content Include="Employee\scss\bootstrap\_card.scss" />
+    <Content Include="Employee\scss\bootstrap\_carousel.scss" />
+    <Content Include="Employee\scss\bootstrap\_close.scss" />
+    <Content Include="Employee\scss\bootstrap\_code.scss" />
+    <Content Include="Employee\scss\bootstrap\_custom-forms.scss" />
+    <Content Include="Employee\scss\bootstrap\_dropdown.scss" />
+    <Content Include="Employee\scss\bootstrap\_forms.scss" />
+    <Content Include="Employee\scss\bootstrap\_functions.scss" />
+    <Content Include="Employee\scss\bootstrap\_grid.scss" />
+    <Content Include="Employee\scss\bootstrap\_images.scss" />
+    <Content Include="Employee\scss\bootstrap\_input-group.scss" />
+    <Content Include="Employee\scss\bootstrap\_jumbotron.scss" />
+    <Content Include="Employee\scss\bootstrap\_list-group.scss" />
+    <Content Include="Employee\scss\bootstrap\_media.scss" />
+    <Content Include="Employee\scss\bootstrap\_mixins.scss" />
+    <Content Include="Employee\scss\bootstrap\_modal.scss" />
+    <Content Include="Employee\scss\bootstrap\_nav.scss" />
+    <Content Include="Employee\scss\bootstrap\_navbar.scss" />
+    <Content Include="Employee\scss\bootstrap\_pagination.scss" />
+    <Content Include="Employee\scss\bootstrap\_popover.scss" />
+    <Content Include="Employee\scss\bootstrap\_print.scss" />
+    <Content Include="Employee\scss\bootstrap\_progress.scss" />
+    <Content Include="Employee\scss\bootstrap\_reboot.scss" />
+    <Content Include="Employee\scss\bootstrap\_root.scss" />
+    <Content Include="Employee\scss\bootstrap\_spinners.scss" />
+    <Content Include="Employee\scss\bootstrap\_tables.scss" />
+    <Content Include="Employee\scss\bootstrap\_toasts.scss" />
+    <Content Include="Employee\scss\bootstrap\_tooltip.scss" />
+    <Content Include="Employee\scss\bootstrap\_transitions.scss" />
+    <Content Include="Employee\scss\bootstrap\_type.scss" />
+    <Content Include="Employee\scss\bootstrap\_utilities.scss" />
+    <Content Include="Employee\scss\bootstrap\_variables.scss" />
+    <Content Include="Employee\scss\style.scss" />
+    <Content Include="Admin\SampleFormat\TrainingAssignmentSample.xlsx" />
+    <Content Include="Admin\SampleFormat\QuestionBankSample.xlsx" />
+    <None Include="packages.config" />
+    <Content Include="Site.Master" />
+    <Content Include="SuperAdminMaster.Master" />
+    <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
+    <Content Include="TrainerMaster.Master" />
+    <Content Include="Trainer\Sample\AttendanceSample.xlsx" />
+    <Content Include="Trainer\css\.DS_Store" />
+    <Content Include="Trainer\css\bootstrap\.DS_Store" />
+    <Content Include="Trainer\css\bootstrap\mixins\.DS_Store" />
+    <Content Include="Trainer\fonts\.DS_Store" />
+    <Content Include="Trainer\images\.DS_Store" />
+    <Content Include="Trainer\js\.DS_Store" />
+    <Content Include="Trainer\scss\.DS_Store" />
+    <Content Include="Trainer\scss\bootstrap\.DS_Store" />
+    <Content Include="Trainer\scss\bootstrap\_alert.scss" />
+    <Content Include="Trainer\scss\bootstrap\_badge.scss" />
+    <Content Include="Trainer\scss\bootstrap\_breadcrumb.scss" />
+    <Content Include="Trainer\scss\bootstrap\_button-group.scss" />
+    <Content Include="Trainer\scss\bootstrap\_buttons.scss" />
+    <Content Include="Trainer\scss\bootstrap\_card.scss" />
+    <Content Include="Trainer\scss\bootstrap\_carousel.scss" />
+    <Content Include="Trainer\scss\bootstrap\_close.scss" />
+    <Content Include="Trainer\scss\bootstrap\_code.scss" />
+    <Content Include="Trainer\scss\bootstrap\_custom-forms.scss" />
+    <Content Include="Trainer\scss\bootstrap\_dropdown.scss" />
+    <Content Include="Trainer\scss\bootstrap\_forms.scss" />
+    <Content Include="Trainer\scss\bootstrap\_functions.scss" />
+    <Content Include="Trainer\scss\bootstrap\_grid.scss" />
+    <Content Include="Trainer\scss\bootstrap\_images.scss" />
+    <Content Include="Trainer\scss\bootstrap\_input-group.scss" />
+    <Content Include="Trainer\scss\bootstrap\_jumbotron.scss" />
+    <Content Include="Trainer\scss\bootstrap\_list-group.scss" />
+    <Content Include="Trainer\scss\bootstrap\_media.scss" />
+    <Content Include="Trainer\scss\bootstrap\_mixins.scss" />
+    <Content Include="Trainer\scss\bootstrap\_modal.scss" />
+    <Content Include="Trainer\scss\bootstrap\_nav.scss" />
+    <Content Include="Trainer\scss\bootstrap\_navbar.scss" />
+    <Content Include="Trainer\scss\bootstrap\_pagination.scss" />
+    <Content Include="Trainer\scss\bootstrap\_popover.scss" />
+    <Content Include="Trainer\scss\bootstrap\_print.scss" />
+    <Content Include="Trainer\scss\bootstrap\_progress.scss" />
+    <Content Include="Trainer\scss\bootstrap\_reboot.scss" />
+    <Content Include="Trainer\scss\bootstrap\_root.scss" />
+    <Content Include="Trainer\scss\bootstrap\_spinners.scss" />
+    <Content Include="Trainer\scss\bootstrap\_tables.scss" />
+    <Content Include="Trainer\scss\bootstrap\_toasts.scss" />
+    <Content Include="Trainer\scss\bootstrap\_tooltip.scss" />
+    <Content Include="Trainer\scss\bootstrap\_transitions.scss" />
+    <Content Include="Trainer\scss\bootstrap\_type.scss" />
+    <Content Include="Trainer\scss\bootstrap\_utilities.scss" />
+    <Content Include="Trainer\scss\bootstrap\_variables.scss" />
+    <Content Include="Trainer\scss\bootstrap\bootstrap-grid.scss" />
+    <Content Include="Trainer\scss\bootstrap\bootstrap-reboot.scss" />
+    <Content Include="Trainer\scss\bootstrap\bootstrap.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_alert.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_background-variant.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_badge.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_border-radius.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_box-shadow.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_breakpoints.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_buttons.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_caret.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_clearfix.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_deprecate.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_float.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_forms.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_gradients.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_grid-framework.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_grid.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_hover.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_image.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_list-group.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_lists.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_nav-divider.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_pagination.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_reset-text.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_resize.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_screen-reader.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_size.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_table-row.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_text-emphasis.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_text-hide.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_text-truncate.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_transition.scss" />
+    <Content Include="Trainer\scss\bootstrap\mixins\_visibility.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_align.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_background.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_borders.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_clearfix.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_display.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_embed.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_flex.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_float.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_overflow.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_position.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_screenreaders.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_shadows.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_sizing.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_spacing.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_stretched-link.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_text.scss" />
+    <Content Include="Trainer\scss\bootstrap\utilities\_visibility.scss" />
+    <Content Include="Trainer\scss\bootstrap\vendor\_rfs.scss" />
+    <Content Include="Trainer\scss\style.scss" />
+    <Content Include="Trainer\Sample\QuestionBankSample.xlsx" />
+    <Content Include="TraineeMaster.Master" />
+    <Content Include="SampleFormat\QuestionBankSample.xlsx" />
+    <Content Include="SampleFormat\TrainingAssignmentSample.xlsx" />
+    <Content Include="Sample\AttendanceSample.xlsx" />
+    <Content Include="Sample\QuestionBankSample.xlsx" />
+    <Content Include="Trainee\css\.DS_Store" />
+    <Content Include="Trainee\css\bootstrap\.DS_Store" />
+    <Content Include="Trainee\css\bootstrap\mixins\.DS_Store" />
+    <Content Include="Trainee\fonts\.DS_Store" />
+    <Content Include="Trainee\images\.DS_Store" />
+    <Content Include="Trainee\js\.DS_Store" />
+    <Content Include="Trainee\scss\.DS_Store" />
+    <Content Include="Trainee\scss\bootstrap\.DS_Store" />
+    <Content Include="Trainee\scss\bootstrap\_alert.scss" />
+    <Content Include="Trainee\scss\bootstrap\_badge.scss" />
+    <Content Include="Trainee\scss\bootstrap\_breadcrumb.scss" />
+    <Content Include="Trainee\scss\bootstrap\_button-group.scss" />
+    <Content Include="Trainee\scss\bootstrap\_buttons.scss" />
+    <Content Include="Trainee\scss\bootstrap\_card.scss" />
+    <Content Include="Trainee\scss\bootstrap\_carousel.scss" />
+    <Content Include="Trainee\scss\bootstrap\_close.scss" />
+    <Content Include="Trainee\scss\bootstrap\_code.scss" />
+    <Content Include="Trainee\scss\bootstrap\_custom-forms.scss" />
+    <Content Include="Trainee\scss\bootstrap\_dropdown.scss" />
+    <Content Include="Trainee\scss\bootstrap\_forms.scss" />
+    <Content Include="Trainee\scss\bootstrap\_functions.scss" />
+    <Content Include="Trainee\scss\bootstrap\_grid.scss" />
+    <Content Include="Trainee\scss\bootstrap\_images.scss" />
+    <Content Include="Trainee\scss\bootstrap\_input-group.scss" />
+    <Content Include="Trainee\scss\bootstrap\_jumbotron.scss" />
+    <Content Include="Trainee\scss\bootstrap\_list-group.scss" />
+    <Content Include="Trainee\scss\bootstrap\_media.scss" />
+    <Content Include="Trainee\scss\bootstrap\_mixins.scss" />
+    <Content Include="Trainee\scss\bootstrap\_modal.scss" />
+    <Content Include="Trainee\scss\bootstrap\_nav.scss" />
+    <Content Include="Trainee\scss\bootstrap\_navbar.scss" />
+    <Content Include="Trainee\scss\bootstrap\_pagination.scss" />
+    <Content Include="Trainee\scss\bootstrap\_popover.scss" />
+    <Content Include="Trainee\scss\bootstrap\_print.scss" />
+    <Content Include="Trainee\scss\bootstrap\_progress.scss" />
+    <Content Include="Trainee\scss\bootstrap\_reboot.scss" />
+    <Content Include="Trainee\scss\bootstrap\_root.scss" />
+    <Content Include="Trainee\scss\bootstrap\_spinners.scss" />
+    <Content Include="Trainee\scss\bootstrap\_tables.scss" />
+    <Content Include="Trainee\scss\bootstrap\_toasts.scss" />
+    <Content Include="Trainee\scss\bootstrap\_tooltip.scss" />
+    <Content Include="Trainee\scss\bootstrap\_transitions.scss" />
+    <Content Include="Trainee\scss\bootstrap\_type.scss" />
+    <Content Include="Trainee\scss\bootstrap\_utilities.scss" />
+    <Content Include="Trainee\scss\bootstrap\_variables.scss" />
+    <Content Include="Trainee\scss\bootstrap\bootstrap-grid.scss" />
+    <Content Include="Trainee\scss\bootstrap\bootstrap-reboot.scss" />
+    <Content Include="Trainee\scss\bootstrap\bootstrap.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_alert.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_background-variant.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_badge.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_border-radius.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_box-shadow.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_breakpoints.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_buttons.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_caret.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_clearfix.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_deprecate.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_float.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_forms.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_gradients.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_grid-framework.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_grid.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_hover.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_image.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_list-group.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_lists.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_nav-divider.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_pagination.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_reset-text.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_resize.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_screen-reader.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_size.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_table-row.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_text-emphasis.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_text-hide.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_text-truncate.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_transition.scss" />
+    <Content Include="Trainee\scss\bootstrap\mixins\_visibility.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_align.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_background.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_borders.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_clearfix.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_display.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_embed.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_flex.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_float.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_overflow.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_position.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_screenreaders.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_shadows.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_sizing.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_spacing.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_stretched-link.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_text.scss" />
+    <Content Include="Trainee\scss\bootstrap\utilities\_visibility.scss" />
+    <Content Include="Trainee\scss\bootstrap\vendor\_rfs.scss" />
+    <Content Include="Trainee\scss\style.scss" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Admin\AttendanceSheet\" />
+    <Folder Include="Business\Common\" />
+    <Folder Include="Business\Dashboard\" />
+    <Folder Include="Business\Feedback\" />
+    <Folder Include="Controls\" />
+    <Folder Include="Scripts\" />
+    <Folder Include="Security\" />
+    <Folder Include="Styles\" />
+    <Folder Include="Uploads\AttendanceSheet\" />
+    <Folder Include="Uploads\CertificateTemplate\Background\" />
+    <Folder Include="Uploads\CertificateTemplate\Logo\" />
+    <Folder Include="Uploads\Certificate\Signature\" />
+    <Folder Include="Uploads\TrainingMaterial\" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>55302</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:55302/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.0\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.0\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

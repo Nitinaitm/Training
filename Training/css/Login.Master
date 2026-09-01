@@ -1,0 +1,248 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Login.master.cs" Inherits="Goal_UPSC.Login" %>
+
+<!DOCTYPE html>
+
+<html>
+<head runat="server">
+
+    <meta charset="utf-8">
+    <title>Goal_UPSC</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Free HTML Templates" name="keywords">
+    <meta content="Free HTML Templates" name="description">
+
+    <!-- Favicon -->
+    <link href="img/Photo_Study7.png" rel="icon" />
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Handlee&family=Nunito&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet" />
+
+    <!-- Flaticon Font -->
+    <link href="lib/flaticon/font/flaticon.css" rel="stylesheet" />
+
+    <!-- Libraries Stylesheet -->
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet" />
+    <link href="lib/lightbox/css/lightbox.min.css" rel="stylesheet" />
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="css/style.css" rel="stylesheet" />
+
+    <script>
+function enquiry() {
+
+            ////	var name = document.enqform.name.value;
+            //var email = document.enqform.email.value;
+
+
+            //if (document.enqform.email.value == "") {
+            //    alert("Please enter your Email");
+            //    document.enqform.email.focus();
+            //    return false;
+            //}
+            //var id = document.enqform.email.value;
+            ////The regular expression for a valid e-mail address
+            //var re = /^.+\@.+\..{2,4}$/gi;
+            //if (!id.match(re)) { //If it is NOT a match
+            //    //flag++;
+            //    //errors = errors + "Invalid E-Mail\n";
+                alert("Under Construction");
+            //    document.enqform.email.focus();
+            //    return false;
+            //}
+
+            //if (window.XMLHttpRequest)
+            //    // code for IE7+, Firefox, Chrome, Opera, Safari
+            //    xmlhttp = new XMLHttpRequest();
+            //else
+            //    // code for IE6, IE5
+            //    xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+
+            //xmlhttp.onreadystatechange = function () {
+            //    if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
+            //        document.getElementById("enqmsg").innerHTML = xmlhttp.responseText;
+            //}
+            //xmlhttp.open("GET", "/subscribe.aspx?email=" + email, true);
+            //xmlhttp.send();
+            //document.enqform.reset();
+
+        }
+    
+    </script>
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <!-- Navbar Start -->
+        <div class="container-fluid bg-light position-relative shadow">
+            <nav class="navbar navbar-expand-lg bg-light navbar-light py-3 py-lg-0 px-0 px-lg-2">
+                <a href="Default.aspx" class="navbar-brand font-weight-bold text-secondary" style="font-size: 50px;">
+                    <img src="img/Photo_Study7.png" alt="">
+                    <span class="text-primary">Goal_UPSC</span>
+                </a>
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                    <div class="navbar-nav font-weight-bold mx-auto py-0">
+                        <a href="Default.aspx" id="test6" class="nav-item nav-link" runat="server">Home</a>
+                        <a href="#" id="test5" class="nav-item nav-link" runat="server">Gallery</a>
+                        <a href="Login.aspx" id="test7" class="nav-item nav-link" runat="server">Login</a>
+                        <%--<a href="Add_Doc.aspx" id="test1" class="nav-item nav-link" runat="server">Add Topics</a>
+                        <%--<a href="Add_Doc.aspx" id="test1" class="nav-item nav-link" runat="server">Add Topics</a>
+                        <a href="View_Doc.aspx" id="test2" class="nav-item nav-link" runat="server">View All Topics</a>
+                        <a href="Search_Topic.aspx" id="test3" class="nav-item nav-link" runat="server">Search Topic</a>
+                        <a href="Edit_Doc.aspx" id="test4" class="nav-item nav-link" runat="server">Edit Topics</a>
+                        
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" id="test7" data-toggle="dropdown" runat="server">Gallery</a>
+                            <div class="dropdown-menu rounded-0 m-0">
+                                <a href="Add_Photo.aspx" class="dropdown-item">Add</a>
+                                <a href="View_Photo.aspx" class="dropdown-item">View</a>
+                                <a href="Delete_Photo.aspx" class="dropdown-item">Delete</a>
+                            </div>
+                        </div>--%>
+                       
+                    </div>
+                    <a href="Message.aspx" class="btn btn-primary px-4">Message</a>
+                </div>
+            </nav>
+        </div>
+        <!-- Navbar End -->
+            <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+            </asp:ContentPlaceHolder>
+        <div class="container-fluid bg-secondary text-white mt-5 py-5 px-sm-3 px-md-5">
+            <div class="row pt-5">
+                <div class="col-lg-3 col-md-6 mb-5">
+                    <a href="#" class="navbar-brand font-weight-bold text-primary m-0 mb-4 p-0" style="font-size: 40px; line-height: 40px;">
+                          <img src="img/Photo_Study7.png" alt="">
+                        <span class="text-white">Goal_UPSC</span>
+                    </a>
+                    <p>
+                        Be your own motivator... 
+                        <br />
+                        Boredom kills your motivation...
+                        <br />
+                        Record your progress...
+                        <br />
+                        Have breaks!
+                    </p>
+                    <div class="d-flex justify-content-start mt-4">
+                        <a class="btn btn-outline-primary rounded-circle text-center mr-2 px-0"
+                            style="width: 38px; height: 38px;" href="#"><i class="fab fa-twitter"></i></a>
+                        <a class="btn btn-outline-primary rounded-circle text-center mr-2 px-0"
+                            style="width: 38px; height: 38px;" href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a class="btn btn-outline-primary rounded-circle text-center mr-2 px-0"
+                            style="width: 38px; height: 38px;" href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a class="btn btn-outline-primary rounded-circle text-center mr-2 px-0"
+                            style="width: 38px; height: 38px;" href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-5">
+                    <h3 class="text-primary mb-4">Get In Touch</h3>
+                    <div class="d-flex">
+                        <h4 class="fa fa-map-marker-alt text-primary"></h4>
+                        <div class="pl-3">
+                            <h5 class="text-white">Address</h5>
+                            <p>In the heart of my Husband.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex">
+                        <h4 class="fa fa-envelope text-primary"></h4>
+                        <div class="pl-3">
+                            <h5 class="text-white">Email</h5>
+                            <p>emailkyu@whatsappkaro.com</p>
+                        </div>
+                    </div>
+                    <div class="d-flex">
+                        <h4 class="fa fa-phone-alt text-primary"></h4>
+                        <div class="pl-3">
+                            <h5 class="text-white">Phone No.</h5>
+                            <p>Nahi hai to nahi dungi...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-5">
+                    <h3 class="text-primary mb-4">Quick Links</h3>
+                    <div class="d-flex flex-column justify-content-start">
+                        <a class="text-white mb-2" href="Default.aspx"><i class="fa fa-angle-right mr-2"></i>Home</a>
+                        <a class="text-white mb-2" href="Add_Doc.aspx"><i class="fa fa-angle-right mr-2"></i>Add Topics</a>
+                        <a class="text-white mb-2" href="View_Doc.aspx"><i class="fa fa-angle-right mr-2"></i>View All Topics</a>
+                        <a class="text-white mb-2" href="Search_Topic.aspx"><i class="fa fa-angle-right mr-2"></i>Search Topic</a>
+                        <a class="text-white mb-2" href="Edit_Doc.aspx"><i class="fa fa-angle-right mr-2"></i>Edit Topics</a>
+                        <a class="text-white" href="#"><i class="fa fa-angle-right mr-2"></i>Gallery</a>
+                    </div>
+                </div>
+                <%--<div class="col-lg-3 col-md-6 mb-5">
+
+                     
+                      <h3 class="text-primary mb-4">Let's see</h3>
+                     <img class="img-fluid mb-4" src="img/Photo_Study8.png" alt="">
+                    </div>--%>
+                <div class="col-lg-3 col-md-6 mb-5">
+                    <h3 class="text-primary mb-4">Suggestion to make my dream come true</h3>
+
+                    <div class="form-group">
+                        <input type="text" class="form-control border-0 py-4" placeholder="Your Name" />
+                    </div>
+                    <div class="form-group">
+                        <input type="email" class="form-control border-0 py-4" placeholder="Your Email"
+                            />
+                    </div>
+                     <div class="form-group">
+                        <input type="text" class="form-control border-0 py-4" placeholder="Your Message"
+                           />
+                    </div>
+                    <div>
+                        <button class="btn btn-primary btn-block border-0 py-3"  onclick="return enquiry();"  type="submit">Submit Now</button>
+                    </div>
+                    </div>
+                </div>
+            
+
+                    <div class="container-fluid pt-5" style="border-top: 1px solid rgba(23, 162, 184, .2);">
+                        <p class="m-0 text-center text-white">
+                            &copy; <a class="text-primary font-weight-bold" href="#">Goal_UPSC</a>. All Rights Reserved. Designed & Developed 
+                by 
+                <a class="text-primary font-weight-bold" href="#">Bechara Patidev</a>
+                            
+                        </p>
+                         <p class="m-0 text-right text-white">
+                            <a class="text-primary font-weight-bold" href="#">Happy 1st Anniversary, Kirti.</a>
+                              </p>
+                      
+                           <p class="m-0 text-right text-white">
+                            <a class="text-primary font-weight-bold" href="#">With Love, <i class="fa fa-heart" style="font-size:48px;color:red"></i> Nitin.</a>
+                              </p>
+                     <p><br /><br /></p>
+                    </div>
+                </div>
+        <!-- Footer End -->
+         <a href="#" class="btn btn-primary p-3 back-to-top"><i class="fa fa-angle-double-up"></i></a>
+     
+    </form>
+    
+   
+   
+
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="lib/isotope/isotope.pkgd.min.js"></script>
+    <script src="lib/lightbox/js/lightbox.min.js"></script>
+
+    <!-- Contact Javascript File -->
+    <script src="mail/jqBootstrapValidation.min.js"></script>
+    <script src="mail/contact.js"></script>
+
+    <!-- Template Javascript -->
+    <script src="js/main.js"></script>
+</body>
+</html>
