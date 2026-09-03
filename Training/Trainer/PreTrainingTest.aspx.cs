@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -61,6 +61,11 @@ namespace Training.Trainer
                 SessionSummary1.LoadSession(Session["SessionID"].ToString());
 
                 LoadSessionDetails();
+
+                if (!CheckPreTrainingRequired())
+                {
+                    return;
+                }
 
                 LoadQuestionPool();
 
@@ -127,6 +132,48 @@ namespace Training.Trainer
             ViewState["TrainingID"] =
                 dt.Rows[0]["TrainingID"]
                 .ToString();
+        }
+        private bool CheckPreTrainingRequired()
+        {
+            string sql =
+                "SELECT InitialAssessmentRequired " +
+                "FROM TrainingDetails " +
+                "WHERE TrainingID=@TrainingID";
+
+            SqlParameter[] parameter =
+            {
+        new SqlParameter(
+            "@TrainingID",
+            ViewState["TrainingID"])
+    };
+
+            object result =
+                objDB.ExecuteScalar(
+                    sql,
+                    parameter);
+
+            if
+            (
+                result == null
+                ||
+                result == DBNull.Value
+                ||
+                !Convert.ToBoolean(result)
+            )
+            {
+                ScriptManager.RegisterStartupScript(
+                    this,
+                    GetType(),
+                    "PreTrainingRequired",
+                    "alert('Pre-Training Assessment is not required for this training.');window.location='SessionDetails.aspx?SessionID="
+                    + ViewState["SessionID"]
+                    + "';",
+                    true);
+
+                return false;
+            }
+
+            return true;
         }
         private void CheckAttendance()
         {
