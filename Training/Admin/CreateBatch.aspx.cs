@@ -12,6 +12,14 @@ namespace Training.Admin
 {
     public partial class CreateBatch : System.Web.UI.Page
     {
+        protected CheckBox chkAttendanceRequired;
+        protected CheckBox chkPreTrainingAssessment;
+        protected CheckBox chkPostTrainingAssessment;
+        protected CheckBox chkFeedbackRequired;
+        protected CheckBox chkCertificateRequired;
+        protected CheckBox chkTrainerHostelRequired;
+        protected CheckBox chkTraineeHostelRequired;
+
         string constr = ConfigurationManager.ConnectionStrings["constr"].ConnectionString;
 
 
@@ -179,17 +187,19 @@ Convert.ToDateTime(dr["DateFrom"])
             txtRemarks.Text =
             dr["Remarks"].ToString();
 
+            chkAttendanceRequired.Checked = Convert.ToBoolean(dr["AttendanceRequired"]);
+            chkPreTrainingAssessment.Checked = Convert.ToBoolean(dr["InitialAssessmentRequired"]);
+            chkPostTrainingAssessment.Checked = Convert.ToBoolean(dr["FinalAssessmentRequired"]);
+            chkFeedbackRequired.Checked = Convert.ToBoolean(dr["FeedbackRequired"]);
+            chkCertificateRequired.Checked = Convert.ToBoolean(dr["CertificateRequired"]);
+            chkTrainerHostelRequired.Checked = Convert.ToBoolean(dr["TrainerHostelRequired"]);
+            chkTraineeHostelRequired.Checked = Convert.ToBoolean(dr["TraineeHostelRequired"]);
+
             if (ddlStartTime.Items.FindByValue(
                 dr["StartTime"].ToString()) != null)
             {
                 ddlStartTime.SelectedValue =
                 dr["StartTime"].ToString();
-            }
-            if (ddlHostelRequired.Items.FindByValue(
-                dr["HostelRequiredTrainee"].ToString()) != null)
-            {
-                ddlHostelRequired.SelectedValue =
-                    dr["HostelRequiredTrainee"].ToString();
             }
 
             SetButtonStatus();
@@ -617,14 +627,6 @@ TrainingLocationMaster";
 
                     return;
                 }
-                if(ddlHostelRequired.SelectedValue == null || ddlHostelRequired.SelectedValue == "")
-                {
-                    lblMessage.Text = "Select Hostel Required";
-
-                    lblMessage.ForeColor = System.Drawing.Color.Red;
-
-                    return;
-                }
                 using (
                 SqlConnection con =
                 new SqlConnection(constr))
@@ -653,7 +655,17 @@ Remarks,
 CreatedOn,
 CreatedBy,
 Hours,
-HostelRequiredTrainee
+HostelRequiredTrainee,
+AttendanceRequired,
+AssessmentRequired,
+AssessmentMode,
+InitialAssessmentRequired,
+SessionAssessmentRequired,
+FinalAssessmentRequired,
+FeedbackRequired,
+CertificateRequired,
+TrainerHostelRequired,
+TraineeHostelRequired
 )
 
 VALUES
@@ -674,7 +686,17 @@ VALUES
 GETDATE(),
 @CreatedBy,
 @Hours,
-@HostelRequiredTrainee
+@HostelRequiredTrainee,
+@AttendanceRequired,
+@AssessmentRequired,
+@AssessmentMode,
+@InitialAssessmentRequired,
+@SessionAssessmentRequired,
+@FinalAssessmentRequired,
+@FeedbackRequired,
+@CertificateRequired,
+@TrainerHostelRequired,
+@TraineeHostelRequired
 )
 
 ", con);
@@ -742,18 +764,26 @@ GETDATE(),
 
                     cmd.Parameters.AddWithValue(
                     "@HostelRequiredTrainee",
-                    ddlHostelRequired.SelectedItem.Text);
-                    //                    cmd.Parameters.AddWithValue(
-                    //"@TrainingStatus",
-                    //"Draft");
+                    chkTraineeHostelRequired.Checked ? "Yes" : "No");
+
+                    cmd.Parameters.AddWithValue("@AttendanceRequired", chkAttendanceRequired.Checked);
+                    cmd.Parameters.AddWithValue("@AssessmentRequired", chkPreTrainingAssessment.Checked || chkPostTrainingAssessment.Checked);
+                    cmd.Parameters.AddWithValue("@AssessmentMode", (chkPreTrainingAssessment.Checked || chkPostTrainingAssessment.Checked) ? "Online" : "");
+                    cmd.Parameters.AddWithValue("@InitialAssessmentRequired", chkPreTrainingAssessment.Checked);
+                    cmd.Parameters.AddWithValue("@SessionAssessmentRequired", false);
+                    cmd.Parameters.AddWithValue("@FinalAssessmentRequired", chkPostTrainingAssessment.Checked);
+                    cmd.Parameters.AddWithValue("@FeedbackRequired", chkFeedbackRequired.Checked);
+                    cmd.Parameters.AddWithValue("@CertificateRequired", chkCertificateRequired.Checked);
+                    cmd.Parameters.AddWithValue("@TrainerHostelRequired", chkTrainerHostelRequired.Checked);
+                    cmd.Parameters.AddWithValue("@TraineeHostelRequired", chkTraineeHostelRequired.Checked);
+
                     cmd.ExecuteNonQuery();
 
                     //clsWorkflow.UpdateWorkflow(txtTrainingID.Text, "Draft", 1);
                     clsWorkflow.UpdateWorkflow(txtTrainingID.Text, "Draft", "A");
 
 
-                }
-
+               }
 
                 lblMessage.Text =
                 "Batch created successfully";
@@ -761,7 +791,7 @@ GETDATE(),
                 lblMessage.ForeColor =
                 Color.Green;
                 Session["TrainingID"] =
-txtTrainingID.Text;
+                txtTrainingID.Text;
 
                 SetButtonStatus();
             }
@@ -853,15 +883,6 @@ EventArgs e)
                 "Select Start Time";
                 return;
             }
-            if (ddlHostelRequired.SelectedValue == null || ddlHostelRequired.SelectedValue == "")
-            {
-                lblMessage.Text = "Select Hostel Required";
-
-                lblMessage.ForeColor = System.Drawing.Color.Red;
-
-                return;
-            }
-
 
             GenerateTrainingID();
 
@@ -1040,7 +1061,17 @@ BatchStrength=@BatchStrength,
 Hours=@Hours,
 UpdatedOn=GETDATE(),
 UpdatedBy=@UpdatedBy,
-HostelRequiredTrainee=@HostelRequiredTrainee
+HostelRequiredTrainee=@HostelRequiredTrainee,
+AttendanceRequired=@AttendanceRequired,
+AssessmentRequired=@AssessmentRequired,
+AssessmentMode=@AssessmentMode,
+InitialAssessmentRequired=@InitialAssessmentRequired,
+SessionAssessmentRequired=@SessionAssessmentRequired,
+FinalAssessmentRequired=@FinalAssessmentRequired,
+FeedbackRequired=@FeedbackRequired,
+CertificateRequired=@CertificateRequired,
+TrainerHostelRequired=@TrainerHostelRequired,
+TraineeHostelRequired=@TraineeHostelRequired
 
 WHERE TrainingID=@OldTrainingID
 
@@ -1113,7 +1144,18 @@ WHERE TrainingID=@OldTrainingID
 
                         cmd.Parameters.AddWithValue(
                         "@HostelRequiredTrainee",
-                        ddlHostelRequired.SelectedItem.Text);
+                        chkTraineeHostelRequired.Checked ? "Yes" : "No");
+
+                        cmd.Parameters.AddWithValue("@AttendanceRequired", chkAttendanceRequired.Checked);
+                        cmd.Parameters.AddWithValue("@AssessmentRequired", chkPreTrainingAssessment.Checked || chkPostTrainingAssessment.Checked);
+                        cmd.Parameters.AddWithValue("@AssessmentMode", (chkPreTrainingAssessment.Checked || chkPostTrainingAssessment.Checked) ? "Online" : "");
+                        cmd.Parameters.AddWithValue("@InitialAssessmentRequired", chkPreTrainingAssessment.Checked);
+                        cmd.Parameters.AddWithValue("@SessionAssessmentRequired", false);
+                        cmd.Parameters.AddWithValue("@FinalAssessmentRequired", chkPostTrainingAssessment.Checked);
+                        cmd.Parameters.AddWithValue("@FeedbackRequired", chkFeedbackRequired.Checked);
+                        cmd.Parameters.AddWithValue("@CertificateRequired", chkCertificateRequired.Checked);
+                        cmd.Parameters.AddWithValue("@TrainerHostelRequired", chkTrainerHostelRequired.Checked);
+                        cmd.Parameters.AddWithValue("@TraineeHostelRequired", chkTraineeHostelRequired.Checked);
 
                         cmd.ExecuteNonQuery();
 
@@ -1137,43 +1179,27 @@ WHERE TrainingID=@OldTrainingID
                         trans.Rollback();
                         throw;
                     }
-
-                    con.Close();
                 }
             }
             catch (Exception ex)
             {
-                lblMessage.Text =
-                ex.Message;
-
-                lblMessage.ForeColor =
-                Color.Red;
+                lblMessage.Text = ex.Message;
+                lblMessage.ForeColor = Color.Red;
             }
         }
 
-        //        protected void btnAssignTrainer_Click(
-        //object sender,
-        //EventArgs e)
-        //        {
-        //            Session["TrainingID"] =
-        //            txtTrainingID.Text;
-
-        //            Response.Redirect(
-        //            "~/Admin/AssignTrainer.aspx");
-        //        }
         protected void btnCreateSessions_Click(
-object sender,
-EventArgs e)
+        object sender,
+        EventArgs e)
         {
             Session["TrainingID"] =
-            txtTrainingID.Text;
+                txtTrainingID.Text;
 
             Response.Redirect(
-            "~/Admin/AssignSession.aspx");
+                "~/Admin/CreateSession.aspx");
         }
-        protected void CalculateDays(
-object sender,
-EventArgs e)
+
+        private void CalculateDays()
         {
             try
             {
@@ -1211,8 +1237,6 @@ EventArgs e)
             "$('#ddlTrainingCategory').select2({width:'100%'});" +
             "$('#ddlTrainingOrganizer').select2({width:'100%'});" +
             "$('#ddlTrainingLocation').select2({width:'100%'});",
-            //"$('#lstDesignation').select2({placeholder:'Select Designation',width:'100%'});",
-
             true);
         }
 
