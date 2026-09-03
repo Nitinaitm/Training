@@ -461,31 +461,25 @@ GridViewCommandEventArgs e)
         {
             string sql =
                 "SELECT " +
+                "TD.AttendanceRequired," +
                 "TD.InitialAssessmentRequired," +
                 "TD.FinalAssessmentRequired," +
                 "TD.FeedbackRequired," +
-                "ISNULL(TP.PreExamCompleted,0) PreExamCompleted," +
-                "ISNULL(TP.PostExamCompleted,0) PostExamCompleted," +
-                "ISNULL(TP.BatchFeedbackCompleted,0) BatchFeedbackCompleted," +
+                "TD.CertificateRequired," +
+                "ISNULL(TP.PreExamCompleted,0) AS PreExamCompleted," +
+                "ISNULL(TP.PostExamCompleted,0) AS PostExamCompleted," +
+                "ISNULL(TP.BatchFeedbackCompleted,0) AS BatchFeedbackCompleted," +
                 "CASE " +
                 "WHEN NOT EXISTS " +
                 "( " +
-                "SELECT 1 " +
-                "FROM SessionMaster SM " +
+                "SELECT 1 FROM SessionMaster SM " +
                 "WHERE SM.TrainingID=@TrainingID " +
                 "AND ISNULL((SELECT TOP 1 AttendanceStatus FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID),'Pending')<>'Completed' " +
-                ") " +
-                "THEN 1 ELSE 0 END AttendanceDone," +
+                ") THEN 1 ELSE 0 END AS AttendanceDone," +
                 "CASE " +
                 "WHEN EXISTS " +
-                "( " +
-                "SELECT 1 " +
-                "FROM TrainingCertificate " +
-                "WHERE TrainingID=@TrainingID " +
-                "AND EmpID=@EmpID " +
-                "AND CertificateStatus='A' " +
-                ") " +
-                "THEN 1 ELSE 0 END CertificateReady " +
+                "(SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') " +
+                "THEN 1 ELSE 0 END AS CertificateReady " +
                 "FROM TrainingDetails TD " +
                 "LEFT JOIN TrainingProgress TP " +
                 "ON TP.TrainingID=TD.TrainingID " +
@@ -494,76 +488,57 @@ GridViewCommandEventArgs e)
 
             SqlParameter[] param =
             {
-                new SqlParameter(
-                    "@TrainingID",
-                    TrainingID),
-
-                new SqlParameter(
-                    "@EmpID",
-                    EmpID)
+                new SqlParameter("@TrainingID", TrainingID),
+                new SqlParameter("@EmpID", EmpID)
             };
 
             DataTable dt =
-                objDB.GetDataTable(
-                    sql,
-                    param);
+                objDB.GetDataTable(sql, param);
 
-            if
-            (
-                dt.Rows.Count == 0
-            )
+            if (dt.Rows.Count == 0)
             {
+                btnBatchFeedback.Enabled = false;
+                btnCertificate.Enabled = false;
                 return;
             }
 
-            DataRow dr =
-                dt.Rows[0];
+            DataRow dr = dt.Rows[0];
 
-            bool attendanceDone =
-                Convert.ToBoolean(
-                    dr["AttendanceDone"]);
+            bool attendanceRequired = Convert.ToBoolean(dr["AttendanceRequired"]);
+            bool preRequired = Convert.ToBoolean(dr["InitialAssessmentRequired"]);
+            bool postRequired = Convert.ToBoolean(dr["FinalAssessmentRequired"]);
+            bool feedbackRequired = Convert.ToBoolean(dr["FeedbackRequired"]);
+            bool certificateRequired = Convert.ToBoolean(dr["CertificateRequired"]);
 
-            bool preRequired =
-                Convert.ToBoolean(
-                    dr["InitialAssessmentRequired"]);
+            bool attendanceDone = Convert.ToBoolean(dr["AttendanceDone"]);
+            bool preDone = Convert.ToBoolean(dr["PreExamCompleted"]);
+            bool postDone = Convert.ToBoolean(dr["PostExamCompleted"]);
+            bool batchFeedbackDone = Convert.ToBoolean(dr["BatchFeedbackCompleted"]);
+            bool certificateReady = Convert.ToBoolean(dr["CertificateReady"]);
 
-            bool postRequired =
-                Convert.ToBoolean(
-                    dr["FinalAssessmentRequired"]);
-
-            bool feedbackRequired =
-                Convert.ToBoolean(
-                    dr["FeedbackRequired"]);
-
-            bool preDone =
-                Convert.ToBoolean(
-                    dr["PreExamCompleted"]);
-
-            bool postDone =
-                Convert.ToBoolean(
-                    dr["PostExamCompleted"]);
-
-            bool batchFeedbackDone =
-                Convert.ToBoolean(
-                    dr["BatchFeedbackCompleted"]);
+            bool attendanceGate =
+                !attendanceRequired || attendanceDone;
 
             bool requiredTestsDone =
                 (!preRequired || preDone)
                 &&
                 (!postRequired || postDone);
 
+            bool feedbackGate =
+                !feedbackRequired || batchFeedbackDone;
+
             btnBatchFeedback.Enabled =
                 feedbackRequired
-                &&
-                attendanceDone
-                &&
-                requiredTestsDone
-                &&
-                !batchFeedbackDone;
+                && attendanceGate
+                && requiredTestsDone
+                && !batchFeedbackDone;
 
             btnCertificate.Enabled =
-                Convert.ToBoolean(
-                    dr["CertificateReady"]);
+                certificateRequired
+                && attendanceGate
+                && requiredTestsDone
+                && feedbackGate
+                && certificateReady;
         }
 
         protected void btnBatchFeedback_Click(
