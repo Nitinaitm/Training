@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -14,10 +14,59 @@ namespace Training.Trainer
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["TrainerID"] == null) Response.Redirect("~/Default.aspx");
+
+            if (!CheckFeedbackRequired())
+            {
+                return;
+            }
+
             if (!IsPostBack) { BindSessions(); BindGrid(); }
         }
 
         private string TrainerID => Session["TrainerID"].ToString();
+
+        private bool CheckFeedbackRequired()
+        {
+            string trainingID = Request.QueryString["TrainingID"];
+
+            if (string.IsNullOrEmpty(trainingID))
+            {
+                return true;
+            }
+
+            string sql =
+                "SELECT FeedbackRequired " +
+                "FROM TrainingDetails " +
+                "WHERE TrainingID=@TrainingID";
+
+            SqlParameter[] parameter =
+            {
+                new SqlParameter("@TrainingID", trainingID)
+            };
+
+            object result = obj.ExecuteScalar(sql, parameter);
+
+            if
+            (
+                result == null
+                ||
+                result == DBNull.Value
+                ||
+                !Convert.ToBoolean(result)
+            )
+            {
+                ScriptManager.RegisterStartupScript(
+                    this,
+                    GetType(),
+                    "FeedbackRequired",
+                    "alert('Feedback is not required for this training.');window.location='TrainingDetails.aspx';",
+                    true);
+
+                return false;
+            }
+
+            return true;
+        }
 
         private void BindSessions()
         {
