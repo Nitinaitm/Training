@@ -768,7 +768,7 @@ GETDATE(),
 
                     cmd.Parameters.AddWithValue("@AttendanceRequired", chkAttendanceRequired.Checked);
                     cmd.Parameters.AddWithValue("@AssessmentRequired", chkPreTrainingAssessment.Checked || chkPostTrainingAssessment.Checked);
-                    cmd.Parameters.AddWithValue("@AssessmentMode", (chkPreTrainingAssessment.Checked || chkPostTrainingAssessment.Checked) ? "Online" : "");
+                    cmd.Parameters.AddWithValue("@AssessmentMode", DBNull.Value);
                     cmd.Parameters.AddWithValue("@InitialAssessmentRequired", chkPreTrainingAssessment.Checked);
                     cmd.Parameters.AddWithValue("@SessionAssessmentRequired", false);
                     cmd.Parameters.AddWithValue("@FinalAssessmentRequired", chkPostTrainingAssessment.Checked);
@@ -1148,7 +1148,7 @@ WHERE TrainingID=@OldTrainingID
 
                         cmd.Parameters.AddWithValue("@AttendanceRequired", chkAttendanceRequired.Checked);
                         cmd.Parameters.AddWithValue("@AssessmentRequired", chkPreTrainingAssessment.Checked || chkPostTrainingAssessment.Checked);
-                        cmd.Parameters.AddWithValue("@AssessmentMode", (chkPreTrainingAssessment.Checked || chkPostTrainingAssessment.Checked) ? "Online" : "");
+                        cmd.Parameters.AddWithValue("@AssessmentMode", DBNull.Value);
                         cmd.Parameters.AddWithValue("@InitialAssessmentRequired", chkPreTrainingAssessment.Checked);
                         cmd.Parameters.AddWithValue("@SessionAssessmentRequired", false);
                         cmd.Parameters.AddWithValue("@FinalAssessmentRequired", chkPostTrainingAssessment.Checked);
