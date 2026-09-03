@@ -135,27 +135,38 @@ namespace Training.Trainee
                 return false;
             }
 
-            DataRow dr = dt.Rows[0];
-
-            bool feedbackRequired =
-                Convert.ToBoolean(dr["FeedbackRequired"]);
-
-            bool attendanceCompleted =
-                Convert.ToBoolean(dr["AttendanceCompleted"]);
+            DataRow row = dt.Rows[0];
 
             bool preRequired =
-                Convert.ToBoolean(dr["InitialAssessmentRequired"]);
+                Convert.ToBoolean(
+                    row["InitialAssessmentRequired"]);
 
             bool postRequired =
-                Convert.ToBoolean(dr["FinalAssessmentRequired"]);
+                Convert.ToBoolean(
+                    row["FinalAssessmentRequired"]);
+
+            bool feedbackRequired =
+                Convert.ToBoolean(
+                    row["FeedbackRequired"]);
+
+            bool attendanceCompleted =
+                Convert.ToBoolean(
+                    row["AttendanceCompleted"]);
 
             bool preCompleted =
-                Convert.ToBoolean(dr["PreExamCompleted"]);
+                Convert.ToBoolean(
+                    row["PreExamCompleted"]);
 
             bool postCompleted =
-                Convert.ToBoolean(dr["PostExamCompleted"]);
+                Convert.ToBoolean(
+                    row["PostExamCompleted"]);
 
-            if (!feedbackRequired || !attendanceCompleted)
+            if (!feedbackRequired)
+            {
+                return false;
+            }
+
+            if (!attendanceCompleted)
             {
                 return false;
             }
@@ -389,7 +400,7 @@ QuestionText
         }
 
         //-----------------------------------------------------
-        // Get Session Trainer List
+        // Get Trainer List
         //-----------------------------------------------------
 
         private DataTable GetSessionTrainerList()
@@ -412,7 +423,7 @@ QuestionText
                 "ON EB.EmpID=TR.EmpID " +
                 "WHERE SM.TrainingID=@TrainingID " +
                 "AND ISNULL(SM.TrainerID,'')<>'' " +
-                "ORDER BY TRY_CONVERT(INT,SM.SessionNo),SM.SessionNo";
+                "ORDER BY SM.SessionDate, SM.StartTime, SM.SessionID";
 
             SqlParameter[] param =
             {
@@ -426,6 +437,7 @@ QuestionText
                     query,
                     param);
         }
+
         //-----------------------------------------------------
         // Build Question
         //-----------------------------------------------------
@@ -495,8 +507,6 @@ QuestionText
                 "HFQ_" +
                 questionID +
                 "_" +
-                sessionID +
-                "_" +
                 trainerID;
 
             hfQuestion.Value =
@@ -511,8 +521,6 @@ QuestionText
             hfTrainer.ID =
                 "HFT_" +
                 questionID +
-                "_" +
-                sessionID +
                 "_" +
                 trainerID;
 
@@ -529,8 +537,6 @@ QuestionText
                 "HFTYPE_" +
                 questionID +
                 "_" +
-                sessionID +
-                "_" +
                 trainerID;
 
             hfTrainerType.Value =
@@ -542,6 +548,17 @@ QuestionText
             Literal lbl =
      new Literal();
 
+            //lbl.ID =
+            //    "LBL_" +
+            //    questionID +
+            //    "_" +
+            //    trainerID;
+
+            //lbl.Text =
+            //    question +
+            //    (mandatory
+            //    ? " <span style='color:red;'>*</span>"
+            //    : "");
             lbl.Text =
 "<div class='question-label'>" +
 question +
@@ -550,6 +567,9 @@ question +
 : "")
 +
 "</div>";
+
+            //lbl.CssClass =
+            //    "question-label";
 
             Control answerControl =
     null;
@@ -712,6 +732,8 @@ question +
                 txt.CssClass =
                     "form-control";
 
+                //txt.TextMode =
+                //    TextBoxMode.Number;
                 txt.Attributes["type"] =
 "number";
 
@@ -760,14 +782,14 @@ question +
                 string questionID =
                     pnl.Attributes["QuestionID"];
 
-                string sessionID =
-                    pnl.Attributes["SessionID"];
-
                 string trainerID =
                     pnl.Attributes["TrainerID"];
 
                 string answerType =
                     pnl.Attributes["AnswerType"];
+
+                string sessionID =
+    pnl.Attributes["SessionID"];
 
                 Control ans =
                     pnl.FindControl(
@@ -839,16 +861,29 @@ question +
 
         private string GenerateFeedbackID()
         {
-            return Guid.NewGuid()
-                .ToString("N")
-                .ToUpper();
-        }
+            //Random rnd =
+            //    new Random();
 
+            //return
+            //    "FDB" +
+            //    DateTime.Now.ToString("yyyyMMddHHmmssfff") +
+            //    rnd.Next(1000, 9999).ToString();
+            return Guid.NewGuid()
+.ToString("N")
+.ToUpper();
+        }
         private string GenerateFeedbackDetailID()
         {
+            //Random rnd =
+            //    new Random();
+
+            //return
+            //    "FDD" +
+            //    DateTime.Now.ToString("yyyyMMddHHmmssfff") +
+            //    rnd.Next(1000, 9999).ToString();
             return Guid.NewGuid()
-                .ToString("N")
-                .ToUpper();
+.ToString("N")
+.ToUpper();
         }
 
         protected void btnSubmit_Click(
@@ -867,7 +902,6 @@ question +
 
                     return;
                 }
-
                 if (IsFeedbackSubmitted())
                 {
                     lblMessage.Text =
@@ -905,6 +939,9 @@ question +
 
                 btnSubmit.Enabled =
                     false;
+
+                //btnCancel.Enabled =
+                //    false;
 
                 bool certificateGenerated =
                     TryGenerateCertificate(
@@ -1014,8 +1051,10 @@ GETDATE()
             }
             catch
             {
+                // Logging failure must not affect feedback submission.
             }
         }
+
 
         private bool IsFeedbackSubmitted()
         {
@@ -1049,7 +1088,6 @@ EmpID=@EmpID
                 param))
                 > 0;
         }
-
         private void SaveFeedback(
     string feedbackID)
         {
