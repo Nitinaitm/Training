@@ -489,35 +489,36 @@
 
                 </div>
 
-                <div class="col-lg-4 mb-3">
+                <!-- Training Requirements -->
 
-                    <label class="form-label">
-                        Hostel Required for Trainee ? *
-                    </label>
+                <div class="col-12 mb-3">
+                    <label class="form-label">Training Requirements</label>
 
-                    <asp:DropDownList
-                        ID="ddlHostelRequired"
-                        runat="server"
-                        CssClass="form-select">
-
-                        <asp:ListItem Text="-- Select --" Value=""></asp:ListItem>
-                        <asp:ListItem Text="Yes" Value="Yes"></asp:ListItem>
-                        <asp:ListItem Text="No" Value="No"></asp:ListItem>
-
-                    </asp:DropDownList>
-
-                    <asp:RequiredFieldValidator
-                        ID="rfvHostelRequired"
-                        runat="server"
-                        ControlToValidate="ddlHostelRequired"
-                        InitialValue=""
-                        ValidationGroup="SaveGroup"
-                        CssClass="validation"
-                        ErrorMessage="Select Hostel Requirement"
-                        Display="Dynamic">
-                    </asp:RequiredFieldValidator>
-
+                    <div class="row">
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                            <asp:CheckBox ID="chkAttendanceRequired" runat="server" Text="Attendance" Checked="true" />
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                            <asp:CheckBox ID="chkPreTrainingAssessment" runat="server" Text="Pre-Training Assessment" Checked="true" />
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                            <asp:CheckBox ID="chkPostTrainingAssessment" runat="server" Text="Post-Training Assessment" Checked="true" />
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                            <asp:CheckBox ID="chkFeedbackRequired" runat="server" Text="Feedback" Checked="true" />
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                            <asp:CheckBox ID="chkCertificateRequired" runat="server" Text="Certificate" Checked="true" />
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                            <asp:CheckBox ID="chkTrainerHostelRequired" runat="server" Text="Trainer Hostel" Checked="true" />
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                            <asp:CheckBox ID="chkTraineeHostelRequired" runat="server" Text="Trainee Hostel" Checked="true" />
+                        </div>
+                    </div>
                 </div>
+
                 <!-- Remarks -->
 
                 <div class="col-lg-4 mb-3">
@@ -702,88 +703,37 @@
                     });
             }
 
-
-
-            //if ($('#lstDesignation').length) {
-            //    if ($('#lstDesignation')
-            //        .hasClass(
-            //            'select2-hidden-accessible')) {
-            //        $('#lstDesignation')
-            //            .select2('destroy');
-            //    }
-
-            //    $('#lstDesignation')
-            //        .select2({
-
-            //            placeholder:
-            //                'Select Designation',
-
-            //            width: '100%'
-
-            //        });
-            //}
-
         }
 
-
-
-        $(document)
-            .ready(function () {
-
-                initControls();
-
-            });
-
-
-        if (typeof (Sys) !== "undefined") {
-            Sys.Application.add_load(
-                function () {
-
-                    initControls();
-
-                });
-        }
-
-    </script>
-    <script>
         function calculateDays() {
+            var from = $('#txtDateFrom').val();
+            var to = $('#txtDateTo').val();
 
-            var from = document.getElementById("txtDateFrom").value;
-
-            var to = document.getElementById("txtDateTo").value;
-
-            if (from == "" || to == "")
+            if (!from || !to) {
+                $('#txtNoOfDays').val('');
                 return;
+            }
 
             var p1 = from.split('-');
-
             var p2 = to.split('-');
 
             var d1 = new Date(p1[2], p1[1] - 1, p1[0]);
-
             var d2 = new Date(p2[2], p2[1] - 1, p2[0]);
 
-            var diff = d2 - d1;
+            var diff = (d2 - d1) / (1000 * 60 * 60 * 24);
 
-            var days = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-
-            if (days > 0)
-                document.getElementById("txtNoOfDays").value = days;
-            else
-                document.getElementById("txtNoOfDays").value = "";
-        }
-    </script>
-    <script>
-
-        function isNumber(evt) {
-            var charCode = (evt.which) ? evt.which : evt.keyCode;
-
-            if (charCode >= 48 && charCode <= 57) {
-                return true;
+            if (diff >= 0) {
+                $('#txtNoOfDays').val(diff + 1);
             }
-
-            return false;
+            else {
+                $('#txtNoOfDays').val('');
+            }
         }
 
+        $(document).ready(function () {
+            initControls();
+        });
+
     </script>
+
 </asp:Content>
