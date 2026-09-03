@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web;
@@ -69,6 +69,11 @@ namespace Training.Trainee
 
 
                 CheckAssignedTraining();
+
+                if (!CheckPreTrainingRequired())
+                {
+                    return;
+                }
 
                 CheckPublishedTest();
 
@@ -209,6 +214,46 @@ namespace Training.Trainee
             }
         }
 
+        private bool CheckPreTrainingRequired()
+        {
+            string sql =
+                "SELECT InitialAssessmentRequired " +
+                "FROM TrainingDetails " +
+                "WHERE TrainingID=@TrainingID";
+
+            SqlParameter[] parameter =
+            {
+        new SqlParameter(
+            "@TrainingID",
+            ViewState["TrainingID"])
+    };
+
+            object result =
+                objDB.ExecuteScalar(
+                    sql,
+                    parameter);
+
+            if
+            (
+                result == null
+                ||
+                result == DBNull.Value
+                ||
+                !Convert.ToBoolean(result)
+            )
+            {
+                ScriptManager.RegisterStartupScript(
+                    this,
+                    GetType(),
+                    "PreTrainingRequired",
+                    "alert('Pre-Training Assessment is not required for this training.');window.location='MySessions.aspx';",
+                    true);
+
+                return false;
+            }
+
+            return true;
+        }
         private void SetRemainingTime()
         {
             string sql =
