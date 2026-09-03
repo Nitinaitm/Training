@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
@@ -62,7 +62,7 @@ namespace Training.Trainee
                 if (!CanSubmitFeedback())
                 {
                     lblMessage.Text =
-                        "Feedback is not available. Please complete all required published tests first.";
+                        "Feedback is not available. Please complete attendance and all required assessments first.";
 
                     lblMessage.ForeColor =
                         System.Drawing.Color.Red;
@@ -101,21 +101,18 @@ namespace Training.Trainee
         {
             string query =
                 "SELECT " +
-                "COUNT(*) AS PublishedTests," +
-                "COUNT(TA.TestID) AS CompletedTests " +
-                "FROM TestMaster TM " +
-                "INNER JOIN SessionMaster SM " +
-                "ON SM.SessionID=TM.SessionID " +
-                "LEFT JOIN " +
-                "(" +
-                "SELECT DISTINCT TestID " +
-                "FROM TestAttempt " +
-                "WHERE EmpID=@EmpID " +
-                "AND Submitted=1" +
-                ") TA " +
-                "ON TA.TestID=TM.TestID " +
-                "WHERE SM.TrainingID=@TrainingID " +
-                "AND TM.IsPublished=1";
+                "TD.AttendanceRequired," +
+                "TD.InitialAssessmentRequired," +
+                "TD.FinalAssessmentRequired," +
+                "TD.FeedbackRequired," +
+                "ISNULL(TP.AttendanceCompleted,0) AS AttendanceCompleted," +
+                "ISNULL(TP.PreExamCompleted,0) AS PreExamCompleted," +
+                "ISNULL(TP.PostExamCompleted,0) AS PostExamCompleted " +
+                "FROM TrainingDetails TD " +
+                "LEFT JOIN TrainingProgress TP " +
+                "ON TP.TrainingID=TD.TrainingID " +
+                "AND TP.EmpID=@EmpID " +
+                "WHERE TD.TrainingID=@TrainingID";
 
             SqlParameter[] param =
             {
@@ -138,25 +135,37 @@ namespace Training.Trainee
                 return false;
             }
 
-            int publishedTests =
-                Convert.ToInt32(
-                    dt.Rows[0]["PublishedTests"]);
+            DataRow dr = dt.Rows[0];
 
-            int completedTests =
-                Convert.ToInt32(
-                    dt.Rows[0]["CompletedTests"]);
+            bool feedbackRequired =
+                Convert.ToBoolean(dr["FeedbackRequired"]);
 
-            if (publishedTests == 0)
+            bool attendanceCompleted =
+                Convert.ToBoolean(dr["AttendanceCompleted"]);
+
+            bool preRequired =
+                Convert.ToBoolean(dr["InitialAssessmentRequired"]);
+
+            bool postRequired =
+                Convert.ToBoolean(dr["FinalAssessmentRequired"]);
+
+            bool preCompleted =
+                Convert.ToBoolean(dr["PreExamCompleted"]);
+
+            bool postCompleted =
+                Convert.ToBoolean(dr["PostExamCompleted"]);
+
+            if (!feedbackRequired || !attendanceCompleted)
             {
                 return false;
             }
 
-            if
-            (
-                publishedTests
-                !=
-                completedTests
-            )
+            if (preRequired && !preCompleted)
+            {
+                return false;
+            }
+
+            if (postRequired && !postCompleted)
             {
                 return false;
             }
@@ -283,6 +292,8 @@ FCM.DisplayOrder
                 BuildQuestion(
                     drQuestion,
                     "",
+                    "",
+                    "",
                     "");
             }
         }
@@ -294,17 +305,28 @@ FCM.DisplayOrder
         private void BuildTrainerCategory(
      string categoryID)
         {
-            DataTable dtTrainer =
-                GetTrainerList();
+            DataTable dtSessionTrainer =
+                GetSessionTrainerList();
 
-            foreach (DataRow drTrainer in dtTrainer.Rows)
+            foreach (DataRow drSession in dtSessionTrainer.Rows)
             {
+                Literal sessionTitle =
+                    new Literal();
+
+                sessionTitle.Text =
+                    "<div class='session-title'>Session: " +
+                    drSession["SessionName"].ToString() +
+                    "</div>";
+
+                phFeedback.Controls.Add(
+                    sessionTitle);
+
                 Literal trainerTitle =
                     new Literal();
 
                 trainerTitle.Text =
-                    "<div class='trainer-title'>" +
-                    drTrainer["TrainerName"].ToString() +
+                    "<div class='trainer-title'>Trainer: " +
+                    drSession["TrainerName"].ToString() +
                     "</div>";
 
                 phFeedback.Controls.Add(
@@ -318,8 +340,10 @@ FCM.DisplayOrder
                 {
                     BuildQuestion(
                         drQuestion,
-                        drTrainer["TrainerID"].ToString(),
-                        drTrainer["TrainerType"].ToString());
+                        drSession["SessionID"].ToString(),
+                        drSession["SessionName"].ToString(),
+                        drSession["TrainerID"].ToString(),
+                        drSession["TrainerType"].ToString());
                 }
             }
         }
@@ -365,13 +389,15 @@ QuestionText
         }
 
         //-----------------------------------------------------
-        // Get Trainer List
+        // Get Session Trainer List
         //-----------------------------------------------------
 
-        private DataTable GetTrainerList()
+        private DataTable GetSessionTrainerList()
         {
             string query =
-                "SELECT DISTINCT " +
+                "SELECT " +
+                "SM.SessionID," +
+                "SM.SessionName," +
                 "TR.TrainerID," +
                 "TR.TrainerType," +
                 "CASE " +
@@ -386,7 +412,7 @@ QuestionText
                 "ON EB.EmpID=TR.EmpID " +
                 "WHERE SM.TrainingID=@TrainingID " +
                 "AND ISNULL(SM.TrainerID,'')<>'' " +
-                "ORDER BY TrainerName";
+                "ORDER BY TRY_CONVERT(INT,SM.SessionNo),SM.SessionNo";
 
             SqlParameter[] param =
             {
@@ -406,6 +432,8 @@ QuestionText
 
         private void BuildQuestion(
      DataRow drQuestion,
+     string sessionID,
+     string sessionName,
      string trainerID,
      string trainerType)
         {
@@ -442,6 +470,12 @@ QuestionText
             pnl.Attributes["QuestionID"] =
     questionID;
 
+            pnl.Attributes["SessionID"] =
+                sessionID;
+
+            pnl.Attributes["SessionName"] =
+                sessionName;
+
             pnl.Attributes["TrainerID"] =
                 trainerID;
 
@@ -461,6 +495,8 @@ QuestionText
                 "HFQ_" +
                 questionID +
                 "_" +
+                sessionID +
+                "_" +
                 trainerID;
 
             hfQuestion.Value =
@@ -475,6 +511,8 @@ QuestionText
             hfTrainer.ID =
                 "HFT_" +
                 questionID +
+                "_" +
+                sessionID +
                 "_" +
                 trainerID;
 
@@ -491,6 +529,8 @@ QuestionText
                 "HFTYPE_" +
                 questionID +
                 "_" +
+                sessionID +
+                "_" +
                 trainerID;
 
             hfTrainerType.Value =
@@ -502,17 +542,6 @@ QuestionText
             Literal lbl =
      new Literal();
 
-            //lbl.ID =
-            //    "LBL_" +
-            //    questionID +
-            //    "_" +
-            //    trainerID;
-
-            //lbl.Text =
-            //    question +
-            //    (mandatory
-            //    ? " <span style='color:red;'>*</span>"
-            //    : "");
             lbl.Text =
 "<div class='question-label'>" +
 question +
@@ -521,9 +550,6 @@ question +
 : "")
 +
 "</div>";
-
-            //lbl.CssClass =
-            //    "question-label";
 
             Control answerControl =
     null;
@@ -543,6 +569,8 @@ question +
                 rbl.ID =
                     "ANS_" +
                     questionID +
+                    "_" +
+                    sessionID +
                     "_" +
                     trainerID;
 
@@ -586,6 +614,8 @@ question +
                     "ANS_" +
                     questionID +
                     "_" +
+                    sessionID +
+                    "_" +
                     trainerID;
 
                 rbl.RepeatDirection =
@@ -618,6 +648,8 @@ question +
                     "ANS_" +
                     questionID +
                     "_" +
+                    sessionID +
+                    "_" +
                     trainerID;
 
                 txt.CssClass =
@@ -642,6 +674,8 @@ question +
                 txt.ID =
                     "ANS_" +
                     questionID +
+                    "_" +
+                    sessionID +
                     "_" +
                     trainerID;
 
@@ -671,13 +705,13 @@ question +
                     "ANS_" +
                     questionID +
                     "_" +
+                    sessionID +
+                    "_" +
                     trainerID;
 
                 txt.CssClass =
                     "form-control";
 
-                //txt.TextMode =
-                //    TextBoxMode.Number;
                 txt.Attributes["type"] =
 "number";
 
@@ -726,6 +760,9 @@ question +
                 string questionID =
                     pnl.Attributes["QuestionID"];
 
+                string sessionID =
+                    pnl.Attributes["SessionID"];
+
                 string trainerID =
                     pnl.Attributes["TrainerID"];
 
@@ -736,6 +773,8 @@ question +
                     pnl.FindControl(
                     "ANS_" +
                     questionID +
+                    "_" +
+                    sessionID +
                     "_" +
                     trainerID);
                 if (ans == null)
@@ -800,29 +839,16 @@ question +
 
         private string GenerateFeedbackID()
         {
-            //Random rnd =
-            //    new Random();
-
-            //return
-            //    "FDB" +
-            //    DateTime.Now.ToString("yyyyMMddHHmmssfff") +
-            //    rnd.Next(1000, 9999).ToString();
             return Guid.NewGuid()
-.ToString("N")
-.ToUpper();
+                .ToString("N")
+                .ToUpper();
         }
+
         private string GenerateFeedbackDetailID()
         {
-            //Random rnd =
-            //    new Random();
-
-            //return
-            //    "FDD" +
-            //    DateTime.Now.ToString("yyyyMMddHHmmssfff") +
-            //    rnd.Next(1000, 9999).ToString();
             return Guid.NewGuid()
-.ToString("N")
-.ToUpper();
+                .ToString("N")
+                .ToUpper();
         }
 
         protected void btnSubmit_Click(
@@ -834,13 +860,14 @@ question +
                 if (!CanSubmitFeedback())
                 {
                     lblMessage.Text =
-                        "Feedback cannot be submitted until all required published tests are completed.";
+                        "Feedback cannot be submitted until attendance and all required assessments are completed.";
 
                     lblMessage.ForeColor =
                         System.Drawing.Color.Red;
 
                     return;
                 }
+
                 if (IsFeedbackSubmitted())
                 {
                     lblMessage.Text =
@@ -878,9 +905,6 @@ question +
 
                 btnSubmit.Enabled =
                     false;
-
-                //btnCancel.Enabled =
-                //    false;
 
                 bool certificateGenerated =
                     TryGenerateCertificate(
@@ -990,10 +1014,8 @@ GETDATE()
             }
             catch
             {
-                // Logging failure must not affect feedback submission.
             }
         }
-
 
         private bool IsFeedbackSubmitted()
         {
@@ -1027,6 +1049,7 @@ EmpID=@EmpID
                 param))
                 > 0;
         }
+
         private void SaveFeedback(
     string feedbackID)
         {
@@ -1127,6 +1150,9 @@ GETDATE(),
                 string categoryID =
                     pnl.Attributes["CategoryID"];
 
+                string sessionID =
+                    pnl.Attributes["SessionID"];
+
                 string trainerID =
                     pnl.Attributes["TrainerID"];
 
@@ -1146,6 +1172,8 @@ GETDATE(),
                     pnl.FindControl(
                     "ANS_" +
                     questionID +
+                    "_" +
+                    sessionID +
                     "_" +
                     trainerID);
 
@@ -1194,6 +1222,7 @@ TrainingID,
 EmpID,
 CategoryID,
 QuestionID,
+SessionID,
 TrainerID,
 TrainerType,
 AnswerType,
@@ -1209,6 +1238,7 @@ VALUES
 @EmpID,
 @CategoryID,
 @QuestionID,
+@SessionID,
 @TrainerID,
 @TrainerType,
 @AnswerType,
@@ -1243,6 +1273,10 @@ GETDATE()
             new SqlParameter(
                 "@QuestionID",
                 questionID),
+
+            new SqlParameter(
+                "@SessionID",
+                sessionID),
 
             new SqlParameter(
                 "@TrainerID",
