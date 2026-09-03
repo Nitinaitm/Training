@@ -457,12 +457,16 @@ GridViewCommandEventArgs e)
                 "Complete Remaining Sessions";
         }
 
-      
-
         private void LoadWorkflow()
         {
             string sql =
                 "SELECT " +
+                "TD.InitialAssessmentRequired," +
+                "TD.FinalAssessmentRequired," +
+                "TD.FeedbackRequired," +
+                "ISNULL(TP.PreExamCompleted,0) PreExamCompleted," +
+                "ISNULL(TP.PostExamCompleted,0) PostExamCompleted," +
+                "ISNULL(TP.BatchFeedbackCompleted,0) BatchFeedbackCompleted," +
                 "CASE " +
                 "WHEN NOT EXISTS " +
                 "( " +
@@ -481,44 +485,86 @@ GridViewCommandEventArgs e)
                 "AND EmpID=@EmpID " +
                 "AND CertificateStatus='A' " +
                 ") " +
-                "THEN 1 ELSE 0 END CertificateReady";
+                "THEN 1 ELSE 0 END CertificateReady " +
+                "FROM TrainingDetails TD " +
+                "LEFT JOIN TrainingProgress TP " +
+                "ON TP.TrainingID=TD.TrainingID " +
+                "AND TP.EmpID=@EmpID " +
+                "WHERE TD.TrainingID=@TrainingID";
 
             SqlParameter[] param =
             {
-        new SqlParameter(
-            "@TrainingID",
-            TrainingID),
+                new SqlParameter(
+                    "@TrainingID",
+                    TrainingID),
 
-        new SqlParameter(
-            "@EmpID",
-            EmpID)
-    };
+                new SqlParameter(
+                    "@EmpID",
+                    EmpID)
+            };
 
             DataTable dt =
                 objDB.GetDataTable(
                     sql,
                     param);
 
+            if
+            (
+                dt.Rows.Count == 0
+            )
+            {
+                return;
+            }
+
+            DataRow dr =
+                dt.Rows[0];
+
             bool attendanceDone =
                 Convert.ToBoolean(
-                    dt.Rows[0]["AttendanceDone"]);
+                    dr["AttendanceDone"]);
 
-            bool certificateReady =
+            bool preRequired =
                 Convert.ToBoolean(
-                    dt.Rows[0]["CertificateReady"]);
+                    dr["InitialAssessmentRequired"]);
+
+            bool postRequired =
+                Convert.ToBoolean(
+                    dr["FinalAssessmentRequired"]);
+
+            bool feedbackRequired =
+                Convert.ToBoolean(
+                    dr["FeedbackRequired"]);
+
+            bool preDone =
+                Convert.ToBoolean(
+                    dr["PreExamCompleted"]);
+
+            bool postDone =
+                Convert.ToBoolean(
+                    dr["PostExamCompleted"]);
+
+            bool batchFeedbackDone =
+                Convert.ToBoolean(
+                    dr["BatchFeedbackCompleted"]);
+
+            bool requiredTestsDone =
+                (!preRequired || preDone)
+                &&
+                (!postRequired || postDone);
 
             btnBatchFeedback.Enabled =
-                attendanceDone;
+                feedbackRequired
+                &&
+                attendanceDone
+                &&
+                requiredTestsDone
+                &&
+                !batchFeedbackDone;
 
             btnCertificate.Enabled =
-                certificateReady;
+                Convert.ToBoolean(
+                    dr["CertificateReady"]);
         }
-     
-       
-
-        
-
-      
 
         protected void btnBatchFeedback_Click(
      object sender,
