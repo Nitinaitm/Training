@@ -34,8 +34,7 @@ namespace Training.Admin
                 ddlTrainingOrganizer.Items.Insert(0, new ListItem("Select Organizer", ""));
                 ddlTrainingLocation.Items.Insert(0, new ListItem("Select Location", ""));
                 BindCourse(); BindStartTime();
-                if (Request.QueryString["mode"] == "edit" && Session["TrainingID"] != null)
-                    LoadTrainingForEdit(Session["TrainingID"].ToString());
+                if (Request.QueryString["mode"] == "edit" && Session["TrainingID"] != null) LoadTrainingForEdit(Session["TrainingID"].ToString());
                 else SetButtonStatus();
                 LoadPlugins();
             }
@@ -51,11 +50,7 @@ namespace Training.Admin
             if (ddlTrainingType.Items.FindByText(Convert.ToString(r["TrainingType"])) != null) ddlTrainingType.SelectedItem.Text = Convert.ToString(r["TrainingType"]);
             if (ddlTrainingOrganizer.Items.FindByText(Convert.ToString(r["TrainingOrganizer"])) != null) ddlTrainingOrganizer.SelectedItem.Text = Convert.ToString(r["TrainingOrganizer"]);
             if (ddlTrainingLocation.Items.FindByText(Convert.ToString(r["TrainingLocation"])) != null) ddlTrainingLocation.SelectedItem.Text = Convert.ToString(r["TrainingLocation"]);
-            txtBatch.Text = Convert.ToString(r["Batch"]);
-            txtNoOfDays.Text = Convert.ToString(r["NoOfDays"]);
-            txtStrength.Text = Convert.ToString(r["BatchStrength"]);
-            txtRemarks.Text = Convert.ToString(r["Remarks"]);
-            txtHours.Text = Convert.ToString(r["Hours"]);
+            txtBatch.Text = Convert.ToString(r["Batch"]); txtNoOfDays.Text = Convert.ToString(r["NoOfDays"]); txtStrength.Text = Convert.ToString(r["BatchStrength"]); txtRemarks.Text = Convert.ToString(r["Remarks"]); txtHours.Text = Convert.ToString(r["Hours"]);
             if (ddlCourse.Items.FindByValue(Convert.ToString(r["CourseID"])) != null) ddlCourse.SelectedValue = Convert.ToString(r["CourseID"]);
             if (ddlTrainingCategory.Items.FindByText(Convert.ToString(r["TrainingCategory"])) != null) ddlTrainingCategory.SelectedItem.Text = Convert.ToString(r["TrainingCategory"]);
             if (ddlStartTime.Items.FindByValue(Convert.ToString(r["StartTime"])) != null) ddlStartTime.SelectedValue = Convert.ToString(r["StartTime"]);
@@ -82,20 +77,16 @@ namespace Training.Admin
             {
                 string trainingType = ddlTrainingType.SelectedItem.Text.Trim().ToUpper();
                 trainingType = trainingType.Length >= 2 ? trainingType.Substring(0, 2) : trainingType;
-
                 string organizer = ddlTrainingOrganizer.SelectedItem.Text.Replace(" ", "").ToUpper();
                 string location = ddlTrainingLocation.SelectedItem.Text.Replace(" ", "").ToUpper();
                 location = location.Length >= 3 ? location.Substring(0, 3) : location;
                 string courseID = ddlCourse.SelectedValue.ToString();
                 string batch = txtBatch.Text.Trim().Replace(" ", "").ToUpper();
-
                 DateTime fromDate = DateTime.ParseExact(txtDateFrom.Text.Trim(), "dd-MM-yyyy", CultureInfo.InvariantCulture);
                 DateTime toDate = DateTime.ParseExact(txtDateTo.Text.Trim(), "dd-MM-yyyy", CultureInfo.InvariantCulture);
                 string fromPart = fromDate.ToString("ddMMyy");
                 string toPart = toDate.ToString("ddMMyy");
-
                 string prefix = "TR" + "-" + courseID + "-" + trainingType + "-" + organizer + "-" + location + "-" + batch + "-" + fromPart + "-" + toPart;
-
                 using (SqlConnection con = new SqlConnection(constr))
                 {
                     con.Open();
@@ -107,9 +98,7 @@ namespace Training.Admin
                     }
                 }
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         protected void btnSave_Click(object sender, EventArgs e)
@@ -121,12 +110,7 @@ namespace Training.Admin
                 if (toDate < fromDate) { lblMessage.Text = "To Date cannot be before From Date."; lblMessage.ForeColor = Color.Red; return; }
                 if (string.IsNullOrWhiteSpace(txtBatch.Text) || ddlTrainingType.SelectedValue == "" || ddlTrainingOrganizer.SelectedValue == "" || ddlTrainingLocation.SelectedValue == "" || ddlTrainingCategory.SelectedValue == "" || ddlCourse.SelectedValue == "") { lblMessage.Text = "Please complete all mandatory batch details."; lblMessage.ForeColor = Color.Red; return; }
                 string trainingID = txtTrainingID.Text.Trim();
-                if (string.IsNullOrEmpty(trainingID))
-                {
-                    GenerateTrainingID();
-                    trainingID = txtTrainingID.Text.Trim();
-                    if (string.IsNullOrEmpty(trainingID)) { lblMessage.Text = "Unable to generate Training ID. Please check Training Type, Organizer, Location, Course, Batch and dates."; lblMessage.ForeColor = Color.Red; return; }
-                }
+                if (string.IsNullOrEmpty(trainingID)) { GenerateTrainingID(); trainingID = txtTrainingID.Text.Trim(); if (string.IsNullOrEmpty(trainingID)) { lblMessage.Text = "Unable to generate Training ID. Please check Training Type, Organizer, Location, Course, Batch and dates."; lblMessage.ForeColor = Color.Red; return; } }
                 using (SqlConnection con = new SqlConnection(constr))
                 {
                     con.Open();
@@ -134,17 +118,13 @@ namespace Training.Admin
                     if (!string.IsNullOrEmpty(oldTrainingID))
                     {
                         using (SqlCommand cmd = new SqlCommand(@"UPDATE TrainingDetails SET TrainingID=@NewTrainingID,TrainingType=@TrainingType,TrainingOrganizer=@TrainingOrganizer,TrainingLocation=@TrainingLocation,Batch=@Batch,DateFrom=@DateFrom,DateTo=@DateTo,CourseID=@CourseID,TrainingCategory=@TrainingCategory,NoOfDays=@NoOfDays,StartTime=@StartTime,Remarks=@Remarks,BatchStrength=@BatchStrength,Hours=@Hours,UpdatedOn=GETDATE(),UpdatedBy='Admin',HostelRequiredTrainee=@HostelRequiredTrainee,AttendanceRequired=@AttendanceRequired,AssessmentRequired=@AssessmentRequired,AssessmentMode=@AssessmentMode,InitialAssessmentRequired=@InitialAssessmentRequired,SessionAssessmentRequired=@SessionAssessmentRequired,FinalAssessmentRequired=@FinalAssessmentRequired,FeedbackRequired=@FeedbackRequired,CertificateRequired=@CertificateRequired,TrainerHostelRequired=@TrainerHostelRequired,TraineeHostelRequired=@TraineeHostelRequired WHERE TrainingID=@OldTrainingID", con))
-                        {
-                            AddParameters(cmd, trainingID, oldTrainingID, fromDate, toDate); cmd.ExecuteNonQuery();
-                        }
+                        { AddParameters(cmd, trainingID, oldTrainingID, fromDate, toDate); cmd.ExecuteNonQuery(); }
                         Session["TrainingID"] = trainingID; lblMessage.Text = "Batch Updated Successfully";
                     }
                     else
                     {
-                        using (SqlCommand cmd = new SqlCommand(@"INSERT INTO TrainingDetails(TrainingID,TrainingType,TrainingOrganizer,TrainingLocation,Batch,DateFrom,DateTo,CourseID,TrainingCategory,NoOfDays,StartTime,Remarks,BatchStrength,Hours,CreatedOn,CreatedBy,HostelRequiredTrainee,AttendanceRequired,AssessmentRequired,AssessmentMode,InitialAssessmentRequired,SessionAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired,TrainerHostelRequired,TraineeHostelRequired) VALUES(@TrainingID,@TrainingType,@TrainingOrganizer,@TrainingLocation,@Batch,@DateFrom,@DateTo,@CourseID,@TrainingCategory,@NoOfDays,@StartTime,@Remarks,@BatchStrength,@Hours,GETDATE(),@CreatedBy,@HostelRequiredTrainee,@AttendanceRequired,@AssessmentRequired,@AssessmentMode,@InitialAssessmentRequired,@SessionAssessmentRequired,@FinalAssessmentRequired,@FinalAssessmentRequired,@FeedbackRequired,@CertificateRequired,@TrainerHostelRequired,@TraineeHostelRequired)", con))
-                        {
-                            AddParameters(cmd, trainingID, null, fromDate, toDate); cmd.Parameters.AddWithValue("@CreatedBy", "Admin"); cmd.ExecuteNonQuery();
-                        }
+                        using (SqlCommand cmd = new SqlCommand(@"INSERT INTO TrainingDetails(TrainingID,TrainingType,TrainingOrganizer,TrainingLocation,Batch,DateFrom,DateTo,CourseID,TrainingCategory,NoOfDays,StartTime,Remarks,BatchStrength,Hours,CreatedOn,CreatedBy,HostelRequiredTrainee,AttendanceRequired,AssessmentRequired,AssessmentMode,InitialAssessmentRequired,SessionAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired,TrainerHostelRequired,TraineeHostelRequired) VALUES(@TrainingID,@TrainingType,@TrainingOrganizer,@TrainingLocation,@Batch,@DateFrom,@DateTo,@CourseID,@TrainingCategory,@NoOfDays,@StartTime,@Remarks,@BatchStrength,@Hours,GETDATE(),@CreatedBy,@HostelRequiredTrainee,@AttendanceRequired,@AssessmentRequired,@AssessmentMode,@InitialAssessmentRequired,@SessionAssessmentRequired,@FinalAssessmentRequired,@FeedbackRequired,@CertificateRequired,@TrainerHostelRequired,@TraineeHostelRequired)", con))
+                        { AddParameters(cmd, trainingID, null, fromDate, toDate); cmd.Parameters.AddWithValue("@CreatedBy", "Admin"); cmd.ExecuteNonQuery(); }
                         Session["TrainingID"] = trainingID; lblMessage.Text = "Batch Created Successfully";
                     }
                     lblMessage.ForeColor = Color.Green; SetButtonStatus();
@@ -157,8 +137,7 @@ namespace Training.Admin
 
         private void AddParameters(SqlCommand cmd, string trainingID, string oldTrainingID, DateTime fromDate, DateTime toDate)
         {
-            if (oldTrainingID != null) cmd.Parameters.AddWithValue("@NewTrainingID", trainingID);
-            else cmd.Parameters.AddWithValue("@TrainingID", trainingID);
+            if (oldTrainingID != null) cmd.Parameters.AddWithValue("@NewTrainingID", trainingID); else cmd.Parameters.AddWithValue("@TrainingID", trainingID);
             if (oldTrainingID != null) cmd.Parameters.AddWithValue("@OldTrainingID", oldTrainingID);
             cmd.Parameters.AddWithValue("@TrainingType", ddlTrainingType.SelectedItem.Text); cmd.Parameters.AddWithValue("@TrainingOrganizer", ddlTrainingOrganizer.SelectedItem.Text); cmd.Parameters.AddWithValue("@TrainingLocation", ddlTrainingLocation.SelectedItem.Text); cmd.Parameters.AddWithValue("@Batch", txtBatch.Text.Trim()); cmd.Parameters.AddWithValue("@DateFrom", fromDate.ToString("dd-MM-yyyy")); cmd.Parameters.AddWithValue("@DateTo", toDate.ToString("dd-MM-yyyy")); cmd.Parameters.AddWithValue("@CourseID", ddlCourse.SelectedValue); cmd.Parameters.AddWithValue("@TrainingCategory", ddlTrainingCategory.SelectedItem.Text); cmd.Parameters.AddWithValue("@NoOfDays", txtNoOfDays.Text.Trim()); cmd.Parameters.AddWithValue("@StartTime", ddlStartTime.SelectedValue); cmd.Parameters.AddWithValue("@BatchStrength", txtStrength.Text.Trim()); cmd.Parameters.AddWithValue("@Remarks", txtRemarks.Text.Trim()); cmd.Parameters.AddWithValue("@Hours", txtHours.Text.Trim()); cmd.Parameters.AddWithValue("@HostelRequiredTrainee", chkTraineeHostelRequired.Checked ? "Yes" : "No"); cmd.Parameters.AddWithValue("@AttendanceRequired", chkAttendanceRequired.Checked); cmd.Parameters.AddWithValue("@AssessmentRequired", chkPreTrainingAssessment.Checked || chkPostTrainingAssessment.Checked); cmd.Parameters.AddWithValue("@AssessmentMode", DBNull.Value); cmd.Parameters.AddWithValue("@InitialAssessmentRequired", chkPreTrainingAssessment.Checked); cmd.Parameters.AddWithValue("@SessionAssessmentRequired", false); cmd.Parameters.AddWithValue("@FinalAssessmentRequired", chkPostTrainingAssessment.Checked); cmd.Parameters.AddWithValue("@FeedbackRequired", chkFeedbackRequired.Checked); cmd.Parameters.AddWithValue("@CertificateRequired", chkCertificateRequired.Checked); cmd.Parameters.AddWithValue("@TrainerHostelRequired", chkTrainerHostelRequired.Checked); cmd.Parameters.AddWithValue("@TraineeHostelRequired", chkTraineeHostelRequired.Checked);
         }
