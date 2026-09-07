@@ -69,10 +69,10 @@ namespace Training.Admin
             SetButtonStatus();
         }
 
-        private void BindTrainingType() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT TrainingType FROM TrainingMaster WHERE IsActive=1 ORDER BY TrainingType", con)) { con.Open(); ddlTrainingType.DataSource = cmd.ExecuteReader(); ddlTrainingType.DataTextField = "TrainingType"; ddlTrainingType.DataValueField = "TrainingType"; ddlTrainingType.DataBind(); } }
-        private void BindTrainingCategory() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT TrainingCategory FROM TrainingCategoryMaster WHERE IsActive=1 ORDER BY TrainingCategory", con)) { con.Open(); ddlTrainingCategory.DataSource = cmd.ExecuteReader(); ddlTrainingCategory.DataTextField = "TrainingCategory"; ddlTrainingCategory.DataValueField = "TrainingCategory"; ddlTrainingCategory.DataBind(); } }
-        private void BindOrganizer() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT TrainingOrganizer FROM TrainingOrganizerMaster WHERE IsActive=1 ORDER BY TrainingOrganizer", con)) { con.Open(); ddlTrainingOrganizer.DataSource = cmd.ExecuteReader(); ddlTrainingOrganizer.DataTextField = "TrainingOrganizer"; ddlTrainingOrganizer.DataValueField = "TrainingOrganizer"; ddlTrainingOrganizer.DataBind(); } }
-        private void BindLocation() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT TrainingLocation FROM TrainingLocationMaster WHERE IsActive=1 ORDER BY TrainingLocation", con)) { con.Open(); ddlTrainingLocation.DataSource = cmd.ExecuteReader(); ddlTrainingLocation.DataTextField = "TrainingLocation"; ddlTrainingLocation.DataValueField = "TrainingLocation"; ddlTrainingLocation.DataBind(); } }
+        private void BindTrainingType() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT TrainingType FROM TrainingMaster ORDER BY TrainingType", con)) { con.Open(); ddlTrainingType.DataSource = cmd.ExecuteReader(); ddlTrainingType.DataTextField = "TrainingType"; ddlTrainingType.DataValueField = "TrainingType"; ddlTrainingType.DataBind(); } }
+        private void BindTrainingCategory() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT TrainingCategory FROM TrainingCategoryMaster ORDER BY TrainingCategory", con)) { con.Open(); ddlTrainingCategory.DataSource = cmd.ExecuteReader(); ddlTrainingCategory.DataTextField = "TrainingCategory"; ddlTrainingCategory.DataValueField = "TrainingCategory"; ddlTrainingCategory.DataBind(); } }
+        private void BindOrganizer() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT TrainingOrganizer FROM TrainingOrganizerMaster ORDER BY TrainingOrganizer", con)) { con.Open(); ddlTrainingOrganizer.DataSource = cmd.ExecuteReader(); ddlTrainingOrganizer.DataTextField = "TrainingOrganizer"; ddlTrainingOrganizer.DataValueField = "TrainingOrganizer"; ddlTrainingOrganizer.DataBind(); } }
+        private void BindLocation() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT TrainingLocation FROM TrainingLocationMaster ORDER BY TrainingLocation", con)) { con.Open(); ddlTrainingLocation.DataSource = cmd.ExecuteReader(); ddlTrainingLocation.DataTextField = "TrainingLocation"; ddlTrainingLocation.DataValueField = "TrainingLocation"; ddlTrainingLocation.DataBind(); } }
         private void BindCourse() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT CourseID,CourseName FROM CourseMaster ORDER BY CourseName", con)) { con.Open(); ddlCourse.DataSource = cmd.ExecuteReader(); ddlCourse.DataTextField = "CourseName"; ddlCourse.DataValueField = "CourseID"; ddlCourse.DataBind(); } }
         private void BindStartTime() { ddlStartTime.Items.Clear(); ddlStartTime.Items.Add(new ListItem("Select Start Time", "")); for (int h = 0; h < 24; h++) for (int m = 0; m < 60; m += 30) { DateTime t = DateTime.Today.AddHours(h).AddMinutes(m); ddlStartTime.Items.Add(new ListItem(t.ToString("hh:mm tt"), t.ToString("HH:mm"))); } }
 
@@ -92,9 +92,9 @@ namespace Training.Admin
                     string oldTrainingID = Session["TrainingID"] == null ? null : Session["TrainingID"].ToString();
                     if (!string.IsNullOrEmpty(oldTrainingID))
                     {
-                        using (SqlCommand cmd = new SqlCommand(@"UPDATE TrainingDetails SET TrainingID=@NewTrainingID,TrainingType=@TrainingType,TrainingOrganizer=@TrainingOrganizer,TrainingLocation=@TrainingLocation,Batch=@Batch,DateFrom=@DateFrom,DateTo=@DateTo,CourseID=@CourseID,TrainingCategory=@TrainingCategory,NoOfDays=@NoOfDays,StartTime=@StartTime,Remarks=@Remarks,BatchStrength=@BatchStrength,Hours=@Hours,UpdatedOn=GETDATE(),UpdatedBy=@UpdatedBy,HostelRequiredTrainee=@HostelRequiredTrainee,AttendanceRequired=@AttendanceRequired,AssessmentRequired=@AssessmentRequired,AssessmentMode=@AssessmentMode,InitialAssessmentRequired=@InitialAssessmentRequired,SessionAssessmentRequired=@SessionAssessmentRequired,FinalAssessmentRequired=@FinalAssessmentRequired,FeedbackRequired=@FeedbackRequired,CertificateRequired=@CertificateRequired,TrainerHostelRequired=@TrainerHostelRequired,TraineeHostelRequired=@TraineeHostelRequired WHERE TrainingID=@OldTrainingID", con))
+                        using (SqlCommand cmd = new SqlCommand(@"UPDATE TrainingDetails SET TrainingID=@NewTrainingID,TrainingType=@TrainingType,TrainingOrganizer=@TrainingOrganizer,TrainingLocation=@TrainingLocation,Batch=@Batch,DateFrom=@DateFrom,DateTo=@DateTo,CourseID=@CourseID,TrainingCategory=@TrainingCategory,NoOfDays=@NoOfDays,StartTime=@StartTime,Remarks=@Remarks,BatchStrength=@BatchStrength,Hours=@Hours,UpdatedOn=GETDATE(),UpdatedBy='Admin',HostelRequiredTrainee=@HostelRequiredTrainee,AttendanceRequired=@AttendanceRequired,AssessmentRequired=@AssessmentRequired,AssessmentMode=@AssessmentMode,InitialAssessmentRequired=@InitialAssessmentRequired,SessionAssessmentRequired=@SessionAssessmentRequired,FinalAssessmentRequired=@FinalAssessmentRequired,FeedbackRequired=@FeedbackRequired,CertificateRequired=@CertificateRequired,TrainerHostelRequired=@TrainerHostelRequired,TraineeHostelRequired=@TraineeHostelRequired WHERE TrainingID=@OldTrainingID", con))
                         {
-                            AddParameters(cmd, trainingID, oldTrainingID, fromDate, toDate); cmd.Parameters.AddWithValue("@UpdatedBy", "Admin"); cmd.ExecuteNonQuery();
+                            AddParameters(cmd, trainingID, oldTrainingID, fromDate, toDate); cmd.ExecuteNonQuery();
                         }
                         Session["TrainingID"] = trainingID; lblMessage.Text = "Batch Updated Successfully";
                     }
@@ -112,10 +112,7 @@ namespace Training.Admin
             catch (Exception ex) { lblMessage.Text = ex.Message; lblMessage.ForeColor = Color.Red; }
         }
 
-        protected void btnUpdate_Click(object sender, EventArgs e)
-        {
-            btnSave_Click(sender, e);
-        }
+        protected void btnUpdate_Click(object sender, EventArgs e) { btnSave_Click(sender, e); }
 
         private void AddParameters(SqlCommand cmd, string trainingID, string oldTrainingID, DateTime fromDate, DateTime toDate)
         {
@@ -126,7 +123,7 @@ namespace Training.Admin
         }
 
         private void SetButtonStatus() { }
-        protected void btnCreateSessions_Click(object sender, EventArgs e) { Session["TrainingID"] = txtTrainingID.Text; Response.Redirect("~/Admin/CreateSession.aspx"); }
+        protected void btnCreateSessions_Click(object sender, EventArgs e) { Session["TrainingID"] = txtTrainingID.Text; Response.Redirect("~/Admin/AssignSession.aspx"); }
         protected void btnAssignTrainee_Click(object sender, EventArgs e) { Session["TrainingID"] = txtTrainingID.Text; Response.Redirect("~/Admin/AssignTrainee.aspx"); }
         protected void btnAssignFeedback_Click(object sender, EventArgs e) { Session["TrainingID"] = txtTrainingID.Text; Response.Redirect("~/Admin/AssignFeedback.aspx"); }
         private void LoadPlugins() { ScriptManager.RegisterStartupScript(this, GetType(), Guid.NewGuid().ToString(), "$('#ddlCourse').select2({width:'100%'});$('#ddlTrainingType').select2({width:'100%'});$('#ddlTrainingCategory').select2({width:'100%'});$('#ddlTrainingOrganizer').select2({width:'100%'});$('#ddlTrainingLocation').select2({width:'100%'});", true); }
