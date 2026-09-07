@@ -9,67 +9,24 @@ namespace Training.Trainee
     public partial class MyTrainings : System.Web.UI.Page
     {
         clsDataAccess objDB = new clsDataAccess();
-
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["EmpID"] == null) { Response.Redirect("~/Default.aspx"); return; }
-            if (!IsPostBack)
-            {
-                LoadCourse();
-                ViewState["SortExpression"] = "TrainingID";
-                ViewState["SortDirection"] = "DESC";
-                ddlStatus.SelectedIndex = 0;
-                LoadTraining();
-            }
+            if (!IsPostBack) { LoadCourse(); ViewState["SortExpression"]="TrainingID"; ViewState["SortDirection"]="DESC"; ddlStatus.SelectedIndex=0; LoadTraining(); }
         }
-
-        private string SortColumn()
-        {
-            string s = Convert.ToString(ViewState["SortExpression"]);
-            switch (s)
-            {
-                case "TrainingID": case "CourseName": case "TrainingType": case "TrainingOrganizer": case "Batch": case "DateFrom": case "DateTo": return s;
-                default: return "TrainingID";
-            }
-        }
-
-        private string SortDirection() { return Convert.ToString(ViewState["SortDirection"]) == "ASC" ? "ASC" : "DESC"; }
-
-        private void LoadCourse()
-        {
-            DataTable dt = objDB.GetDataTable("SELECT DISTINCT CM.CourseID,CM.CourseName FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TA.TrainingID=TD.TrainingID INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID WHERE TA.EmpID=@EmpID ORDER BY CM.CourseName", new SqlParameter("@EmpID", Session["EmpID"].ToString().ToUpperInvariant()));
-            ddlCourse.DataSource = dt; ddlCourse.DataTextField = "CourseName"; ddlCourse.DataValueField = "CourseID"; ddlCourse.DataBind(); ddlCourse.Items.Insert(0, new ListItem("All", ""));
-        }
-
-        protected void btnSearch_Click(object sender, EventArgs e) { gvTraining.PageIndex = 0; LoadTraining(); }
-        protected void btnReset_Click(object sender, EventArgs e) { txtTrainingID.Text = ""; ddlCourse.SelectedIndex = 0; ddlStatus.SelectedIndex = 0; ViewState["SortExpression"] = "TrainingID"; ViewState["SortDirection"] = "DESC"; gvTraining.PageIndex = 0; LoadTraining(); }
-        protected void gvTraining_PageIndexChanging(object sender, GridViewPageEventArgs e) { gvTraining.PageIndex = e.NewPageIndex; LoadTraining(); }
-        protected void gvTraining_Sorting(object sender, GridViewSortEventArgs e) { if (Convert.ToString(ViewState["SortExpression"]) == e.SortExpression) ViewState["SortDirection"] = Convert.ToString(ViewState["SortDirection"]) == "ASC" ? "DESC" : "ASC"; else { ViewState["SortExpression"] = e.SortExpression; ViewState["SortDirection"] = "ASC"; } LoadTraining(); }
-
-        protected void gvTraining_RowDataBound(object sender, GridViewRowEventArgs e)
-        {
-            if (e.Row.RowType != DataControlRowType.DataRow) return;
-            LinkButton f = (LinkButton)e.Row.FindControl("lnkFeedback"); LinkButton c = (LinkButton)e.Row.FindControl("lnkCertificate"); LinkButton a = (LinkButton)e.Row.FindControl("lnkAttendance");
-            if (f != null && !f.Enabled) f.CssClass = "btn btn-warning btn-sm disabled";
-            if (c != null && !c.Enabled) c.CssClass = "btn btn-info btn-sm disabled";
-            if (a != null && !a.Enabled) a.CssClass = "btn btn-primary btn-sm disabled";
-        }
-
-        protected void gvTraining_RowCommand(object sender, GridViewCommandEventArgs e)
-        {
-            string trainingID = e.CommandArgument.ToString(); Session["TrainingID"] = trainingID;
-            if (e.CommandName == "ViewTraining") { Response.Redirect("TrainingDetails.aspx", false); return; }
-            if (e.CommandName == "Attendance") { Response.Redirect("Attendance.aspx", false); return; }
-            if (e.CommandName == "BatchFeedback") { Response.Redirect("TraineeFeedback.aspx", false); return; }
-            if (e.CommandName == "Certificate") { Session["CertificateFromTraining"] = true; Session["SessionID"] = "CERTIFICATE"; Response.Redirect("MyCertificate.aspx", false); }
-        }
-
+        private string SortColumn(){string s=Convert.ToString(ViewState["SortExpression"]);switch(s){case "TrainingID":case "CourseName":case "TrainingType":case "TrainingOrganizer":case "Batch":case "DateFrom":case "DateTo":return s;default:return "TrainingID";}}
+        private string SortDirection(){return Convert.ToString(ViewState["SortDirection"])=="ASC"?"ASC":"DESC";}
+        private void LoadCourse(){DataTable dt=objDB.GetDataTable("SELECT DISTINCT CM.CourseID,CM.CourseName FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TA.TrainingID=TD.TrainingID INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID WHERE TA.EmpID=@EmpID ORDER BY CM.CourseName",new SqlParameter("@EmpID",Session["EmpID"].ToString().ToUpperInvariant()));ddlCourse.DataSource=dt;ddlCourse.DataTextField="CourseName";ddlCourse.DataValueField="CourseID";ddlCourse.DataBind();ddlCourse.Items.Insert(0,new ListItem("All",""));}
+        protected void btnSearch_Click(object sender,EventArgs e){gvTraining.PageIndex=0;LoadTraining();}
+        protected void btnReset_Click(object sender,EventArgs e){txtTrainingID.Text="";ddlCourse.SelectedIndex=0;ddlStatus.SelectedIndex=0;ViewState["SortExpression"]="TrainingID";ViewState["SortDirection"]="DESC";gvTraining.PageIndex=0;LoadTraining();}
+        protected void gvTraining_PageIndexChanging(object sender,GridViewPageEventArgs e){gvTraining.PageIndex=e.NewPageIndex;LoadTraining();}
+        protected void gvTraining_Sorting(object sender,GridViewSortEventArgs e){if(Convert.ToString(ViewState["SortExpression"])==e.SortExpression)ViewState["SortDirection"]=Convert.ToString(ViewState["SortDirection"])=="ASC"?"DESC":"ASC";else{ViewState["SortExpression"]=e.SortExpression;ViewState["SortDirection"]="ASC";}LoadTraining();}
+        protected void gvTraining_RowDataBound(object sender,GridViewRowEventArgs e){if(e.Row.RowType!=DataControlRowType.DataRow)return;LinkButton f=(LinkButton)e.Row.FindControl("lnkFeedback");LinkButton c=(LinkButton)e.Row.FindControl("lnkCertificate");LinkButton a=(LinkButton)e.Row.FindControl("lnkAttendance");if(f!=null&&!f.Enabled)f.CssClass="btn btn-warning btn-sm disabled";if(c!=null&&!c.Enabled)c.CssClass="btn btn-info btn-sm disabled";if(a!=null&&!a.Enabled)a.CssClass="btn btn-primary btn-sm disabled";}
+        protected void gvTraining_RowCommand(object sender,GridViewCommandEventArgs e){string trainingID=e.CommandArgument.ToString();Session["TrainingID"]=trainingID;if(e.CommandName=="ViewTraining"){Response.Redirect("TrainingDetails.aspx",false);return;}if(e.CommandName=="Attendance"){Response.Redirect("Attendance.aspx",false);return;}if(e.CommandName=="BatchFeedback"){Response.Redirect("TraineeFeedback.aspx",false);return;}if(e.CommandName=="Certificate"){Session["CertificateFromTraining"]=true;Session["SessionID"]="CERTIFICATE";Response.Redirect("MyCertificate.aspx",false);}}
         private void LoadTraining()
         {
-            string sql = @"
-SELECT TA.TrainingID,CM.CourseName,TD.TrainingType,TD.TrainingOrganizer,TD.Batch,
-TRY_CONVERT(date,TD.DateFrom,105) DateFrom,TRY_CONVERT(date,TD.DateTo,105) DateTo,
-TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,TD.FeedbackRequired,TD.CertificateRequired,
+            string sql=@"
+SELECT TA.TrainingID,CM.CourseName,TD.TrainingType,TD.TrainingOrganizer,TD.Batch,TRY_CONVERT(date,TD.DateFrom,105) DateFrom,TRY_CONVERT(date,TD.DateTo,105) DateTo,TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,TD.FeedbackRequired,TD.CertificateRequired,
 CASE WHEN TD.AttendanceRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND NOT EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Completed')) THEN 0 ELSE 1 END AS AttendanceDone,
 CASE WHEN TD.InitialAssessmentRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 0 ELSE 1 END AS PreDone,
 CASE WHEN TD.FinalAssessmentRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 0 ELSE 1 END AS PostDone,
@@ -79,43 +36,13 @@ CASE WHEN TD.AttendanceRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHER
 CASE WHEN TD.FeedbackRequired=1 AND (CASE WHEN TD.AttendanceRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND NOT EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Completed')) THEN 0 ELSE 1 END)=1 AND (CASE WHEN TD.InitialAssessmentRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 0 ELSE 1 END)=1 AND (CASE WHEN TD.FinalAssessmentRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 0 ELSE 1 END)=1 THEN 1 ELSE 0 END AS CanBatchFeedback,
 CASE WHEN TD.CertificateRequired=1 AND (CASE WHEN TD.AttendanceRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND NOT EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Completed')) THEN 0 ELSE 1 END)=1 AND (CASE WHEN TD.InitialAssessmentRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 0 ELSE 1 END)=1 AND (CASE WHEN TD.FinalAssessmentRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 0 ELSE 1 END)=1 AND (TD.FeedbackRequired=0 OR EXISTS(SELECT 1 FROM Feedback F WHERE F.TrainingID=TA.TrainingID AND F.EmpID=TA.EmpID AND F.Submitted=1)) THEN 1 ELSE 0 END AS CanCertificate
 FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TD.TrainingID=TA.TrainingID INNER JOIN CourseMaster CM ON CM.CourseID=TD.CourseID WHERE TA.EmpID=@EmpID ";
-
-            if (txtTrainingID.Text.Trim() != "") sql += " AND TA.TrainingID LIKE @TrainingID ";
-            if (ddlCourse.SelectedValue != "") sql += " AND TD.CourseID=@CourseID ";
-
-            string status = ddlStatus.SelectedValue;
-            if (status == "P") sql += " AND NOT (" + StatusCompletionExpression() + ") ";
-            else if (status == "I") sql += " AND (" + StatusDoneExpression() + ") AND (" + StatusIncompleteExpression() + ") ";
-            else if (status == "C") sql += " AND (" + StatusDoneExpression() + ") AND NOT (" + StatusIncompleteExpression() + ") ";
-
-            sql += " ORDER BY " + SortColumn() + " " + SortDirection();
-            SqlParameter[] p = { new SqlParameter("@EmpID", Session["EmpID"].ToString().ToUpperInvariant()), new SqlParameter("@TrainingID", "%" + txtTrainingID.Text.Trim() + "%"), new SqlParameter("@CourseID", ddlCourse.SelectedValue) };
-            DataTable dt = objDB.GetDataTable(sql, p); dt.Columns.Add("ProgressPercent"); dt.Columns.Add("StatusText"); dt.Columns.Add("StatusClass");
-            foreach (DataRow r in dt.Rows)
-            {
-                int done = 0, total = 0;
-                if (Convert.ToBoolean(r["AttendanceRequired"])) { total++; if (Convert.ToBoolean(r["AttendanceDone"])) done++; }
-                if (Convert.ToBoolean(r["InitialAssessmentRequired"])) { total++; if (Convert.ToBoolean(r["PreDone"])) done++; }
-                if (Convert.ToBoolean(r["FinalAssessmentRequired"])) { total++; if (Convert.ToBoolean(r["PostDone"])) done++; }
-                if (Convert.ToBoolean(r["FeedbackRequired"])) { total++; if (Convert.ToBoolean(r["FeedbackDone"])) done++; }
-                if (Convert.ToBoolean(r["CertificateRequired"])) { total++; if (Convert.ToBoolean(r["CertificateDone"])) done++; }
-                r["ProgressPercent"] = total == 0 ? 100 : done * 100 / total;
-                r["StatusText"] = done == total ? "Completed" : done > 0 ? "In Progress" : "Pending";
-                r["StatusClass"] = done == total ? "badge badge-success badge-status" : done > 0 ? "badge badge-warning badge-status" : "badge badge-secondary badge-status";
-            }
-            gvTraining.DataSource = dt; gvTraining.DataBind();
+            if(txtTrainingID.Text.Trim()!="")sql+=" AND TA.TrainingID LIKE @TrainingID ";
+            if(ddlCourse.SelectedValue!="")sql+=" AND TD.CourseID=@CourseID ";
+            sql+=" ORDER BY "+SortColumn()+" "+SortDirection();
+            SqlParameter[] p={new SqlParameter("@EmpID",Session["EmpID"].ToString().ToUpperInvariant()),new SqlParameter("@TrainingID","%"+txtTrainingID.Text.Trim()+"%"),new SqlParameter("@CourseID",ddlCourse.SelectedValue)};
+            DataTable dt=objDB.GetDataTable(sql,p);dt.Columns.Add("ProgressPercent",typeof(int));dt.Columns.Add("StatusText");dt.Columns.Add("StatusClass");
+            foreach(DataRow r in dt.Rows){int done=0,total=0;if(Convert.ToBoolean(r["AttendanceRequired"])){total++;if(Convert.ToBoolean(r["AttendanceDone"]))done++;}if(Convert.ToBoolean(r["InitialAssessmentRequired"])){total++;if(Convert.ToBoolean(r["PreDone"]))done++;}if(Convert.ToBoolean(r["FinalAssessmentRequired"])){total++;if(Convert.ToBoolean(r["PostDone"]))done++;}if(Convert.ToBoolean(r["FeedbackRequired"])){total++;if(Convert.ToBoolean(r["FeedbackDone"]))done++;}if(Convert.ToBoolean(r["CertificateRequired"])){total++;if(Convert.ToBoolean(r["CertificateDone"]))done++;}r["ProgressPercent"]=total==0?100:done*100/total;r["StatusText"]=done==total?"Completed":done>0?"In Progress":"Pending";r["StatusClass"]=done==total?"badge badge-success badge-status":done>0?"badge badge-warning badge-status":"badge badge-secondary badge-status";}
+            string selectedStatus=ddlStatus.SelectedValue;if(selectedStatus!=""){DataView view=dt.DefaultView;if(selectedStatus=="P")view.RowFilter="StatusText='Pending'";else if(selectedStatus=="I")view.RowFilter="StatusText='In Progress'";else if(selectedStatus=="C")view.RowFilter="StatusText='Completed'";gvTraining.DataSource=view;}else gvTraining.DataSource=dt;gvTraining.DataBind();
         }
-
-        private string StatusDoneExpression()
-        {
-            return "((TD.AttendanceRequired=0 OR NOT EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND NOT EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Completed'))) AND (TD.InitialAssessmentRequired=0 OR NOT EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1))) AND (TD.FinalAssessmentRequired=0 OR NOT EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1))) AND (TD.FeedbackRequired=0 OR EXISTS(SELECT 1 FROM Feedback F WHERE F.TrainingID=TA.TrainingID AND F.EmpID=TA.EmpID AND F.Submitted=1)) AND (TD.CertificateRequired=0 OR EXISTS(SELECT 1 FROM TrainingCertificate TC WHERE TC.TrainingID=TA.TrainingID AND TC.EmpID=TA.EmpID AND TC.CertificateStatus='A')))";
-        }
-
-        private string StatusIncompleteExpression()
-        {
-            return "((TD.AttendanceRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND NOT EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Completed'))) OR (TD.InitialAssessmentRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1))) OR (TD.FinalAssessmentRequired=1 AND EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) AND NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1))) OR (TD.FeedbackRequired=1 AND NOT EXISTS(SELECT 1 FROM Feedback F WHERE F.TrainingID=TA.TrainingID AND F.EmpID=TA.EmpID AND F.Submitted=1)) OR (TD.CertificateRequired=1 AND NOT EXISTS(SELECT 1 FROM TrainingCertificate TC WHERE TC.TrainingID=TA.TrainingID AND TC.EmpID=TA.EmpID AND TC.CertificateStatus='A')))";
-        }
-
-        private string StatusCompletionExpression() { return StatusDoneExpression(); }
     }
 }
