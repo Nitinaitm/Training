@@ -88,13 +88,16 @@ namespace Training.Trainee
                 "CASE WHEN TR.TrainerType='Internal' THEN ISNULL(EB.EmpName,'') ELSE ISNULL(TR.NameExternal,'') END AS TrainerName," +
                 "TRY_CONVERT(date,SM.SessionDate,105) AS SessionDate,SM.StartTime,SM.EndTime," +
                 "ISNULL(SA.AttendanceStatus,'Pending') AS AttendanceStatus," +
-                "CASE WHEN ISNULL(SA.AttendanceStatus,'Pending')<>'Completed' THEN 'Locked' " +
+                "CASE WHEN TD.InitialAssessmentRequired=0 THEN '-' " +
+                "WHEN ISNULL(SA.AttendanceStatus,'Pending')<>'Completed' AND TD.AttendanceRequired=1 THEN 'Locked' " +
                 "WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1) THEN '-' " +
                 "WHEN EXISTS (SELECT 1 FROM TestMaster TT INNER JOIN TestAttempt TA ON TT.TestID=TA.TestID WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1) THEN 'Completed' ELSE 'Available' END AS PreStatus," +
-                "CASE WHEN ISNULL(SA.AttendanceStatus,'Pending')<>'Completed' THEN 'Locked' " +
+                "CASE WHEN TD.FinalAssessmentRequired=0 THEN '-' " +
+                "WHEN ISNULL(SA.AttendanceStatus,'Pending')<>'Completed' AND TD.AttendanceRequired=1 THEN 'Locked' " +
                 "WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Post' AND TT.IsPublished=1) THEN '-' " +
                 "WHEN EXISTS (SELECT 1 FROM TestMaster TT INNER JOIN TestAttempt TA ON TT.TestID=TA.TestID WHERE TT.SessionID=SM.SessionID AND TT.TestType='Post' AND TT.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1) THEN 'Completed' ELSE 'Available' END AS PostStatus " +
                 "FROM SessionMaster SM " +
+                "INNER JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID " +
                 "LEFT JOIN TopicMaster TM ON TM.TopicID=SM.TopicID " +
                 "LEFT JOIN TrainerMaster TR ON TR.TrainerID=SM.TrainerID " +
                 "LEFT JOIN EmpBasicMaster EB ON EB.EmpID=TR.EmpID " +
@@ -168,13 +171,13 @@ namespace Training.Trainee
             }
 
             int total = Convert.ToInt32(dt.Rows[0]["TotalSession"]);
-            int completed = Convert.ToInt32(dt.Rows[0]["AttendanceCompleted"]);
+            int completed = dt.Rows[0]["AttendanceCompleted"] == DBNull.Value ? 0 : Convert.ToInt32(dt.Rows[0]["AttendanceCompleted"]);
             int percentage = total > 0 ? completed * 100 / total : 0;
 
             progressBar.Style["width"] = percentage + "%";
             progressBar.Attributes["aria-valuenow"] = percentage.ToString();
             lblProgress.Text = percentage + "%";
-            lblNextActivity.Text = completed == total ? "Complete Batch Feedback" : "Complete Remaining Sessions";
+            lblNextActivity.Text = completed == total ? "Complete required training activities" : "Complete Remaining Sessions";
         }
 
         private void LoadWorkflow()
@@ -258,7 +261,7 @@ namespace Training.Trainee
         protected void btnBatchFeedback_Click(object sender, EventArgs e)
         {
             Session["TrainingID"] = TrainingID;
-            Response.Redirect("BatchFeedback.aspx", false);
+            Response.Redirect("TraineeFeedback.aspx", false);
         }
 
         protected void btnCertificate_Click(object sender, EventArgs e)
