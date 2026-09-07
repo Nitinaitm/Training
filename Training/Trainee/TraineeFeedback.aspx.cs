@@ -13,9 +13,6 @@ namespace Training.Trainee
         clsDataAccess objDB =
             new clsDataAccess();
 
-
-
-
         protected void Page_Load(
     object sender,
     EventArgs e)
@@ -58,11 +55,10 @@ namespace Training.Trainee
                     trainingID,
                     empID);
 
-
                 if (!CanSubmitFeedback())
                 {
                     lblMessage.Text =
-                        "Feedback is not available. Please complete attendance and all required assessments first.";
+                        "Feedback is not available. Please complete all required training activities first.";
 
                     lblMessage.ForeColor =
                         System.Drawing.Color.Red;
@@ -105,9 +101,14 @@ namespace Training.Trainee
                 "TD.InitialAssessmentRequired," +
                 "TD.FinalAssessmentRequired," +
                 "TD.FeedbackRequired," +
-                "ISNULL(TP.AttendanceCompleted,0) AS AttendanceCompleted," +
                 "ISNULL(TP.PreExamCompleted,0) AS PreExamCompleted," +
-                "ISNULL(TP.PostExamCompleted,0) AS PostExamCompleted " +
+                "ISNULL(TP.PostExamCompleted,0) AS PostExamCompleted," +
+                "CASE WHEN NOT EXISTS (" +
+                "SELECT 1 FROM SessionMaster SM " +
+                "WHERE SM.TrainingID=@TrainingID " +
+                "AND ISNULL((SELECT TOP 1 SA.AttendanceStatus FROM SessionAttendance SA " +
+                "WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID),'Pending')<>'Completed'" +
+                ") THEN 1 ELSE 0 END AS AttendanceDone " +
                 "FROM TrainingDetails TD " +
                 "LEFT JOIN TrainingProgress TP " +
                 "ON TP.TrainingID=TD.TrainingID " +
@@ -137,6 +138,10 @@ namespace Training.Trainee
 
             DataRow row = dt.Rows[0];
 
+            bool attendanceRequired =
+                Convert.ToBoolean(
+                    row["AttendanceRequired"]);
+
             bool preRequired =
                 Convert.ToBoolean(
                     row["InitialAssessmentRequired"]);
@@ -149,9 +154,9 @@ namespace Training.Trainee
                 Convert.ToBoolean(
                     row["FeedbackRequired"]);
 
-            bool attendanceCompleted =
+            bool attendanceDone =
                 Convert.ToBoolean(
-                    row["AttendanceCompleted"]);
+                    row["AttendanceDone"]);
 
             bool preCompleted =
                 Convert.ToBoolean(
@@ -166,7 +171,7 @@ namespace Training.Trainee
                 return false;
             }
 
-            if (!attendanceCompleted)
+            if (attendanceRequired && !attendanceDone)
             {
                 return false;
             }
@@ -183,9 +188,6 @@ namespace Training.Trainee
 
             return true;
         }
-        //-----------------------------------------------------
-        // Build Feedback
-        //-----------------------------------------------------
 
         private void BuildFeedback()
         {
@@ -200,10 +202,6 @@ namespace Training.Trainee
                     drCategory);
             }
         }
-
-        //-----------------------------------------------------
-        // Get Categories
-        //-----------------------------------------------------
 
         private DataTable GetCategories()
         {
@@ -236,10 +234,6 @@ FCM.DisplayOrder
                 query,
                 param);
         }
-
-        //-----------------------------------------------------
-        // Build Category
-        //-----------------------------------------------------
 
         private void BuildCategory(
             DataRow drCategory)
@@ -287,9 +281,6 @@ FCM.DisplayOrder
             phFeedback.Controls.Add(
                 footer);
         }
-        //-----------------------------------------------------
-        // Build Normal Category
-        //-----------------------------------------------------
 
         private void BuildNormalCategory(
     string categoryID)
@@ -308,10 +299,6 @@ FCM.DisplayOrder
                     "");
             }
         }
-
-        //-----------------------------------------------------
-        // Build Trainer Category
-        //-----------------------------------------------------
 
         private void BuildTrainerCategory(
      string categoryID)
@@ -359,10 +346,6 @@ FCM.DisplayOrder
             }
         }
 
-        //-----------------------------------------------------
-        // Get Questions
-        //-----------------------------------------------------
-
         private DataTable GetQuestions(
             string categoryID)
         {
@@ -399,10 +382,6 @@ QuestionText
                 param);
         }
 
-        //-----------------------------------------------------
-        // Get Trainer List
-        //-----------------------------------------------------
-
         private DataTable GetSessionTrainerList()
         {
             string query =
@@ -438,10 +417,6 @@ QuestionText
                     param);
         }
 
-        //-----------------------------------------------------
-        // Build Question
-        //-----------------------------------------------------
-
         private void BuildQuestion(
      DataRow drQuestion,
      string sessionID,
@@ -464,7 +439,6 @@ QuestionText
             bool mandatory =
                 Convert.ToBoolean(
                 drQuestion["Mandatory"]);
-
 
             string categoryID =
     drQuestion["CategoryID"]
@@ -507,6 +481,8 @@ QuestionText
                 "HFQ_" +
                 questionID +
                 "_" +
+                sessionID +
+                "_" +
                 trainerID;
 
             hfQuestion.Value =
@@ -521,6 +497,8 @@ QuestionText
             hfTrainer.ID =
                 "HFT_" +
                 questionID +
+                "_" +
+                sessionID +
                 "_" +
                 trainerID;
 
@@ -537,6 +515,8 @@ QuestionText
                 "HFTYPE_" +
                 questionID +
                 "_" +
+                sessionID +
+                "_" +
                 trainerID;
 
             hfTrainerType.Value =
@@ -548,17 +528,6 @@ QuestionText
             Literal lbl =
      new Literal();
 
-            //lbl.ID =
-            //    "LBL_" +
-            //    questionID +
-            //    "_" +
-            //    trainerID;
-
-            //lbl.Text =
-            //    question +
-            //    (mandatory
-            //    ? " <span style='color:red;'>*</span>"
-            //    : "");
             lbl.Text =
 "<div class='question-label'>" +
 question +
@@ -568,18 +537,11 @@ question +
 +
 "</div>";
 
-            //lbl.CssClass =
-            //    "question-label";
-
             Control answerControl =
     null;
 
             pnl.Controls.Add(
                 lbl);
-
-            //-------------------------------------------------
-            // Rating
-            //-------------------------------------------------
 
             if (answerType == "Rating")
             {
@@ -620,11 +582,6 @@ question +
                 answerControl =
     rbl;
             }
-
-            //-------------------------------------------------
-            // Yes No
-            //-------------------------------------------------
-
             else if (answerType == "YesNo")
             {
                 RadioButtonList rbl =
@@ -654,11 +611,6 @@ question +
                 answerControl =
     rbl;
             }
-
-            //-------------------------------------------------
-            // Text
-            //-------------------------------------------------
-
             else if (answerType == "Text")
             {
                 TextBox txt =
@@ -681,11 +633,6 @@ question +
                 answerControl =
      txt;
             }
-
-            //-------------------------------------------------
-            // Text Area
-            //-------------------------------------------------
-
             else if (answerType == "TextArea")
             {
                 TextBox txt =
@@ -711,11 +658,6 @@ question +
                 answerControl =
      txt;
             }
-
-            //-------------------------------------------------
-            // Number
-            //-------------------------------------------------
-
             else if (answerType == "Number")
             {
                 TextBox txt =
@@ -732,8 +674,6 @@ question +
                 txt.CssClass =
                     "form-control";
 
-                //txt.TextMode =
-                //    TextBoxMode.Number;
                 txt.Attributes["type"] =
 "number";
 
@@ -749,8 +689,6 @@ question +
 
             phFeedback.Controls.Add(
                 pnl);
-
-
         }
 
         private bool ValidateFeedback()
@@ -861,26 +799,12 @@ question +
 
         private string GenerateFeedbackID()
         {
-            //Random rnd =
-            //    new Random();
-
-            //return
-            //    "FDB" +
-            //    DateTime.Now.ToString("yyyyMMddHHmmssfff") +
-            //    rnd.Next(1000, 9999).ToString();
             return Guid.NewGuid()
 .ToString("N")
 .ToUpper();
         }
         private string GenerateFeedbackDetailID()
         {
-            //Random rnd =
-            //    new Random();
-
-            //return
-            //    "FDD" +
-            //    DateTime.Now.ToString("yyyyMMddHHmmssfff") +
-            //    rnd.Next(1000, 9999).ToString();
             return Guid.NewGuid()
 .ToString("N")
 .ToUpper();
@@ -895,7 +819,7 @@ question +
                 if (!CanSubmitFeedback())
                 {
                     lblMessage.Text =
-                        "Feedback cannot be submitted until attendance and all required assessments are completed.";
+                        "Feedback cannot be submitted until all required training activities are completed.";
 
                     lblMessage.ForeColor =
                         System.Drawing.Color.Red;
@@ -939,9 +863,6 @@ question +
 
                 btnSubmit.Enabled =
                     false;
-
-                //btnCancel.Enabled =
-                //    false;
 
                 bool certificateGenerated =
                     TryGenerateCertificate(
@@ -1051,10 +972,8 @@ GETDATE()
             }
             catch
             {
-                // Logging failure must not affect feedback submission.
             }
         }
-
 
         private bool IsFeedbackSubmitted()
         {
@@ -1314,15 +1233,21 @@ GETDATE()
 
             new SqlParameter(
                 "@SessionID",
-                sessionID),
+                String.IsNullOrWhiteSpace(sessionID)
+                ? (object)DBNull.Value
+                : sessionID),
 
             new SqlParameter(
                 "@TrainerID",
-                trainerID),
+                String.IsNullOrWhiteSpace(trainerID)
+                ? (object)DBNull.Value
+                : trainerID),
 
             new SqlParameter(
                 "@TrainerType",
-                trainerType),
+                String.IsNullOrWhiteSpace(trainerType)
+                ? (object)DBNull.Value
+                : trainerType),
 
             new SqlParameter(
                 "@AnswerType",
