@@ -202,6 +202,11 @@ AND NOT EXISTS (
             }
 
             traineeAssigned = IsTraineeAssigned();
+            bool sessionsAssigned = HasSessionsAndTrainers();
+            bool feedbackAssigned = !IsFeedbackRequired() || IsFeedbackAssigned();
+            bool certificateTemplateConfigured = !certificateRequired || IsCertificateTemplateConfigured();
+            bool attendanceCompleted = !IsAttendanceRequired() || AreAllAttendanceCompleted();
+
             btnUpdateTraining.Visible = true;
             btnAssignSession.Visible = true;
             btnAssignTrainee.Visible = true;
@@ -210,8 +215,13 @@ AND NOT EXISTS (
             btnAssignHostel.Visible = hostelRequired;
             btnCertificateTemplate.Visible = certificateRequired;
             btnCertificateTemplate.Enabled = certificateRequired && traineeAssigned && !workflow.Contains("E");
+
+            // Show a checkmark on every action button whose corresponding setup step is complete.
+            btnAssignSession.Text = sessionsAssigned ? "Assign Sessions & Trainers ✓" : "Assign Sessions & Trainers";
+            btnAssignTrainee.Text = traineeAssigned ? "Assign Trainee ✓" : "Assign Trainee";
+
             if (certificateRequired && traineeAssigned && !workflow.Contains("E"))
-                btnCertificateTemplate.Text = IsCertificateTemplateConfigured() ? "Certificate Template ✓" : "Certificate Template";
+                btnCertificateTemplate.Text = certificateTemplateConfigured ? "Certificate Template ✓" : "Certificate Template";
 
             if (workflow.Contains("E"))
             {
@@ -223,6 +233,13 @@ AND NOT EXISTS (
                 btnCertificateTemplate.Visible = false;
                 btnCertificateTemplate.Enabled = false;
                 btnAttendance.Visible = true;
+                btnAttendance.Text = attendanceCompleted ? "Attendance ✓" : "Attendance";
+            }
+            else if (hostelRequired)
+            {
+                // Hostel assignment has no reliable assignment table/page in the current project,
+                // so do not display a false completion checkmark.
+                btnAssignHostel.Text = "Assign Hostel";
             }
 
             BuildLifecycle();
