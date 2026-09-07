@@ -15,8 +15,6 @@ namespace Training.Trainer
         private DataTable dtSelectedQuestion =
             new DataTable();
 
-
-
         protected void Page_Load(
       object sender,
       EventArgs e)
@@ -61,6 +59,11 @@ namespace Training.Trainer
                 SessionSummary1.LoadSession(Session["SessionID"].ToString());
 
                 LoadSessionDetails();
+
+                if (!CheckPostTrainingRequired())
+                {
+                    return;
+                }
 
                 LoadQuestionPool();
 
@@ -114,8 +117,6 @@ namespace Training.Trainer
                 return;
             }
 
-
-
             ViewState["TopicID"] =
     dt.Rows[0]["TopicID"]
     .ToString();
@@ -128,6 +129,50 @@ namespace Training.Trainer
                 dt.Rows[0]["TrainingID"]
                 .ToString();
         }
+
+        private bool CheckPostTrainingRequired()
+        {
+            string sql =
+                "SELECT FinalAssessmentRequired " +
+                "FROM TrainingDetails " +
+                "WHERE TrainingID=@TrainingID";
+
+            SqlParameter[] parameter =
+            {
+                new SqlParameter(
+                    "@TrainingID",
+                    ViewState["TrainingID"])
+            };
+
+            object result =
+                objDB.ExecuteScalar(
+                    sql,
+                    parameter);
+
+            if
+            (
+                result == null
+                ||
+                result == DBNull.Value
+                ||
+                !Convert.ToBoolean(result)
+            )
+            {
+                ScriptManager.RegisterStartupScript(
+                    this,
+                    GetType(),
+                    "PostTrainingRequired",
+                    "alert('Post-Training Assessment is not required for this training.');window.location='SessionDetails.aspx?SessionID="
+                    + ViewState["SessionID"]
+                    + "';",
+                    true);
+
+                return false;
+            }
+
+            return true;
+        }
+
         private void CheckAttendance()
         {
             string sql =
@@ -389,11 +434,6 @@ namespace Training.Trainer
                 return;
             }
 
-
-            //GenerateRandomQuestions();
-
-            //BindSelectedQuestions();
-
             if (chkRandom.Checked)
             {
                 GenerateRandomQuestions();
@@ -469,7 +509,6 @@ namespace Training.Trainer
                 objDB.GetDataTable(
                     sql,
                     parameter);
-
 
             gvQuestion.DataSource =
     dt;
@@ -630,21 +669,6 @@ namespace Training.Trainer
 
             return true;
         }
-        //private void GenerateNextQuestionID()
-        //{
-        //    string sql =
-        //        "SELECT ISNULL(MAX(ID),0)+1 " +
-        //        "FROM TestQuestion";
-
-        //    object obj =
-        //        objDB.ExecuteScalar(
-        //            sql,
-        //            null);
-
-        //    NextQuestionNo =
-        //        Convert.ToInt32(
-        //            obj);
-        //}
         private bool ValidateQuestionDistribution()
         {
             int totalQuestions =
@@ -653,15 +677,15 @@ namespace Training.Trainer
 
             int easy =
                 Convert.ToInt32(
-                txtEasy.Text);
+                    txtEasy.Text);
 
             int medium =
                 Convert.ToInt32(
-                txtMedium.Text);
+                    txtMedium.Text);
 
             int hard =
                 Convert.ToInt32(
-                txtHard.Text);
+                    txtHard.Text);
 
             if
             (
@@ -985,7 +1009,6 @@ namespace Training.Trainer
                 true);
         }
 
-
         protected void chkAll_CheckedChanged(
     object sender,
     EventArgs e)
@@ -1009,44 +1032,6 @@ namespace Training.Trainer
                     chkAll.Checked;
             }
         }
-        //private string GenerateTestID()
-        //{
-        //    string sql =
-        //        "SELECT ISNULL(MAX(ID),0)+1 " +
-        //        "FROM TestMaster";
-
-        //    object obj =
-        //        objDB.ExecuteScalar(
-        //            sql,
-        //            null);
-
-        //    int id =
-        //        Convert.ToInt32(obj);
-
-        //    return
-        //        "TST"
-        //        +
-        //        id.ToString("00000");
-        //}
-        //private string GenerateTestQuestionID()
-        //{
-        //    string sql =
-        //        "SELECT ISNULL(MAX(ID),0)+1 " +
-        //        "FROM TestQuestion";
-
-        //    object obj =
-        //        objDB.ExecuteScalar(
-        //            sql,
-        //            null);
-
-        //    int id =
-        //        Convert.ToInt32(obj);
-
-        //    return
-        //        "TQ"
-        //        +
-        //        id.ToString("00000");
-        //}
         private void SaveTestQuestions()
         {
             try
@@ -1065,8 +1050,6 @@ namespace Training.Trainer
                 objDB.ExecuteSql(
                     deleteSql,
                     deleteParameter);
-
-                // GenerateNextQuestionID();
 
                 DataTable dt =
                     (DataTable)
@@ -1132,8 +1115,6 @@ namespace Training.Trainer
                         sql,
                         parameter);
 
-                    // NextQuestionNo++;
-
                     order++;
                 }
             }
@@ -1147,34 +1128,6 @@ namespace Training.Trainer
                     true);
             }
         }
-        //private bool ValidatePublish()
-        //{
-        //    if
-        //    (
-        //        ViewState["SelectedQuestions"]
-        //        ==
-        //        null
-        //    )
-        //    {
-        //        return false;
-        //    }
-
-        //    DataTable dt =
-        //        (DataTable)
-        //        ViewState["SelectedQuestions"];
-
-        //    if
-        //    (
-        //        dt.Rows.Count
-        //        ==
-        //        0
-        //    )
-        //    {
-        //        return false;
-        //    }
-
-        //    return true;
-        //}
         private bool ValidatePublish()
         {
             if
@@ -1240,8 +1193,6 @@ namespace Training.Trainer
         {
             try
             {
-
-
                 decimal totalMarks =
                     Convert.ToDecimal(
                         txtMarks.Text)
@@ -1405,8 +1356,6 @@ namespace Training.Trainer
 
             PublishTest();
 
-            //GenerateCandidateQuestions();
-
             if
             (
                 !CandidateQuestionsExist()
@@ -1477,8 +1426,6 @@ namespace Training.Trainer
         }
         private void GenerateCandidateQuestions()
         {
-            // DeleteOldCandidateQuestions();
-
             string sql =
                 "SELECT EmpID " +
                 "FROM TrainingAssignment " +
@@ -1502,23 +1449,6 @@ namespace Training.Trainer
                     empRow["EmpID"].ToString().ToUpperInvariant());
             }
         }
-        //    private void DeleteOldCandidateQuestions()
-        //    {
-        //        string sql =
-        //            "DELETE FROM TestCandidateQuestion " +
-        //            "WHERE TestID=@TestID";
-
-        //        SqlParameter[] parameter =
-        //        {
-        //    new SqlParameter(
-        //        "@TestID",
-        //        ViewState["TestID"])
-        //};
-
-        //        objDB.ExecuteSql(
-        //            sql,
-        //            parameter);
-        //    }
         private void SaveCandidateQuestions(
     string empID)
         {
@@ -1546,8 +1476,6 @@ namespace Training.Trainer
                     sql,
                     parameter);
 
-            // GenerateNextCandidateQuestionID();
-
             foreach (DataRow row in dt.Rows)
             {
                 InsertCandidateQuestion(
@@ -1556,21 +1484,6 @@ namespace Training.Trainer
             }
         }
 
-        //private void GenerateNextCandidateQuestionID()
-        //{
-        //    string sql =
-        //        "SELECT ISNULL(MAX(ID),0)+1 " +
-        //        "FROM TestCandidateQuestion";
-
-        //    object obj =
-        //        objDB.ExecuteScalar(
-        //            sql,
-        //            null);
-
-        //    NextCandidateQuestionNo =
-        //        Convert.ToInt32(
-        //            obj);
-        //}
         private void InsertCandidateQuestion(
     string empID,
     DataRow row)
@@ -1647,8 +1560,6 @@ namespace Training.Trainer
             objDB.ExecuteSql(
                 sql,
                 parameter);
-
-            //  NextCandidateQuestionNo++;
         }
 
         private void LoadQuestionPool()
