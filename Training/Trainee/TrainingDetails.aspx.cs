@@ -19,16 +19,13 @@ namespace Training.Trainee
                 Response.Redirect("~/Default.aspx");
                 return;
             }
-
             if (Session["TrainingID"] == null)
             {
                 Response.Redirect("MyTrainings.aspx");
                 return;
             }
-
             EmpID = Session["EmpID"].ToString().ToUpperInvariant();
             TrainingID = Session["TrainingID"].ToString();
-
             if (!IsPostBack)
             {
                 TraineeTrainingSummary1.LoadTraining(TrainingID, EmpID);
@@ -41,20 +38,13 @@ namespace Training.Trainee
 
         protected void gvSession_RowDataBound(object sender, GridViewRowEventArgs e)
         {
-            if (e.Row.RowType != DataControlRowType.DataRow)
-                return;
-
+            if (e.Row.RowType != DataControlRowType.DataRow) return;
             string pre = DataBinder.Eval(e.Row.DataItem, "PreStatus").ToString();
             string post = DataBinder.Eval(e.Row.DataItem, "PostStatus").ToString();
-
             Label lblPre = (Label)e.Row.FindControl("lblPre");
             Label lblPost = (Label)e.Row.FindControl("lblPost");
-
-            if (lblPre != null)
-                lblPre.CssClass = GetBadgeClass(pre);
-
-            if (lblPost != null)
-                lblPost.CssClass = GetBadgeClass(post);
+            if (lblPre != null) lblPre.CssClass = GetBadgeClass(pre);
+            if (lblPost != null) lblPost.CssClass = GetBadgeClass(post);
         }
 
         private string GetBadgeClass(string status)
@@ -100,17 +90,14 @@ namespace Training.Trainee
                 "LEFT JOIN SessionAttendance SA ON SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID " +
                 "WHERE SM.TrainingID=@TrainingID " +
                 "ORDER BY TRY_CONVERT(INT,SM.SessionNo),SM.SessionNo";
-
             SqlParameter[] param =
             {
                 new SqlParameter("@TrainingID", TrainingID),
                 new SqlParameter("@EmpID", EmpID)
             };
-
             DataTable dt = objDB.GetDataTable(sql, param);
             gvSession.DataSource = dt;
             gvSession.DataBind();
-
             ViewState["CompletedSession"] = dt.Select("AttendanceStatus='Completed'").Length;
             ViewState["PendingSession"] = dt.Rows.Count - Convert.ToInt32(ViewState["CompletedSession"]);
         }
@@ -122,16 +109,13 @@ namespace Training.Trainee
                 "TRY_CONVERT(date,TD.DateFrom,105) DateFrom,TRY_CONVERT(date,TD.DateTo,105) DateTo," +
                 "(SELECT COUNT(*) FROM SessionMaster SM WHERE SM.TrainingID=TD.TrainingID) TotalSession " +
                 "FROM TrainingDetails TD INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID WHERE TD.TrainingID=@TrainingID";
-
             SqlParameter[] param = { new SqlParameter("@TrainingID", TrainingID) };
             DataTable dt = objDB.GetDataTable(sql, param);
-
             if (dt.Rows.Count == 0)
             {
                 Response.Redirect("MyTrainings.aspx");
                 return;
             }
-
             ViewState["TotalSession"] = dt.Rows[0]["TotalSession"];
         }
 
@@ -150,26 +134,21 @@ namespace Training.Trainee
                 "SELECT COUNT(*) TotalSession,SUM(CASE WHEN ISNULL(SA.AttendanceStatus,'Pending')='Completed' THEN 1 ELSE 0 END) AttendanceCompleted " +
                 "FROM SessionMaster SM LEFT JOIN SessionAttendance SA ON SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID " +
                 "WHERE SM.TrainingID=@TrainingID";
-
             SqlParameter[] param =
             {
                 new SqlParameter("@TrainingID", TrainingID),
                 new SqlParameter("@EmpID", EmpID)
             };
-
             DataTable dt = objDB.GetDataTable(sql, param);
-
             if (dt.Rows.Count == 0)
             {
                 progressBar.Style["width"] = "0%";
                 lblProgress.Text = "0%";
                 return;
             }
-
             int total = Convert.ToInt32(dt.Rows[0]["TotalSession"]);
             int completed = dt.Rows[0]["AttendanceCompleted"] == DBNull.Value ? 0 : Convert.ToInt32(dt.Rows[0]["AttendanceCompleted"]);
             int percentage = total > 0 ? completed * 100 / total : 0;
-
             progressBar.Style["width"] = percentage + "%";
             progressBar.Attributes["aria-valuenow"] = percentage.ToString();
             lblProgress.Text = percentage + "%";
@@ -186,30 +165,24 @@ namespace Training.Trainee
                 "CASE WHEN EXISTS (SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') THEN 1 ELSE 0 END AS CertificateReady " +
                 "FROM TrainingDetails TD LEFT JOIN TrainingProgress TP ON TP.TrainingID=TD.TrainingID AND TP.EmpID=@EmpID " +
                 "WHERE TD.TrainingID=@TrainingID";
-
             SqlParameter[] param =
             {
                 new SqlParameter("@TrainingID", TrainingID),
                 new SqlParameter("@EmpID", EmpID)
             };
-
             DataTable dt = objDB.GetDataTable(sql, param);
-
             if (dt.Rows.Count == 0)
             {
                 btnBatchFeedback.Enabled = false;
                 btnCertificate.Enabled = false;
                 return;
             }
-
             DataRow dr = dt.Rows[0];
-
             bool attendanceRequired = Convert.ToBoolean(dr["AttendanceRequired"]);
             bool preRequired = Convert.ToBoolean(dr["InitialAssessmentRequired"]);
             bool postRequired = Convert.ToBoolean(dr["FinalAssessmentRequired"]);
             bool feedbackRequired = Convert.ToBoolean(dr["FeedbackRequired"]);
             bool certificateRequired = Convert.ToBoolean(dr["CertificateRequired"]);
-
             bool attendanceDone = Convert.ToBoolean(dr["AttendanceDone"]);
             bool preDone = Convert.ToBoolean(dr["PreExamCompleted"]);
             bool postDone = Convert.ToBoolean(dr["PostExamCompleted"]);
@@ -229,40 +202,27 @@ namespace Training.Trainee
             bool attendanceGate = !attendanceRequired || attendanceDone;
             bool requiredTestsDone = (!preRequired || preDone) && (!postRequired || postDone);
             bool feedbackGate = !feedbackRequired || batchFeedbackDone;
-
-            bool workflowComplete =
-                certificateRequired &&
-                attendanceGate &&
-                requiredTestsDone &&
-                feedbackGate;
+            bool workflowComplete = certificateRequired && attendanceGate && requiredTestsDone && feedbackGate;
 
             if (workflowComplete && !certificateReady)
             {
                 Training.Business.Certificate.CertificateGenerator generator =
                     new Training.Business.Certificate.CertificateGenerator();
-
                 generator.GenerateCertificate(TrainingID, EmpID);
-
-                certificateReady =
-                    Convert.ToInt32(
-                        objDB.ExecuteScalar(
-                            "SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') THEN 1 ELSE 0 END",
-                            param)) == 1;
+                certificateReady = Convert.ToInt32(
+                    objDB.ExecuteScalar(
+                        "SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') THEN 1 ELSE 0 END",
+                        param)) == 1;
             }
 
             btnBatchFeedback.Enabled =
-                feedbackRequired &&
-                questionnaireAvailable &&
-                attendanceGate &&
-                requiredTestsDone &&
-                !batchFeedbackDone;
+                feedbackRequired && questionnaireAvailable && attendanceGate && requiredTestsDone && !batchFeedbackDone;
 
+            // Certificate button is enabled once all required activities are complete.
+            // MyCertificate.aspx will make one final generation attempt and will show the
+            // generator error instead of silently showing an empty certificate list.
             btnCertificate.Enabled =
-                certificateRequired &&
-                attendanceGate &&
-                requiredTestsDone &&
-                feedbackGate &&
-                certificateReady;
+                certificateRequired && attendanceGate && requiredTestsDone && feedbackGate;
         }
 
         protected void btnBatchFeedback_Click(object sender, EventArgs e)
