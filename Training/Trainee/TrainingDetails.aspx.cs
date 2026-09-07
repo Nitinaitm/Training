@@ -59,21 +59,13 @@ namespace Training.Trainee
             }
         }
 
-        private string GetResultBadgeClass(string result)
-        {
-            if (result.StartsWith("Pass")) return "badge badge-success";
-            if (result.StartsWith("Fail")) return "badge badge-danger";
-            return "badge badge-secondary";
-        }
-
         private void LoadSessionGrid()
         {
             string sql =
-                "SELECT " +
-                "SM.SessionID,SM.SessionNo,SM.SessionName,TM.TopicName," +
+                "SELECT SM.SessionID,SM.SessionNo,SM.SessionName,TM.TopicName," +
                 "CASE WHEN TR.TrainerType='Internal' THEN ISNULL(EB.EmpName,'') ELSE ISNULL(TR.NameExternal,'') END AS TrainerName," +
                 "TRY_CONVERT(date,SM.SessionDate,105) AS SessionDate,SM.StartTime,SM.EndTime," +
-                "ISNULL(SA.AttendanceStatus,'Pending') AS AttendanceStatus," +
+                "CASE WHEN TD.AttendanceRequired=0 THEN '-' ELSE ISNULL(SA.AttendanceStatus,'Pending') END AS AttendanceStatus," +
                 "CASE WHEN TD.InitialAssessmentRequired=0 THEN '-' " +
                 "WHEN ISNULL(SA.AttendanceStatus,'Pending')<>'Completed' AND TD.AttendanceRequired=1 THEN 'Locked' " +
                 "WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1) THEN '-' " +
@@ -173,6 +165,8 @@ namespace Training.Trainee
             DataTable dt = objDB.GetDataTable(sql, param);
             if (dt.Rows.Count == 0)
             {
+                btnBatchFeedback.Visible = false;
+                btnCertificate.Visible = false;
                 btnBatchFeedback.Enabled = false;
                 btnCertificate.Enabled = false;
                 return;
@@ -189,6 +183,8 @@ namespace Training.Trainee
             bool batchFeedbackDone = Convert.ToBoolean(dr["BatchFeedbackCompleted"]);
             bool certificateReady = Convert.ToBoolean(dr["CertificateReady"]);
 
+            // The trainee page is batch-feedback only. A questionnaire must be assigned
+            // to the training before the feedback action becomes usable.
             bool questionnaireAvailable =
                 Convert.ToInt32(
                     objDB.ExecuteScalar(
@@ -215,14 +211,26 @@ namespace Training.Trainee
                         param)) == 1;
             }
 
+            // Hide optional actions completely; show them only when the corresponding
+            // training requirement is enabled.
+            btnBatchFeedback.Visible = feedbackRequired;
+            btnCertificate.Visible = certificateRequired;
+
             btnBatchFeedback.Enabled =
                 feedbackRequired && questionnaireAvailable && attendanceGate && requiredTestsDone && !batchFeedbackDone;
 
-            // Certificate button is enabled once all required activities are complete.
-            // MyCertificate.aspx will make one final generation attempt and will show the
-            // generator error instead of silently showing an empty certificate list.
             btnCertificate.Enabled =
                 certificateRequired && attendanceGate && requiredTestsDone && feedbackGate;
+
+            // Requirement-aware grid columns:
+            // 0 No, 1 Session, 2 Topic, 3 Trainer, 4 Date, 5 Time,
+            // 6 Attendance, 7 Pre Test, 8 Post Test, 9 Action.
+            if (gvSession.Columns.Count >= 10)
+            {
+                gvSession.Columns[6].Visible = attendanceRequired;
+                gvSession.Columns[7].Visible = preRequired;
+                gvSession.Columns[8].Visible = postRequired;
+            }
         }
 
         protected void btnBatchFeedback_Click(object sender, EventArgs e)
