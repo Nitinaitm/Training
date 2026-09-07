@@ -76,6 +76,42 @@ namespace Training.Admin
         private void BindCourse() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT CourseID,CourseName FROM CourseMaster ORDER BY CourseName", con)) { con.Open(); ddlCourse.DataSource = cmd.ExecuteReader(); ddlCourse.DataTextField = "CourseName"; ddlCourse.DataValueField = "CourseID"; ddlCourse.DataBind(); } }
         private void BindStartTime() { ddlStartTime.Items.Clear(); ddlStartTime.Items.Add(new ListItem("Select Start Time", "")); for (int h = 0; h < 24; h++) for (int m = 0; m < 60; m += 30) { DateTime t = DateTime.Today.AddHours(h).AddMinutes(m); ddlStartTime.Items.Add(new ListItem(t.ToString("hh:mm tt"), t.ToString("HH:mm"))); } }
 
+        private void GenerateTrainingID()
+        {
+            try
+            {
+                string trainingType = ddlTrainingType.SelectedItem.Text.Trim().ToUpper();
+                trainingType = trainingType.Length >= 2 ? trainingType.Substring(0, 2) : trainingType;
+
+                string organizer = ddlTrainingOrganizer.SelectedItem.Text.Replace(" ", "").ToUpper();
+                string location = ddlTrainingLocation.SelectedItem.Text.Replace(" ", "").ToUpper();
+                location = location.Length >= 3 ? location.Substring(0, 3) : location;
+                string courseID = ddlCourse.SelectedValue.ToString();
+                string batch = txtBatch.Text.Trim().Replace(" ", "").ToUpper();
+
+                DateTime fromDate = DateTime.ParseExact(txtDateFrom.Text.Trim(), "dd-MM-yyyy", CultureInfo.InvariantCulture);
+                DateTime toDate = DateTime.ParseExact(txtDateTo.Text.Trim(), "dd-MM-yyyy", CultureInfo.InvariantCulture);
+                string fromPart = fromDate.ToString("ddMMyy");
+                string toPart = toDate.ToString("ddMMyy");
+
+                string prefix = "TR" + "-" + courseID + "-" + trainingType + "-" + organizer + "-" + location + "-" + batch + "-" + fromPart + "-" + toPart;
+
+                using (SqlConnection con = new SqlConnection(constr))
+                {
+                    con.Open();
+                    using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM TrainingDetails WHERE TrainingID LIKE @Prefix+'%'", con))
+                    {
+                        cmd.Parameters.AddWithValue("@Prefix", prefix);
+                        int count = Convert.ToInt32(cmd.ExecuteScalar());
+                        txtTrainingID.Text = prefix + "-" + (count + 1).ToString("000");
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
         protected void btnSave_Click(object sender, EventArgs e)
         {
             try
@@ -85,7 +121,12 @@ namespace Training.Admin
                 if (toDate < fromDate) { lblMessage.Text = "To Date cannot be before From Date."; lblMessage.ForeColor = Color.Red; return; }
                 if (string.IsNullOrWhiteSpace(txtBatch.Text) || ddlTrainingType.SelectedValue == "" || ddlTrainingOrganizer.SelectedValue == "" || ddlTrainingLocation.SelectedValue == "" || ddlTrainingCategory.SelectedValue == "" || ddlCourse.SelectedValue == "") { lblMessage.Text = "Please complete all mandatory batch details."; lblMessage.ForeColor = Color.Red; return; }
                 string trainingID = txtTrainingID.Text.Trim();
-                if (string.IsNullOrEmpty(trainingID)) trainingID = "TRN" + DateTime.Now.ToString("yyyyMMddHHmmss");
+                if (string.IsNullOrEmpty(trainingID))
+                {
+                    GenerateTrainingID();
+                    trainingID = txtTrainingID.Text.Trim();
+                    if (string.IsNullOrEmpty(trainingID)) { lblMessage.Text = "Unable to generate Training ID. Please check Training Type, Organizer, Location, Course, Batch and dates."; lblMessage.ForeColor = Color.Red; return; }
+                }
                 using (SqlConnection con = new SqlConnection(constr))
                 {
                     con.Open();
@@ -100,7 +141,7 @@ namespace Training.Admin
                     }
                     else
                     {
-                        using (SqlCommand cmd = new SqlCommand(@"INSERT INTO TrainingDetails(TrainingID,TrainingType,TrainingOrganizer,TrainingLocation,Batch,DateFrom,DateTo,CourseID,TrainingCategory,NoOfDays,StartTime,Remarks,BatchStrength,Hours,CreatedOn,CreatedBy,HostelRequiredTrainee,AttendanceRequired,AssessmentRequired,AssessmentMode,InitialAssessmentRequired,SessionAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired,TrainerHostelRequired,TraineeHostelRequired) VALUES(@TrainingID,@TrainingType,@TrainingOrganizer,@TrainingLocation,@Batch,@DateFrom,@DateTo,@CourseID,@TrainingCategory,@NoOfDays,@StartTime,@Remarks,@BatchStrength,@Hours,GETDATE(),@CreatedBy,@HostelRequiredTrainee,@AttendanceRequired,@AssessmentRequired,@AssessmentMode,@InitialAssessmentRequired,@SessionAssessmentRequired,@FinalAssessmentRequired,@FeedbackRequired,@CertificateRequired,@TrainerHostelRequired,@TraineeHostelRequired)", con))
+                        using (SqlCommand cmd = new SqlCommand(@"INSERT INTO TrainingDetails(TrainingID,TrainingType,TrainingOrganizer,TrainingLocation,Batch,DateFrom,DateTo,CourseID,TrainingCategory,NoOfDays,StartTime,Remarks,BatchStrength,Hours,CreatedOn,CreatedBy,HostelRequiredTrainee,AttendanceRequired,AssessmentRequired,AssessmentMode,InitialAssessmentRequired,SessionAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired,TrainerHostelRequired,TraineeHostelRequired) VALUES(@TrainingID,@TrainingType,@TrainingOrganizer,@TrainingLocation,@Batch,@DateFrom,@DateTo,@CourseID,@TrainingCategory,@NoOfDays,@StartTime,@Remarks,@BatchStrength,@Hours,GETDATE(),@CreatedBy,@HostelRequiredTrainee,@AttendanceRequired,@AssessmentRequired,@AssessmentMode,@InitialAssessmentRequired,@SessionAssessmentRequired,@FinalAssessmentRequired,@FinalAssessmentRequired,@FeedbackRequired,@CertificateRequired,@TrainerHostelRequired,@TraineeHostelRequired)", con))
                         {
                             AddParameters(cmd, trainingID, null, fromDate, toDate); cmd.Parameters.AddWithValue("@CreatedBy", "Admin"); cmd.ExecuteNonQuery();
                         }
