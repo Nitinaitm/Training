@@ -32,7 +32,9 @@ namespace Training.Trainee
 
         private void LoadRequirements()
         {
-            DataTable dt = objDB.GetDataTable("SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter("@TrainingID", Session["TrainingID"].ToString()));
+            DataTable dt = objDB.GetDataTable(
+                "SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired FROM TrainingDetails WHERE TrainingID=@TrainingID",
+                new SqlParameter[] { new SqlParameter("@TrainingID", Session["TrainingID"].ToString()) });
             if (dt.Rows.Count == 0) { Response.Redirect("MyTrainings.aspx"); return; }
             AttendanceRequired = Convert.ToBoolean(dt.Rows[0]["AttendanceRequired"]);
             PreRequired = Convert.ToBoolean(dt.Rows[0]["InitialAssessmentRequired"]);
@@ -45,7 +47,12 @@ namespace Training.Trainee
 
         private bool SessionAttendanceDone()
         {
-            object value = objDB.ExecuteScalar("SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionAttendance WHERE SessionID=@SessionID AND EmpID=@EmpID AND AttendanceStatus='Completed') THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@SessionID", Session["SessionID"].ToString()), new SqlParameter("@EmpID", Session["EmpID"].ToString().ToUpperInvariant()) });
+            object value = objDB.ExecuteScalar(
+                "SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionAttendance WHERE SessionID=@SessionID AND EmpID=@EmpID AND AttendanceStatus='Completed') THEN 1 ELSE 0 END",
+                new SqlParameter[] {
+                    new SqlParameter("@SessionID", Session["SessionID"].ToString()),
+                    new SqlParameter("@EmpID", Session["EmpID"].ToString().ToUpperInvariant())
+                });
             return value != null && Convert.ToInt32(value) == 1;
         }
 
@@ -65,7 +72,7 @@ namespace Training.Trainee
             if (!PreRequired) SetPreNotRequired();
             if (!PostRequired) SetPostNotRequired();
             string sql = "SELECT MAX(CASE WHEN TM.TestType='Pre' THEN TM.TestID END) AS PreTestID,MAX(CASE WHEN TM.TestType='Pre' THEN TM.IsPublished END) AS PrePublished,MAX(CASE WHEN TM.TestType='Post' THEN TM.TestID END) AS PostTestID,MAX(CASE WHEN TM.TestType='Post' THEN TM.IsPublished END) AS PostPublished FROM TestMaster TM WHERE TM.SessionID=@SessionID";
-            DataTable dt = objDB.GetDataTable(sql, new SqlParameter("@SessionID", Session["SessionID"].ToString()));
+            DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@SessionID", Session["SessionID"].ToString()) });
             if (dt.Rows.Count == 0) { if (PreRequired) SetPreNotPublished(); if (PostRequired) SetPostNotPublished(); return; }
             DataRow dr=dt.Rows[0];
             if (PreRequired) LoadPreStatus(dr["PreTestID"].ToString(),dr["PrePublished"].ToString());
