@@ -68,9 +68,12 @@ namespace Training.Trainee
 
                 SessionSummary1.LoadSession(ViewState["TrainingID"].ToString(), ViewState["SessionID"].ToString(), ViewState["EmpID"].ToString());
 
-                
-
                 CheckAssignedTraining();
+
+                if (!CheckPostTrainingRequired())
+                {
+                    return;
+                }
 
                 CheckPublishedTest();
 
@@ -117,6 +120,48 @@ namespace Training.Trainee
                 }
             }
         }
+
+        private bool CheckPostTrainingRequired()
+        {
+            string sql =
+                "SELECT FinalAssessmentRequired " +
+                "FROM TrainingDetails " +
+                "WHERE TrainingID=@TrainingID";
+
+            SqlParameter[] parameter =
+            {
+                new SqlParameter(
+                    "@TrainingID",
+                    ViewState["TrainingID"])
+            };
+
+            object result =
+                objDB.ExecuteScalar(
+                    sql,
+                    parameter);
+
+            if
+            (
+                result == null
+                ||
+                result == DBNull.Value
+                ||
+                !Convert.ToBoolean(result)
+            )
+            {
+                ScriptManager.RegisterStartupScript(
+                    this,
+                    GetType(),
+                    "PostTrainingRequired",
+                    "alert('Post-Training Assessment is not required for this training.');window.location='MySessions.aspx';",
+                    true);
+
+                return false;
+            }
+
+            return true;
+        }
+
         private bool ResumeAttempt()
         {
             string sql =
@@ -576,41 +621,10 @@ namespace Training.Trainee
             return
                 "btn btn-outline-secondary question-palette";
         }
-        //private void BindPalette()
-        //{
-        //    DataTable dtQuestion =
-        //        (DataTable)
-        //        ViewState["QuestionTable"];
-
-        //    DataTable dtPalette =
-        //        new DataTable();
-
-        //    dtPalette.Columns.Add(
-        //        "QuestionNo");
-
-        //    foreach
-        //    (
-        //        DataRow row
-        //        in
-        //        dtQuestion.Rows
-        //    )
-        //    {
-        //        dtPalette.Rows.Add(
-        //            row["QuestionOrder"]
-        //            .ToString());
-        //    }
-
-        //    rptPalette.DataSource =
-        //        dtPalette;
-
-        //    rptPalette.DataBind();
-        //}
 
         private void LoadQuestion(
       int index)
         {
-
-
             DataTable dt =
                 (DataTable)
                 ViewState["QuestionTable"];
@@ -777,14 +791,6 @@ namespace Training.Trainee
                     1
                 );
 
-            //btnSubmit.Visible =
-            //    (
-            //        index
-            //        ==
-            //        dt.Rows.Count
-            //        -
-            //        1
-            //    );
             btnFinish.Visible =
 (
     index
@@ -1255,10 +1261,6 @@ namespace Training.Trainee
                 return;
             }
 
-            //--------------------------------------------------
-            // Shuffle Questions
-            //--------------------------------------------------
-
             DataView dv =
                 dt.DefaultView;
 
@@ -1288,10 +1290,6 @@ namespace Training.Trainee
                 shuffleTable.Rows[j].ItemArray =
                     temp;
             }
-
-            //--------------------------------------------------
-            // Insert Snapshot
-            //--------------------------------------------------
 
             int displayOrder =
                 1;
@@ -1549,7 +1547,6 @@ namespace Training.Trainee
                 dt.Rows.Count
                 .ToString();
         }
-
 
         private void EvaluateResult()
         {
