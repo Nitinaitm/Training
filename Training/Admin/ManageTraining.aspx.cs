@@ -13,16 +13,7 @@ namespace Training.Admin
     {
         string constr = ConfigurationManager.ConnectionStrings["constr"].ConnectionString;
         private SqlParameter[] P(string name, object value) { return new SqlParameter[] { new SqlParameter(name, value) }; }
-
-        protected void Page_Load(object sender, EventArgs e)
-        {
-            if (!IsPostBack)
-            {
-                if (Session["TrainingID"] == null) { Response.Redirect("TrainingList.aspx"); return; }
-                TrainingSummary1.LoadTraining(Session["TrainingID"].ToString());
-                LoadWorkflow();
-            }
-        }
+        protected void Page_Load(object sender, EventArgs e) { if (!IsPostBack) { if (Session["TrainingID"] == null) { Response.Redirect("TrainingList.aspx"); return; } TrainingSummary1.LoadTraining(Session["TrainingID"].ToString()); LoadWorkflow(); } }
         private bool GetRequirement(string column) { object value = new clsDataAccess().ExecuteScalar("SELECT " + column + " FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", Session["TrainingID"].ToString())); return value != null && value != DBNull.Value && Convert.ToBoolean(value); }
         private bool IsFeedbackRequired() { return GetRequirement("FeedbackRequired"); }
         private bool IsCertificateRequired() { return GetRequirement("CertificateRequired"); }
@@ -46,12 +37,12 @@ namespace Training.Admin
             bool ta=IsTraineeAssigned(), sa=HasSessionsAndTrainers(), fr=IsFeedbackRequired(), fa=!fr||IsFeedbackAssigned(), ct=!certificateRequired||IsCertificateTemplateConfigured(), ac=!IsAttendanceRequired()||AreAllAttendanceCompleted();
             btnUpdateTraining.Visible=true; btnAssignSession.Visible=true; btnAssignTrainee.Visible=true;
             btnAssignFeedback.Visible=fr; btnAssignFeedback.Enabled=fr; btnAssignFeedback.Text=fa?"Feedback Template ✓":"Feedback Template";
-            btnStartTraining.Visible=true; btnStartTraining.Enabled=true;
+            btnStartTraining.Visible=true; btnStartTraining.Enabled=!workflow.Contains("E");
             btnAttendance.Visible=false; btnAssignHostel.Visible=hostelRequired;
             btnCertificateTemplate.Visible=certificateRequired; btnCertificateTemplate.Enabled=certificateRequired&&ta&&!workflow.Contains("E");
             btnAssignSession.Text=sa?"Assign Sessions & Trainers ✓":"Assign Sessions & Trainers"; btnAssignTrainee.Text=ta?"Assign Trainee ✓":"Assign Trainee";
             if(certificateRequired&&ta&&!workflow.Contains("E")) btnCertificateTemplate.Text=ct?"Certificate Template ✓":"Certificate Template";
-            if(workflow.Contains("E")){btnUpdateTraining.Visible=false;btnAssignSession.Visible=false;btnAssignTrainee.Visible=false;btnAssignFeedback.Visible=false;btnStartTraining.Visible=true;btnStartTraining.Enabled=false;btnAssignHostel.Visible=false;btnCertificateTemplate.Visible=false;btnCertificateTemplate.Enabled=false;btnAttendance.Visible=true;btnAttendance.Text=ac?"Attendance ✓":"Attendance";}
+            if(workflow.Contains("E")){btnUpdateTraining.Visible=false;btnAssignSession.Visible=false;btnAssignTrainee.Visible=false;btnStartTraining.Visible=true;btnStartTraining.Enabled=false;btnAssignHostel.Visible=false;btnCertificateTemplate.Visible=false;btnCertificateTemplate.Enabled=false;btnAttendance.Visible=true;btnAttendance.Text=ac?"Attendance ✓":"Attendance";}
             else if(hostelRequired) btnAssignHostel.Text="Assign Hostel";
             BuildLifecycle();
         }
