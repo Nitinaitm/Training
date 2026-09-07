@@ -9,7 +9,6 @@ namespace Training.Trainee
     public partial class TrainingDetails : System.Web.UI.Page
     {
         clsDataAccess objDB = new clsDataAccess();
-
         private string TrainingID = "";
         private string EmpID = "";
 
@@ -32,10 +31,7 @@ namespace Training.Trainee
 
             if (!IsPostBack)
             {
-                string trainingID = Session["TrainingID"].ToString();
-                string empID = Session["EmpID"].ToString().ToUpperInvariant();
-
-                TraineeTrainingSummary1.LoadTraining(trainingID, empID);
+                TraineeTrainingSummary1.LoadTraining(TrainingID, EmpID);
                 LoadTrainingSummary();
                 LoadSessionGrid();
                 LoadProgress();
@@ -220,6 +216,16 @@ namespace Training.Trainee
             bool batchFeedbackDone = Convert.ToBoolean(dr["BatchFeedbackCompleted"]);
             bool certificateReady = Convert.ToBoolean(dr["CertificateReady"]);
 
+            bool questionnaireAvailable =
+                Convert.ToInt32(
+                    objDB.ExecuteScalar(
+                        "SELECT CASE WHEN EXISTS (" +
+                        "SELECT 1 FROM TrainingFeedbackCategory TFC " +
+                        "INNER JOIN FeedbackQuestionMaster FQM ON FQM.CategoryID=TFC.CategoryID " +
+                        "WHERE TFC.TrainingID=@TrainingID AND FQM.Active=1" +
+                        ") THEN 1 ELSE 0 END",
+                        new SqlParameter("@TrainingID", TrainingID))) == 1;
+
             bool attendanceGate = !attendanceRequired || attendanceDone;
             bool requiredTestsDone = (!preRequired || preDone) && (!postRequired || postDone);
             bool feedbackGate = !feedbackRequired || batchFeedbackDone;
@@ -246,6 +252,7 @@ namespace Training.Trainee
 
             btnBatchFeedback.Enabled =
                 feedbackRequired &&
+                questionnaireAvailable &&
                 attendanceGate &&
                 requiredTestsDone &&
                 !batchFeedbackDone;
