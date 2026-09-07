@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
@@ -15,14 +15,14 @@ namespace Training.Admin
         string TrainingID =
             "";
 
-        string UserID =
+        string AdminID =
             "";
 
         protected void Page_Load(
             object sender,
             EventArgs e)
         {
-            if (Session["UserID"] == null)
+            if (Session["AdminID"] == null)
             {
                 Response.Redirect(
                     "~/Default.aspx");
@@ -30,8 +30,8 @@ namespace Training.Admin
                 return;
             }
 
-            UserID =
-                Session["UserID"].ToString();
+            AdminID =
+                Session["AdminID"].ToString();
 
             TrainingID =
                 Session["TrainingID"].ToString();
@@ -898,7 +898,7 @@ GETDATE(),
 
         new SqlParameter(
             "@CreatedBy",
-            UserID),
+            AdminID),
 
         new SqlParameter(
             "@ConfigurationName",
@@ -921,79 +921,30 @@ GETDATE(),
             chkReusable.Checked)
     };
 
-            int result =
-                objDB.ExecuteSql(
+            objDB.ExecuteSql(
                 sql,
                 param);
-
-            if
-            (
-                result
-                >
-                0
-            )
-            {
-                hfTrainingTemplateID.Value =
-                    trainingTemplateID;
-
-                ShowMessage(
-                    "Certificate configuration saved successfully.",
-                    true);
-            }
-            else
-            {
-                ShowMessage(
-                    "Unable to save certificate configuration.",
-                    false);
-            }
-
-            LoadExistingTrainingConfiguration();
-
-            LoadReusableConfigurations();
-
-            rblMode.SelectedValue =
-                "Existing";
-
-            pnlExisting.Visible =
-                true;
-
-            pnlNew.Visible =
-                false;
         }
-
         private string GenerateTrainingTemplateID()
         {
-            string sql =
+            string query =
         @"
 SELECT
-ISNULL(
-MAX(
-CAST(
-RIGHT(
-TrainingTemplateID,
-4)
-AS INT)),
-0)
-+
-1
+ISNULL(MAX(ID),0)+1
 FROM
 TrainingCertificateTemplate
 ";
 
-            object obj =
-                objDB.ExecuteScalar(
-                sql);
-
             int nextID =
                 Convert.ToInt32(
-                obj);
+                objDB.ExecuteScalar(
+                query));
 
             return
                 "TCT"
                 +
                 nextID.ToString("0000");
         }
-
         private void UpdateTrainingConfiguration()
         {
             string leftSignature =
@@ -1006,37 +957,21 @@ TrainingCertificateTemplate
         @"
 UPDATE
 TrainingCertificateTemplate
-
 SET
-
 TemplateID=@TemplateID,
-
 CourseTitle=@CourseTitle,
-
 LeftSignature=@LeftSignature,
-
 LeftName=@LeftName,
-
 LeftDesignation=@LeftDesignation,
-
 RightSignature=@RightSignature,
-
 RightName=@RightName,
-
 RightDesignation=@RightDesignation,
-
 ModifiedOn=GETDATE(),
-
 ModifiedBy=@ModifiedBy,
-
 ConfigurationName=@ConfigurationName,
-
 Description=@Description,
-
 IsReusable=@IsReusable
-
 WHERE
-
 TrainingID=@TrainingID
 ";
 
@@ -1076,7 +1011,7 @@ TrainingID=@TrainingID
 
         new SqlParameter(
             "@ModifiedBy",
-            UserID),
+            AdminID),
 
         new SqlParameter(
             "@TrainingID",
@@ -1143,9 +1078,36 @@ TrainingID=@TrainingID
      object sender,
      EventArgs e)
         {
-            ShowMessage(
-                "Preview will be available in Version 2.",
-                true);
+            if (Session["TrainingID"] == null)
+            {
+                Response.Redirect("~/Admin/ManageTraining.aspx");
+                return;
+            }
+
+            string trainingID =
+                Session["TrainingID"].ToString();
+
+            object configured =
+                objDB.ExecuteScalar(
+                @"SELECT COUNT(*)
+                  FROM TrainingCertificateTemplate
+                  WHERE TrainingID=@TrainingID",
+                new SqlParameter[]
+                {
+                    new SqlParameter("@TrainingID", trainingID)
+                });
+
+            if (Convert.ToInt32(configured) == 0)
+            {
+                ShowMessage(
+                    "Please save the certificate configuration before preview.",
+                    false);
+                return;
+            }
+
+            Response.Redirect(
+                "~/Admin/CertificatePreview.aspx?TrainingID="
+                + Server.UrlEncode(trainingID));
         }
         protected void btnPreviewConfiguration_Click(
     object sender,
