@@ -71,7 +71,6 @@ namespace Training.Admin
 
                 bool feedbackRequired = Convert.ToBoolean(dr["FeedbackRequired"]);
                 bool certificateRequired = Convert.ToBoolean(dr["CertificateRequired"]);
-                bool feedbackAssigned = IsFeedbackAssigned();
 
                 bool trainerHostelRequired = dr["TrainerHostelRequired"] != DBNull.Value && Convert.ToBoolean(dr["TrainerHostelRequired"]);
                 bool traineeHostelRequired = dr["TraineeHostelRequired"] != DBNull.Value && Convert.ToBoolean(dr["TraineeHostelRequired"]);
@@ -88,25 +87,22 @@ namespace Training.Admin
                 btnStartTraining.Visible = false;
                 btnAttendance.Visible = false;
 
-                // These actions are shown only when the corresponding requirement is enabled.
+                // Requirement-driven actions.
                 btnAssignHostel.Visible = hostelRequired;
                 btnCertificateTemplate.Visible = certificateRequired;
                 btnCertificateTemplate.Enabled = false;
 
                 bool traineeAssigned = IsTraineeAssigned();
-                bool certificateConfigured = !certificateRequired || IsCertificateTemplateConfigured();
-
                 if (certificateRequired && traineeAssigned && !workflow.Contains("E"))
                 {
                     btnCertificateTemplate.Enabled = true;
-                    btnCertificateTemplate.Text = certificateConfigured
+                    btnCertificateTemplate.Text = IsCertificateTemplateConfigured()
                         ? "Certificate Template ✓"
                         : "Certificate Template";
                 }
 
-                // Start Training stays visible once the normal structural prerequisites
-                // (sessions/trainers and trainees) are complete. Additional requirement-
-                // dependent checks are performed when the button is clicked.
+                // Start Training remains visible after the normal workflow stages are
+                // reached. Feedback/certificate requirements are validated on click.
                 bool canStart = workflow.Contains("A") &&
                                 workflow.Contains("B") &&
                                 workflow.Contains("C") &&
@@ -177,8 +173,8 @@ namespace Training.Admin
         private void ShowStartValidation(List<string> missingSteps)
         {
             lblMessage.ForeColor = System.Drawing.Color.Red;
-            lblMessage.Text = "Cannot start training. Please complete: " +
-                              "<br/>" + string.Join("<br/>", missingSteps.ToArray());
+            lblMessage.Text = "Cannot start training. Please complete:<br/>" +
+                              string.Join("<br/>", missingSteps.ToArray());
         }
 
         protected void btnStartTraining_Click(object sender, EventArgs e)
@@ -187,14 +183,12 @@ namespace Training.Admin
 
             List<string> missingSteps = new List<string>();
 
-            // Structural prerequisites are always mandatory.
             if (!HasSessionsAndTrainers())
                 missingSteps.Add("1. Assign Sessions & Trainers");
 
             if (!IsTraineeAssigned())
                 missingSteps.Add("2. Assign Trainees");
 
-            // Optional activities are checked only when the admin marked them required.
             if (IsFeedbackRequired() && !IsFeedbackAssigned())
                 missingSteps.Add("3. Assign Feedback Questionnaire");
 
@@ -207,9 +201,6 @@ namespace Training.Admin
                 return;
             }
 
-            // Hostel button is displayed when required. Hostel assignment itself is
-            // handled from Assign Hostel and is not assumed here because the existing
-            // database does not expose a single completion flag for both hostel types.
             StartTraining();
         }
 
@@ -220,7 +211,8 @@ namespace Training.Admin
             string query = @"
                 SELECT COUNT(*)
                 FROM SessionMaster
-                WHERE TrainingID=@TrainingID";
+                WHERE TrainingID=@TrainingID
+                  AND ISNULL(TrainerID,'')<>''";
 
             SqlParameter[] param =
             {
