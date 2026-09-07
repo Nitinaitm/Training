@@ -65,7 +65,7 @@ namespace Training.Trainee
             if (gvSession.Columns.Count >= 10) { gvSession.Columns[6].Visible = attendanceRequired; gvSession.Columns[7].Visible = preRequired; gvSession.Columns[8].Visible = postRequired; }
         }
         protected void btnBatchFeedback_Click(object sender, EventArgs e) { Session["TrainingID"] = TrainingID; Response.Redirect("TraineeFeedback.aspx", false); }
-        protected void btnCertificate_Click(object sender, EventArgs e) { Session["TrainingID"] = TrainingID; Session["CertificateFromTraining"] = true; Session["SessionID"] = "CERTIFICATE"; Response.Redirect("MyCertificate.aspx", false); }
+        protected void btnCertificate_Click(object sender, EventArgs e) { Session["TrainingID"] = TrainingID; Session["CertificateFromTraining"] = true; Response.Redirect("MyCertificate.aspx", false); }
         protected void btnBack_Click(object sender, EventArgs e) { Response.Redirect("MyTrainings.aspx"); }
     }
 }
