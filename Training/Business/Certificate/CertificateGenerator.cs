@@ -14,950 +14,489 @@ namespace Training.Business.Certificate
 {
     public class CertificateGenerator
     {
-        clsDataAccess objDB =
-            new clsDataAccess();
+        clsDataAccess objDB = new clsDataAccess();
         private BaseFont _baseFont;
 
-        public string LastError
+        public string LastError { get; private set; }
+
+        public bool GenerateCertificate(string trainingID, string empID)
         {
-            get;
-            private set;
-        }
-        //-------------------------------------------------------
-        // Generate Certificate
-        //-------------------------------------------------------
-
-        //-------------------------------------------------------
-        // Generate Certificate
-        //-------------------------------------------------------
-
-        public bool GenerateCertificate(
-         string trainingID,
-         string empID)
-        {
-            LastError =
-                "";
-
-            if
-            (
-                String.IsNullOrWhiteSpace(
-                    trainingID)
-                ||
-                String.IsNullOrWhiteSpace(
-                    empID)
-            )
+            LastError = "";
+            if (String.IsNullOrWhiteSpace(trainingID) || String.IsNullOrWhiteSpace(empID))
             {
-                LastError =
-                    "TrainingID or EmpID is blank.";
-
+                LastError = "TrainingID or EmpID is blank.";
                 return false;
             }
 
-            if
-            (
-                IsAlreadyGenerated(
-                    trainingID,
-                    empID)
-            )
+            if (IsAlreadyGenerated(trainingID, empID))
             {
-                LastError =
-                    "Certificate is already generated.";
-
+                LastError = "Certificate is already generated.";
                 return true;
             }
 
-            if
-            (
-                !IsEligibleForCertificate(
-                    trainingID,
-                    empID)
-            )
+            if (!IsEligibleForCertificate(trainingID, empID))
             {
-                LastError =
-                    "Certificate eligibility check failed.";
-
+                LastError = "Certificate eligibility check failed.";
                 return false;
             }
 
-            string templateID =
-    GetTrainingTemplateID(
-        trainingID);
-
-            if
-            (
-                String.IsNullOrWhiteSpace(
-                    templateID)
-            )
+            string templateID = GetTrainingTemplateID(trainingID);
+            if (String.IsNullOrWhiteSpace(templateID))
             {
-                LastError =
-                    "Certificate template is not configured for this training.";
-
+                LastError = "Certificate template is not configured for this training.";
                 return false;
             }
 
-
-            DataRow dr =
-    LoadCertificateData(
-        trainingID,
-        empID,
-        templateID);
-
-
-
-
-            if
-            (
-                dr
-                ==
-                null
-            )
+            DataRow dr = LoadCertificateData(trainingID, empID, templateID);
+            if (dr == null)
             {
-                LastError =
-                    "LoadCertificateData returned no record.";
-
+                LastError = "LoadCertificateData returned no record.";
                 return false;
             }
 
-            string certificateID =
-                GenerateCertificateID();
+            string certificateID = GenerateCertificateID();
+            string certificateNo = GenerateCertificateNumber();
+            string pdfName = GeneratePDFName(trainingID, empID);
+            string verificationCode = GenerateVerificationCode();
 
-            string certificateNo =
-                GenerateCertificateNumber();
-
-            string pdfName =
-                GeneratePDFName(
-                    trainingID,
-                    empID);
-
-            string verificationCode =
-                GenerateVerificationCode();
-
-            bool result =
-                CreatePDF(
-                    dr,
-                    certificateID,
-                    certificateNo,
-                    pdfName,
-                    verificationCode);
-
-            if
-            (
-                !result
-            )
+            bool result = CreatePDF(dr, certificateID, certificateNo, pdfName, verificationCode);
+            if (!result)
             {
-                LastError =
-                    "CreatePDF returned false.";
-
+                LastError = "CreatePDF returned false.";
                 return false;
             }
-
             return true;
         }
 
-        //-------------------------------------------------------
-        // Check Certificate Eligibility
-        //-------------------------------------------------------
-
-        private bool IsEligibleForCertificate(
-         string trainingID,
-         string empID)
+        private bool IsEligibleForCertificate(string trainingID, string empID)
         {
-            string query =
-                "SELECT " +
-                "TD.AttendanceRequired," +
-                "TD.InitialAssessmentRequired," +
-                "TD.FinalAssessmentRequired," +
-                "TD.FeedbackRequired," +
-                "TD.CertificateRequired," +
-                "ISNULL(TP.PreExamCompleted,0) AS PreExamCompleted," +
-                "ISNULL(TP.PostExamCompleted,0) AS PostExamCompleted," +
-                "ISNULL(TP.CertificateGenerated,0) AS CertificateGenerated " +
-                "FROM TrainingDetails TD " +
-                "INNER JOIN TrainingProgress TP " +
-                "ON TP.TrainingID=TD.TrainingID " +
-                "AND TP.EmpID=@EmpID " +
-                "WHERE TD.TrainingID=@TrainingID";
+            string progressQuery =
+                "SELECT BatchFeedbackCompleted,PreExamCompleted,PostExamCompleted,CertificateGenerated " +
+                "FROM TrainingProgress WHERE TrainingID=@TrainingID AND EmpID=@EmpID";
 
-            SqlParameter[] param =
+            SqlParameter[] progressParam =
             {
                 new SqlParameter("@TrainingID", trainingID),
                 new SqlParameter("@EmpID", empID)
             };
 
-            DataTable dt =
-                objDB.GetDataTable(
-                    query,
-                    param);
+            DataTable dtProgress = objDB.GetDataTable(progressQuery, progressParam);
+            if (dtProgress.Rows.Count == 0) return false;
 
-            if
-            (
-                dt.Rows.Count == 0
-            )
+            if (Convert.ToBoolean(dtProgress.Rows[0]["CertificateGenerated"])) return false;
+
+            string requirementQuery =
+                "SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired " +
+                "FROM TrainingDetails WHERE TrainingID=@TrainingID";
+
+            SqlParameter[] requirementParam =
             {
-                return false;
-            }
+                new SqlParameter("@TrainingID", trainingID)
+            };
 
-            DataRow row = dt.Rows[0];
+            DataTable dtRequirement = objDB.GetDataTable(requirementQuery, requirementParam);
+            if (dtRequirement.Rows.Count == 0) return false;
 
-            if
-            (
-                !Convert.ToBoolean(row["CertificateRequired"])
-                ||
-                Convert.ToBoolean(row["CertificateGenerated"])
-            )
-            {
-                return false;
-            }
+            DataRow requirement = dtRequirement.Rows[0];
+            bool attendanceRequired = Convert.ToBoolean(requirement["AttendanceRequired"]);
+            bool preRequired = Convert.ToBoolean(requirement["InitialAssessmentRequired"]);
+            bool postRequired = Convert.ToBoolean(requirement["FinalAssessmentRequired"]);
+            bool feedbackRequired = Convert.ToBoolean(requirement["FeedbackRequired"]);
+            bool certificateRequired = Convert.ToBoolean(requirement["CertificateRequired"]);
 
-            bool attendanceRequired =
-                Convert.ToBoolean(row["AttendanceRequired"]);
+            if (!certificateRequired) return false;
 
-            if
-            (
-                attendanceRequired
-            )
+            bool preExamCompleted = Convert.ToBoolean(dtProgress.Rows[0]["PreExamCompleted"]);
+            bool postExamCompleted = Convert.ToBoolean(dtProgress.Rows[0]["PostExamCompleted"]);
+
+            if (attendanceRequired)
             {
                 string attendanceQuery =
-                    "SELECT COUNT(*) AS TotalSessions," +
-                    "SUM(CASE WHEN ISNULL((SELECT TOP 1 SA.AttendanceStatus " +
-                    "FROM SessionAttendance SA " +
-                    "WHERE SA.SessionID=SM.SessionID " +
-                    "AND SA.EmpID=@EmpID),'Pending')='Completed' " +
-                    "THEN 1 ELSE 0 END) AS CompletedSessions " +
-                    "FROM SessionMaster SM " +
-                    "WHERE SM.TrainingID=@TrainingID";
+                    "SELECT COUNT(*) TotalSessions," +
+                    "SUM(CASE WHEN ISNULL((SELECT TOP 1 SA.AttendanceStatus FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID),'Pending')='Completed' THEN 1 ELSE 0 END) CompletedSessions " +
+                    "FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID";
 
-                DataTable attendance =
-                    objDB.GetDataTable(
-                        attendanceQuery,
-                        new SqlParameter[]
-                        {
-                            new SqlParameter("@TrainingID", trainingID),
-                            new SqlParameter("@EmpID", empID)
-                        });
-
-                if
-                (
-                    attendance.Rows.Count == 0
-                )
+                SqlParameter[] attendanceParam =
                 {
-                    return false;
-                }
+                    new SqlParameter("@TrainingID", trainingID),
+                    new SqlParameter("@EmpID", empID)
+                };
 
-                int total =
-                    Convert.ToInt32(
-                        attendance.Rows[0]["TotalSessions"]);
+                DataTable dtAttendance = objDB.GetDataTable(attendanceQuery, attendanceParam);
+                if (dtAttendance.Rows.Count == 0) return false;
 
-                int completed =
-                    attendance.Rows[0]["CompletedSessions"] == DBNull.Value
-                    ? 0
-                    : Convert.ToInt32(
-                        attendance.Rows[0]["CompletedSessions"]);
+                int totalSessions = Convert.ToInt32(dtAttendance.Rows[0]["TotalSessions"]);
+                int completedSessions = dtAttendance.Rows[0]["CompletedSessions"] == DBNull.Value
+                    ? 0 : Convert.ToInt32(dtAttendance.Rows[0]["CompletedSessions"]);
 
-                if
-                (
-                    total == 0
-                    ||
-                    total != completed
-                )
-                {
-                    return false;
-                }
+                if (totalSessions == 0 || totalSessions != completedSessions) return false;
             }
 
-            if
-            (
-                Convert.ToBoolean(row["InitialAssessmentRequired"])
-                &&
-                !Convert.ToBoolean(row["PreExamCompleted"])
-            )
-            {
-                return false;
-            }
+            if (preRequired && !preExamCompleted) return false;
+            if (postRequired && !postExamCompleted) return false;
 
-            if
-            (
-                Convert.ToBoolean(row["FinalAssessmentRequired"])
-                &&
-                !Convert.ToBoolean(row["PostExamCompleted"])
-            )
+            if (feedbackRequired)
             {
-                return false;
-            }
+                string feedbackQuery =
+                    "SELECT COUNT(*) FROM Feedback WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND Submitted=1";
 
-            if
-            (
-                Convert.ToBoolean(row["FeedbackRequired"])
-            )
-            {
-                object feedbackResult =
-                    objDB.ExecuteScalar(
-                        "SELECT COUNT(*) FROM Feedback " +
-                        "WHERE TrainingID=@TrainingID " +
-                        "AND EmpID=@EmpID " +
-                        "AND Submitted=1",
-                        param);
-
-                if
-                (
-                    feedbackResult == null
-                    ||
-                    Convert.ToInt32(feedbackResult) == 0
-                )
+                SqlParameter[] feedbackParam =
                 {
-                    return false;
-                }
+                    new SqlParameter("@TrainingID", trainingID),
+                    new SqlParameter("@EmpID", empID)
+                };
+
+                object feedbackResult = objDB.ExecuteScalar(feedbackQuery, feedbackParam);
+                if (feedbackResult == null || Convert.ToInt32(feedbackResult) == 0) return false;
             }
 
             return true;
         }
 
-        //-------------------------------------------------------
-        // Already Generated
-        //-------------------------------------------------------
-
-        private bool IsAlreadyGenerated(
-            string trainingID,
-            string empID)
+        private bool IsAlreadyGenerated(string trainingID, string empID)
         {
-            string query =
-         "SELECT COUNT(*) " +
-         "FROM TrainingCertificate " +
-         "WHERE TrainingID=@TrainingID " +
-         "AND EmpID=@EmpID " +
-         "AND CertificateStatus='A'";
-
+            string query = "SELECT COUNT(*) FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A'";
             SqlParameter[] param =
             {
-            new SqlParameter(
-                "@TrainingID",
-                trainingID),
-
-            new SqlParameter(
-                "@EmpID",
-                empID)
-        };
-
-            return
-                Convert.ToInt32(
-                objDB.ExecuteScalar(
-                query,
-                param))
-                >
-                0;
+                new SqlParameter("@TrainingID", trainingID),
+                new SqlParameter("@EmpID", empID)
+            };
+            return Convert.ToInt32(objDB.ExecuteScalar(query, param)) > 0;
         }
-
-        //-------------------------------------------------------
-        // Generate Certificate ID
-        //-------------------------------------------------------
-
-        //-------------------------------------------------------
-        // Generate Certificate ID
-        //-------------------------------------------------------
 
         private string GenerateCertificateID()
         {
-            string timeStamp =
-                DateTime.Now
-                .ToString("yyyyMMddHHmmssfff");
-
-            string randomPart =
-                Guid.NewGuid()
-                .ToString("N")
-                .Substring(
-                0,
-                6)
-                .ToUpper();
-
-            return
-                "CID"
-                +
-                timeStamp
-                +
-                randomPart;
+            return "CID" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
         }
-
-        //-------------------------------------------------------
-        // Generate Certificate Number
-        //-------------------------------------------------------
-
-        //-------------------------------------------------------
-        // Generate Certificate Number
-        //-------------------------------------------------------
 
         private string GenerateCertificateNumber()
         {
-            string timeStamp =
-                DateTime.Now
-                .ToString("yyyyMMddHHmmssfff");
-
-            string randomPart =
-                Guid.NewGuid()
-                .ToString("N")
-                .Substring(
-                0,
-                8)
-                .ToUpper();
-
-            return
-                "CERT"
-                +
-                timeStamp
-                +
-                randomPart;
+            return "CERT" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
         }
 
-        //-------------------------------------------------------
-        // Generate PDF Name
-        //-------------------------------------------------------
-
-        private string GeneratePDFName(
-            string trainingID,
-            string empID)
+        private string GeneratePDFName(string trainingID, string empID)
         {
-            return
-                empID
-                +
-                "_"
-                +
-                trainingID
-                +
-                "_"
-                +
-                DateTime.Now
-                .ToString("yyyyMMddHHmmss")
-                +
-                ".pdf";
+            return empID + "_" + trainingID + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".pdf";
         }
 
-        //-------------------------------------------------------
-        // Load Certificate Data
-        //-------------------------------------------------------
-
-        private DataRow LoadCertificateData(
-    string trainingID,
-    string empID,
-    string templateID)
+        private DataRow LoadCertificateData(string trainingID, string empID, string templateID)
         {
-            string query =
-        @"
-SELECT
-TCT.TrainingID,
-@EmpID AS EmpID,
-TCT.TemplateID,
-TCT.CourseTitle,
-TCT.LeftSignature,
-TCT.LeftName,
-TCT.LeftDesignation,
-TCT.RightSignature,
-TCT.RightName,
-TCT.RightDesignation,
-CTM.TemplateName,
-CTM.HeaderText,
-CTM.FooterText,
-CTM.BackgroundImage,
-CTM.LogoImage,
-CTM.HeaderFontSize,
-CTM.FooterFontSize,
-CTM.CourseTitleFontSize,
-CTM.BodyFontSize,
-CTM.Orientation,
-CTM.PaperSize,
-CTM.LogoX,
-CTM.LogoY,
-CTM.HeaderY,
-CTM.TitleY,
-CTM.BodyY,
-CTM.LeftSignatureX,
-CTM.RightSignatureX,
-CTM.SignatureY,
-CTM.FooterY,
-TD.DateFrom,
-TD.DateTo,
-CM.CourseName,
-ISNULL(
-EBM.EmpName,
-TME.TraineeName
-)
-AS
-EmpName
-FROM
-TrainingCertificateTemplate TCT
-INNER JOIN
-CertificateTemplateMaster CTM
-ON
-TCT.TemplateID=CTM.TemplateID
-INNER JOIN
-TrainingDetails TD
-ON
-TCT.TrainingID=TD.TrainingID
-INNER JOIN
-CourseMaster CM
-ON
-TD.CourseID=CM.CourseID
-LEFT JOIN
-EmpBasicMaster EBM
-ON
-EBM.EmpID=@EmpID
-LEFT JOIN
-TraineeMasterExternal TME
-ON
-TME.EmpIDExternal=@EmpID
-WHERE
-TCT.TrainingID=@TrainingID
-AND
-TCT.TemplateID=@TemplateID
-AND
-TCT.Active=1
-AND
-CTM.Active=1
-";
+            string query = @"
+SELECT TCT.TrainingID,@EmpID AS EmpID,TCT.TemplateID,TCT.CourseTitle,
+TCT.LeftSignature,TCT.LeftName,TCT.LeftDesignation,TCT.RightSignature,TCT.RightName,TCT.RightDesignation,
+CTM.TemplateName,CTM.HeaderText,CTM.FooterText,CTM.BackgroundImage,CTM.LogoImage,
+CTM.HeaderFontSize,CTM.FooterFontSize,CTM.CourseTitleFontSize,CTM.BodyFontSize,
+CTM.Orientation,CTM.PaperSize,CTM.LogoX,CTM.LogoY,CTM.HeaderY,CTM.TitleY,CTM.BodyY,
+CTM.LeftSignatureX,CTM.RightSignatureX,CTM.SignatureY,CTM.FooterY,
+TD.DateFrom,TD.DateTo,CM.CourseName,ISNULL(EBM.EmpName,TME.TraineeName) AS EmpName
+FROM TrainingCertificateTemplate TCT
+INNER JOIN CertificateTemplateMaster CTM ON TCT.TemplateID=CTM.TemplateID
+INNER JOIN TrainingDetails TD ON TCT.TrainingID=TD.TrainingID
+INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID
+LEFT JOIN EmpBasicMaster EBM ON EBM.EmpID=@EmpID
+LEFT JOIN TraineeMasterExternal TME ON TME.EmpIDExternal=@EmpID
+WHERE TCT.TrainingID=@TrainingID AND TCT.TemplateID=@TemplateID AND TCT.Active=1 AND CTM.Active=1";
 
             SqlParameter[] param =
             {
-            new SqlParameter(
-    "@TrainingID",
-    trainingID),
+                new SqlParameter("@TrainingID", trainingID),
+                new SqlParameter("@EmpID", empID),
+                new SqlParameter("@TemplateID", templateID)
+            };
 
-new SqlParameter(
-    "@EmpID",
-    empID),
-
-new SqlParameter(
-    "@TemplateID",
-    templateID)
-        };
-
-            DataTable dt =
-                objDB.GetDataTable(
-                query,
-                param);
-
-            if
-            (
-                dt.Rows.Count
-                ==
-                0
-            )
-            {
-                return null;
-            }
-
-            return
-                dt.Rows[0];
+            DataTable dt = objDB.GetDataTable(query, param);
+            return dt.Rows.Count == 0 ? null : dt.Rows[0];
         }
 
-        //-------------------------------------------------------
-        // Part-2
-        //-------------------------------------------------------
-
-
-        private bool CreatePDF(
-        DataRow dr,
-        string certificateID,
-        string certificateNo,
-        string pdfName,
-        string verificationCode)
+        private bool CreatePDF(DataRow dr, string certificateID, string certificateNo, string pdfName, string verificationCode)
         {
-            string pdfPath =
-                GetPDFPath(
-                pdfName);
-
-            Document document =
-                null;
-
-            PdfWriter writer =
-                null;
-
+            string pdfPath = GetPDFPath(pdfName);
+            Document document = null;
+            PdfWriter writer = null;
             try
             {
-                Rectangle page =
-        GetPageSize(
-        dr["PaperSize"]
-        .ToString(),
-        dr["Orientation"]
-        .ToString());
-
-                document =
-                    new Document(
-                    page,
-                    20,
-                    20,
-                    20,
-                    20);
-
-                writer =
-                    PdfWriter.GetInstance(
-                    document,
-                    new FileStream(
-                    pdfPath,
-                    FileMode.Create));
-
+                Rectangle page = GetPageSize(dr["PaperSize"].ToString(), dr["Orientation"].ToString());
+                document = new Document(page, 20, 20, 20, 20);
+                writer = PdfWriter.GetInstance(document, new FileStream(pdfPath, FileMode.Create));
                 document.Open();
-
-                DrawBackground(
-        writer,
-        document,
-        dr);
-
-                DrawLogo(
-                    writer,
-                    document,
-                    dr);
-
-                DrawHeader(
-                   writer,
-                    document,
-                    dr);
-
-                DrawBody(
-                    writer,
-                    document,
-                    dr);
-
-                DrawSignature(
-                    writer,
-                    document,
-                    dr);
-
-                DrawVerificationBlock(
-        writer,
-        document,
-        certificateNo,
-        verificationCode);
-
-                DrawFooter(
-                    writer,
-                    document,
-                    dr);
-
+                DrawBackground(writer, document, dr);
+                DrawLogo(writer, document, dr);
+                DrawHeader(writer, document, dr);
+                DrawBody(writer, document, dr);
+                DrawSignature(writer, document, dr);
+                DrawVerificationBlock(writer, document, certificateNo, verificationCode);
+                DrawFooter(writer, document, dr);
                 document.Close();
-
-                SaveCertificate(
-         certificateID,
-         certificateNo,
-         dr,
-         pdfName,
-         verificationCode);
-
+                SaveCertificate(certificateID, certificateNo, dr, pdfName, verificationCode);
                 return true;
             }
             catch
             {
-                if
-                (
-                    document != null
-                    &&
-                    document.IsOpen()
-                )
-                {
-                    document.Close();
-                }
-
-                if
-                (
-                    File.Exists(
-                    pdfPath)
-                )
-                {
-                    File.Delete(
-                        pdfPath);
-                }
-
+                if (document != null && document.IsOpen()) document.Close();
+                if (File.Exists(pdfPath)) File.Delete(pdfPath);
                 throw;
             }
         }
 
-        //-------------------------------------------------------
-        // Draw Verification Block
-        //-------------------------------------------------------
-
-        private void DrawVerificationBlock(
-            PdfWriter writer,
-            Document document,
-            string certificateNo,
-            string verificationCode)
+        private void DrawVerificationBlock(PdfWriter writer, Document document, string certificateNo, string verificationCode)
         {
-            PdfContentByte canvas =
-                writer.DirectContent;
-
-            BaseFont baseFont =
-                GetBaseFont();
-
-            Font smallFont =
-                new Font(
-                    baseFont,
-                    8,
-                    Font.NORMAL,
-                    BaseColor.BLACK);
-
-            Font boldFont =
-                new Font(
-                    baseFont,
-                    8,
-                    Font.BOLD,
-                    BaseColor.BLACK);
-
-            float leftX =
-                40f;
-
-            float bottomY =
-                20f;
-
-            canvas.BeginText();
-            canvas.SetFontAndSize(
-                baseFont,
-                8);
-            canvas.SetColorFill(
-                BaseColor.BLACK);
-
-            canvas.ShowTextAligned(
-                PdfContentByte.ALIGN_LEFT,
-                "Certificate No: " + certificateNo,
-                leftX,
-                bottomY + 10,
-                0);
-
-            canvas.ShowTextAligned(
-                PdfContentByte.ALIGN_LEFT,
-                "Verification Code: " + verificationCode,
-                leftX,
-                bottomY,
-                0);
-
-            canvas.EndText();
+            PdfContentByte canvas = writer.DirectContent;
+            BaseFont baseFont = GetBaseFont();
+            Font smallFont = new Font(baseFont, 8, Font.NORMAL, BaseColor.BLACK);
+            Font boldFont = new Font(baseFont, 8, Font.BOLD, BaseColor.BLACK);
+            float leftX = 40f;
+            float bottomY = 55f;
+            ColumnText.ShowTextAligned(canvas, Element.ALIGN_LEFT, new Phrase("Certificate No: " + certificateNo, boldFont), leftX, bottomY + 28f, 0);
+            ColumnText.ShowTextAligned(canvas, Element.ALIGN_LEFT, new Phrase("Verification Code: " + verificationCode, smallFont), leftX, bottomY + 14f, 0);
+            ColumnText.ShowTextAligned(canvas, Element.ALIGN_LEFT, new Phrase("Scan QR code to verify this certificate", smallFont), leftX, bottomY, 0);
+            DrawVerificationQRCode(writer, document, certificateNo, verificationCode);
         }
 
-        //-------------------------------------------------------
-        // Get Base Font
-        //-------------------------------------------------------
+        private void DrawVerificationQRCode(PdfWriter writer, Document document, string certificateNo, string verificationCode)
+        {
+            string verificationURL = BuildVerificationURL(certificateNo, verificationCode);
+            BarcodeQRCode qrCode = new BarcodeQRCode(verificationURL, 150, 150, null);
+            Image qrImage = qrCode.GetImage();
+            qrImage.ScaleAbsolute(65f, 65f);
+            float qrX = document.PageSize.Width - 105f;
+            float qrY = 45f;
+            qrImage.SetAbsolutePosition(qrX, qrY);
+            writer.DirectContent.AddImage(qrImage);
+        }
+
+        private string BuildVerificationURL(string certificateNo, string verificationCode)
+        {
+            string baseURL = ConfigurationManager.AppSettings["CertificateVerificationBaseUrl"];
+            if (String.IsNullOrWhiteSpace(baseURL)) throw new Exception("Certificate verification base URL is not configured.");
+            baseURL = baseURL.TrimEnd('/');
+            return baseURL + "/VerifyCertificate.aspx?CertificateNo=" + HttpUtility.UrlEncode(certificateNo) + "&Code=" + HttpUtility.UrlEncode(verificationCode);
+        }
+
+        private string GetPDFPath(string pdfName)
+        {
+            return Path.Combine(GetCertificateFolder(), pdfName);
+        }
+
+        private string GetCertificateFolder()
+        {
+            string folder = HttpContext.Current.Server.MapPath("~/Uploads/Certificates/");
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+            return folder;
+        }
+
+        private void DrawBackground(PdfWriter writer, Document document, DataRow dr)
+        {
+            string background = dr["BackgroundImage"].ToString();
+            if (String.IsNullOrWhiteSpace(background)) return;
+            string filePath = HttpContext.Current.Server.MapPath(background);
+            if (!File.Exists(filePath)) return;
+            Image image = Image.GetInstance(filePath);
+            image.SetAbsolutePosition(0, 0);
+            image.ScaleAbsolute(document.PageSize.Width, document.PageSize.Height);
+            writer.DirectContentUnder.AddImage(image);
+        }
+
+        private void DrawLogo(PdfWriter writer, Document document, DataRow dr)
+        {
+            string logo = dr["LogoImage"].ToString();
+            if (String.IsNullOrWhiteSpace(logo)) return;
+            string filePath = HttpContext.Current.Server.MapPath(logo);
+            if (!File.Exists(filePath)) return;
+            Image image = Image.GetInstance(filePath);
+            image.ScaleToFit(80f, 80f);
+            image.SetAbsolutePosition(Convert.ToSingle(dr["LogoX"]), Convert.ToSingle(dr["LogoY"]));
+            writer.DirectContent.AddImage(image);
+        }
+
+        private void DrawHeader(PdfWriter writer, Document document, DataRow dr)
+        {
+            string header = dr["HeaderText"].ToString();
+            if (String.IsNullOrWhiteSpace(header)) return;
+            PdfContentByte canvas = writer.DirectContent;
+            ColumnText.ShowTextAligned(canvas, Element.ALIGN_CENTER, new Phrase(header, GetHeaderFont(dr)), document.PageSize.Width / 2, Convert.ToSingle(dr["HeaderY"]), 0);
+        }
+
+        private void DrawBody(PdfWriter writer, Document document, DataRow dr)
+        {
+            Font titleFont = GetTitleFont(dr);
+            Font bodyFont = GetBodyFont(dr);
+            Font nameFont = new Font(GetBaseFont(), 28, Font.BOLD, BaseColor.BLACK);
+            PdfPTable table = new PdfPTable(1);
+            table.TotalWidth = document.PageSize.Width - 120;
+            table.LockedWidth = true;
+            table.HorizontalAlignment = Element.ALIGN_CENTER;
+            PdfPCell cell = new PdfPCell();
+            cell.Border = Rectangle.NO_BORDER;
+            cell.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell.Padding = 5;
+            cell.AddElement(new Paragraph("CERTIFICATE OF COMPLETION", titleFont) { Alignment = Element.ALIGN_CENTER });
+            cell.AddElement(new Paragraph("\nThis Certificate is proudly presented to\n", bodyFont) { Alignment = Element.ALIGN_CENTER });
+            cell.AddElement(new Paragraph(dr["EmpName"].ToString(), nameFont) { Alignment = Element.ALIGN_CENTER });
+            cell.AddElement(new Paragraph("\nFor Successfully Completing\n", bodyFont) { Alignment = Element.ALIGN_CENTER });
+            cell.AddElement(new Paragraph(dr["CourseTitle"].ToString(), titleFont) { Alignment = Element.ALIGN_CENTER });
+            cell.AddElement(new Paragraph("\nDuration : " + Convert.ToDateTime(dr["DateFrom"]).ToString("dd MMM yyyy") + "  To  " + Convert.ToDateTime(dr["DateTo"]).ToString("dd MMM yyyy"), bodyFont) { Alignment = Element.ALIGN_CENTER });
+            table.AddCell(cell);
+            table.WriteSelectedRows(0, -1, 60, Convert.ToSingle(dr["BodyY"]), writer.DirectContent);
+        }
+
+        private void DrawSignature(PdfWriter writer, Document document, DataRow dr)
+        {
+            DrawSingleSignature(writer, dr, dr["LeftSignature"].ToString(), dr["LeftName"].ToString(), dr["LeftDesignation"].ToString(), Convert.ToSingle(dr["LeftSignatureX"]), Convert.ToSingle(dr["SignatureY"]));
+            DrawSingleSignature(writer, dr, dr["RightSignature"].ToString(), dr["RightName"].ToString(), dr["RightDesignation"].ToString(), Convert.ToSingle(dr["RightSignatureX"]), Convert.ToSingle(dr["SignatureY"]));
+        }
+
+        private void DrawSingleSignature(PdfWriter writer, DataRow dr, string imagePath, string name, string designation, float x, float y)
+        {
+            PdfContentByte canvas = writer.DirectContent;
+            if (!String.IsNullOrWhiteSpace(imagePath))
+            {
+                string filePath = HttpContext.Current.Server.MapPath(imagePath);
+                if (File.Exists(filePath))
+                {
+                    Image img = Image.GetInstance(filePath);
+                    img.ScaleToFit(120f, 50f);
+                    img.SetAbsolutePosition(x, y);
+                    canvas.AddImage(img);
+                }
+            }
+            Font nameFont = new Font(GetBaseFont(), Convert.ToSingle(dr["BodyFontSize"]), Font.BOLD, BaseColor.BLACK);
+            Font designationFont = GetFooterFont(dr);
+            ColumnText.ShowTextAligned(canvas, Element.ALIGN_CENTER, new Phrase(name, nameFont), x + 60f, y - 15f, 0);
+            ColumnText.ShowTextAligned(canvas, Element.ALIGN_CENTER, new Phrase(designation, designationFont), x + 60f, y - 32f, 0);
+        }
+
+        private void DrawFooter(PdfWriter writer, Document document, DataRow dr)
+        {
+            PdfContentByte canvas = writer.DirectContent;
+            ColumnText.ShowTextAligned(canvas, Element.ALIGN_CENTER, new Phrase(dr["FooterText"].ToString(), GetFooterFont(dr)), document.PageSize.Width / 2, Convert.ToSingle(dr["FooterY"]), 0);
+        }
+
+        private void SaveCertificate(string certificateID, string certificateNo, DataRow dr, string pdfName, string verificationCode)
+        {
+            string trainingID = dr["TrainingID"].ToString();
+            string empID = dr["EmpID"].ToString();
+            string templateID = dr["TemplateID"].ToString();
+            string relativePDFPath = "~/Uploads/Certificates/" + pdfName;
+            string certificateHash = GenerateCertificateHash(certificateNo, trainingID, empID, verificationCode);
+
+            string query = @"
+INSERT INTO TrainingCertificate
+(CertificateID,CertificateNo,TrainingID,EmpID,TemplateID,PDFPath,PDFName,GeneratedOn,GeneratedBy,CertificateStatus,CertificateHash,VerificationCode,Remarks)
+VALUES
+(@CertificateID,@CertificateNo,@TrainingID,@EmpID,@TemplateID,@PDFPath,@PDFName,GETDATE(),@GeneratedBy,@CertificateStatus,@CertificateHash,@VerificationCode,@Remarks)";
+
+            SqlParameter[] param =
+            {
+                new SqlParameter("@CertificateID", certificateID),
+                new SqlParameter("@CertificateNo", certificateNo),
+                new SqlParameter("@TrainingID", trainingID),
+                new SqlParameter("@EmpID", empID),
+                new SqlParameter("@TemplateID", templateID),
+                new SqlParameter("@PDFPath", relativePDFPath),
+                new SqlParameter("@PDFName", pdfName),
+                new SqlParameter("@GeneratedBy", empID),
+                new SqlParameter("@CertificateStatus", "A"),
+                new SqlParameter("@CertificateHash", certificateHash),
+                new SqlParameter("@VerificationCode", verificationCode),
+                new SqlParameter("@Remarks", DBNull.Value)
+            };
+
+            int result = objDB.ExecuteSql(query, param);
+            if (result <= 0) throw new Exception("Certificate record could not be saved.");
+            UpdateTrainingProgress(trainingID, empID);
+        }
+
+        private void UpdateTrainingProgress(string trainingID, string empID)
+        {
+            string query = @"
+UPDATE TrainingProgress
+SET CertificateGenerated=1,CertificateGeneratedOn=GETDATE(),UpdatedOn=GETDATE(),UpdatedBy=@UpdatedBy
+WHERE TrainingID=@TrainingID AND EmpID=@EmpID";
+
+            SqlParameter[] param =
+            {
+                new SqlParameter("@UpdatedBy", empID),
+                new SqlParameter("@TrainingID", trainingID),
+                new SqlParameter("@EmpID", empID)
+            };
+
+            int result = objDB.ExecuteSql(query, param);
+            if (result <= 0) throw new Exception("Training progress could not be updated after certificate generation.");
+        }
+
+        private string GenerateVerificationCode()
+        {
+            return Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper();
+        }
+
+        private string GenerateCertificateHash(string certificateNo, string trainingID, string empID, string verificationCode)
+        {
+            string value = certificateNo + "|" + trainingID + "|" + empID + "|" + verificationCode;
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(value);
+                byte[] hash = sha256.ComputeHash(bytes);
+                StringBuilder result = new StringBuilder();
+                foreach (byte item in hash) result.Append(item.ToString("x2"));
+                return result.ToString();
+            }
+        }
+
+        private Rectangle GetPageSize(string paperSize, string orientation)
+        {
+            Rectangle page;
+            switch (paperSize.ToUpper())
+            {
+                case "A3": page = PageSize.A3; break;
+                case "LETTER": page = PageSize.LETTER; break;
+                case "LEGAL": page = PageSize.LEGAL; break;
+                default: page = PageSize.A4; break;
+            }
+            if (orientation.Equals("Landscape", StringComparison.OrdinalIgnoreCase)) page = page.Rotate();
+            return page;
+        }
 
         private BaseFont GetBaseFont()
         {
-            if
-            (
-                _baseFont
-                !=
-                null
-            )
-            {
-                return
-                    _baseFont;
-            }
-
-            string fontPath =
-                HttpContext.Current.Server.MapPath(
-                    "~/Fonts/ARIAL.TTF");
-
-            if
-            (
-                File.Exists(
-                    fontPath)
-            )
-            {
-                _baseFont =
-                    BaseFont.CreateFont(
-                        fontPath,
-                        BaseFont.IDENTITY_H,
-                        BaseFont.EMBEDDED);
-            }
+            if (_baseFont != null) return _baseFont;
+            string fontPath = HttpContext.Current.Server.MapPath("~/Fonts/ARIAL.TTF");
+            if (File.Exists(fontPath))
+                _baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
             else
-            {
-                _baseFont =
-                    BaseFont.CreateFont(
-                        BaseFont.HELVETICA,
-                        BaseFont.CP1252,
-                        BaseFont.NOT_EMBEDDED);
-            }
-
-            return
-                _baseFont;
+                _baseFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+            return _baseFont;
         }
 
-        //-------------------------------------------------------
-        // Get Page Size
-        //-------------------------------------------------------
-
-        private Rectangle GetPageSize(
-            string paperSize,
-            string orientation)
+        private Font GetHeaderFont(DataRow dr)
         {
-            Rectangle page;
-
-            switch
-            (
-                paperSize.ToUpper()
-            )
-            {
-                case "A4":
-                    page =
-                        PageSize.A4;
-                    break;
-
-                case "A3":
-                    page =
-                        PageSize.A3;
-                    break;
-
-                case "LETTER":
-                    page =
-                        PageSize.LETTER;
-                    break;
-
-                default:
-                    page =
-                        PageSize.A4;
-                    break;
-            }
-
-            if
-            (
-                orientation.ToUpper()
-                ==
-                "LANDSCAPE"
-            )
-            {
-                page =
-                    page.Rotate();
-            }
-
-            return
-                page;
+            return new Font(GetBaseFont(), Convert.ToSingle(dr["HeaderFontSize"]), Font.BOLD, BaseColor.BLACK);
         }
 
-        //-------------------------------------------------------
-        // Get PDF Path
-        //-------------------------------------------------------
-
-        private string GetPDFPath(
-            string pdfName)
+        private Font GetTitleFont(DataRow dr)
         {
-            string folder =
-                HttpContext.Current.Server.MapPath(
-                    "~/Certificates/");
-
-            if
-            (
-                !Directory.Exists(
-                    folder)
-            )
-            {
-                Directory.CreateDirectory(
-                    folder);
-            }
-
-            return
-                Path.Combine(
-                    folder,
-                    pdfName);
+            return new Font(GetBaseFont(), Convert.ToSingle(dr["CourseTitleFontSize"]), Font.BOLD, BaseColor.BLACK);
         }
 
-        //-------------------------------------------------------
-        // Save Certificate
-        //-------------------------------------------------------
-
-        private void SaveCertificate(
-            string certificateID,
-            string certificateNo,
-            DataRow dr,
-            string pdfName,
-            string verificationCode)
+        private Font GetBodyFont(DataRow dr)
         {
-            string query =
-                "INSERT INTO TrainingCertificate " +
-                "(" +
-                "CertificateID," +
-                "CertificateNo," +
-                "TrainingID," +
-                "EmpID," +
-                "TemplateID," +
-                "CertificateFile," +
-                "VerificationCode," +
-                "CertificateStatus," +
-                "GeneratedOn" +
-                ") VALUES (" +
-                "@CertificateID," +
-                "@CertificateNo," +
-                "@TrainingID," +
-                "@EmpID," +
-                "@TemplateID," +
-                "@CertificateFile," +
-                "@VerificationCode," +
-                "'A'," +
-                "GETDATE()" +
-                ")";
+            return new Font(GetBaseFont(), Convert.ToSingle(dr["BodyFontSize"]), Font.NORMAL, BaseColor.BLACK);
+        }
 
+        private Font GetFooterFont(DataRow dr)
+        {
+            return new Font(GetBaseFont(), Convert.ToSingle(dr["FooterFontSize"]), Font.NORMAL, BaseColor.BLACK);
+        }
+
+        private string GetTrainingTemplateID(string trainingID)
+        {
+            string sql = "SELECT TOP 1 TemplateID FROM TrainingCertificateTemplate WHERE TrainingID=@TrainingID AND Active=1 ORDER BY DefaultConfiguration DESC,CreatedOn DESC";
             SqlParameter[] param =
             {
-                new SqlParameter(
-                    "@CertificateID",
-                    certificateID),
-
-                new SqlParameter(
-                    "@CertificateNo",
-                    certificateNo),
-
-                new SqlParameter(
-                    "@TrainingID",
-                    dr["TrainingID"]),
-
-                new SqlParameter(
-                    "@EmpID",
-                    dr["EmpID"]),
-
-                new SqlParameter(
-                    "@TemplateID",
-                    dr["TemplateID"]),
-
-                new SqlParameter(
-                    "@CertificateFile",
-                    pdfName),
-
-                new SqlParameter(
-                    "@VerificationCode",
-                    verificationCode)
+                new SqlParameter("@TrainingID", trainingID)
             };
-
-            objDB.ExecuteNonQuery(
-                query,
-                param);
-
-            UpdateTrainingProgress(
-                dr["TrainingID"]
-                .ToString(),
-                dr["EmpID"]
-                .ToString());
-        }
-
-        //-------------------------------------------------------
-        // Update Training Progress
-        //-------------------------------------------------------
-
-        private void UpdateTrainingProgress(
-            string trainingID,
-            string empID)
-        {
-            string query =
-                "UPDATE TrainingProgress " +
-                "SET CertificateGenerated=1," +
-                "CertificateGeneratedOn=GETDATE() " +
-                "WHERE TrainingID=@TrainingID " +
-                "AND EmpID=@EmpID";
-
-            SqlParameter[] param =
-            {
-                new SqlParameter(
-                    "@TrainingID",
-                    trainingID),
-
-                new SqlParameter(
-                    "@EmpID",
-                    empID)
-            };
-
-            objDB.ExecuteNonQuery(
-                query,
-                param);
+            object result = objDB.ExecuteScalar(sql, param);
+            if (result == null || result == DBNull.Value) return "";
+            return result.ToString();
         }
     }
 }
