@@ -1,255 +1,46 @@
 using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace Training.Trainee
 {
     public partial class TrainingDetails : System.Web.UI.Page
     {
         clsDataAccess objDB = new clsDataAccess();
-        private string TrainingID = "";
-        private string EmpID = "";
+        private string TrainingID { get { return Convert.ToString(Session["TrainingID"]); } }
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["EmpID"] == null)
-            {
-                Response.Redirect("~/Default.aspx");
-                return;
-            }
-            if (Session["TrainingID"] == null)
-            {
-                Response.Redirect("MyTrainings.aspx");
-                return;
-            }
-            EmpID = Session["EmpID"].ToString().ToUpperInvariant();
-            TrainingID = Session["TrainingID"].ToString();
-            if (!IsPostBack)
-            {
-                TraineeTrainingSummary1.LoadTraining(TrainingID, EmpID);
-                LoadTrainingSummary();
-                LoadSessionGrid();
-                LoadProgress();
-                LoadWorkflow();
-            }
-        }
-
-        protected void gvSession_RowDataBound(object sender, GridViewRowEventArgs e)
-        {
-            if (e.Row.RowType != DataControlRowType.DataRow) return;
-            string pre = DataBinder.Eval(e.Row.DataItem, "PreStatus").ToString();
-            string post = DataBinder.Eval(e.Row.DataItem, "PostStatus").ToString();
-            Label lblPre = (Label)e.Row.FindControl("lblPre");
-            Label lblPost = (Label)e.Row.FindControl("lblPost");
-            if (lblPre != null) lblPre.CssClass = GetBadgeClass(pre);
-            if (lblPost != null) lblPost.CssClass = GetBadgeClass(post);
-        }
-
-        private string GetBadgeClass(string status)
-        {
-            switch (status)
-            {
-                case "Completed": return "badge badge-success";
-                case "Available": return "badge badge-primary";
-                case "Locked": return "badge badge-secondary";
-                case "Pending": return "badge badge-warning";
-                default: return "badge badge-light";
-            }
-        }
-
-        private void LoadSessionGrid()
-        {
-            string sql =
-                "SELECT SM.SessionID,SM.SessionNo,SM.SessionName,TM.TopicName," +
-                "CASE WHEN TR.TrainerType='Internal' THEN ISNULL(EB.EmpName,'') ELSE ISNULL(TR.NameExternal,'') END AS TrainerName," +
-                "TRY_CONVERT(date,SM.SessionDate,105) AS SessionDate,SM.StartTime,SM.EndTime," +
-                "CASE WHEN TD.AttendanceRequired=0 THEN '-' ELSE ISNULL(SA.AttendanceStatus,'Pending') END AS AttendanceStatus," +
-                "CASE WHEN TD.InitialAssessmentRequired=0 THEN '-' " +
-                "WHEN ISNULL(SA.AttendanceStatus,'Pending')<>'Completed' AND TD.AttendanceRequired=1 THEN 'Locked' " +
-                "WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1) THEN '-' " +
-                "WHEN EXISTS (SELECT 1 FROM TestMaster TT INNER JOIN TestAttempt TA ON TT.TestID=TA.TestID WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1) THEN 'Completed' ELSE 'Available' END AS PreStatus," +
-                "CASE WHEN TD.FinalAssessmentRequired=0 THEN '-' " +
-                "WHEN ISNULL(SA.AttendanceStatus,'Pending')<>'Completed' AND TD.AttendanceRequired=1 THEN 'Locked' " +
-                "WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Post' AND TT.IsPublished=1) THEN '-' " +
-                "WHEN EXISTS (SELECT 1 FROM TestMaster TT INNER JOIN TestAttempt TA ON TT.TestID=TA.TestID WHERE TT.SessionID=SM.SessionID AND TT.TestType='Post' AND TT.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1) THEN 'Completed' ELSE 'Available' END AS PostStatus " +
-                "FROM SessionMaster SM " +
-                "INNER JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID " +
-                "LEFT JOIN TopicMaster TM ON TM.TopicID=SM.TopicID " +
-                "LEFT JOIN TrainerMaster TR ON TR.TrainerID=SM.TrainerID " +
-                "LEFT JOIN EmpBasicMaster EB ON EB.EmpID=TR.EmpID " +
-                "LEFT JOIN SessionAttendance SA ON SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID " +
-                "WHERE SM.TrainingID=@TrainingID " +
-                "ORDER BY TRY_CONVERT(INT,SM.SessionNo),SM.SessionNo";
-            SqlParameter[] param =
-            {
-                new SqlParameter("@TrainingID", TrainingID),
-                new SqlParameter("@EmpID", EmpID)
-            };
-            DataTable dt = objDB.GetDataTable(sql, param);
-            gvSession.DataSource = dt;
-            gvSession.DataBind();
-            ViewState["CompletedSession"] = dt.Select("AttendanceStatus='Completed'").Length;
-            ViewState["PendingSession"] = dt.Rows.Count - Convert.ToInt32(ViewState["CompletedSession"]);
+            if (Session["EmpID"] == null || string.IsNullOrEmpty(TrainingID)) { Response.Redirect("~/Trainee/MyTrainings.aspx"); return; }
+            if (!IsPostBack) { LoadTrainingSummary(); LoadProgress(); LoadWorkflow(); }
         }
 
         private void LoadTrainingSummary()
         {
-            string sql =
-                "SELECT TD.TrainingID,CM.CourseName,TD.TrainingType,TD.TrainingOrganizer,TD.TrainingLocation,TD.Batch," +
-                "TRY_CONVERT(date,TD.DateFrom,105) DateFrom,TRY_CONVERT(date,TD.DateTo,105) DateTo," +
-                "(SELECT COUNT(*) FROM SessionMaster SM WHERE SM.TrainingID=TD.TrainingID) TotalSession " +
-                "FROM TrainingDetails TD INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID WHERE TD.TrainingID=@TrainingID";
-            SqlParameter[] param = { new SqlParameter("@TrainingID", TrainingID) };
-            DataTable dt = objDB.GetDataTable(sql, param);
-            if (dt.Rows.Count == 0)
-            {
-                Response.Redirect("MyTrainings.aspx");
-                return;
-            }
-            ViewState["TotalSession"] = dt.Rows[0]["TotalSession"];
-        }
-
-        protected void gvSession_RowCommand(object sender, GridViewCommandEventArgs e)
-        {
-            if (e.CommandName == "ViewSession")
-            {
-                Session["SessionID"] = e.CommandArgument.ToString();
-                Response.Redirect("MySessions.aspx", false);
-            }
+            string sql = @"SELECT TD.TrainingID,TD.Batch,TD.TrainingType,TD.TrainingOrganizer,TD.TrainingLocation,TD.DateFrom,TD.DateTo,TD.TrainingCategory,TD.NoOfDays,TD.StartTime,TD.Remarks,CM.CourseName,TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,TD.FeedbackRequired,TD.CertificateRequired FROM TrainingDetails TD LEFT JOIN CourseMaster CM ON TD.CourseID=CM.CourseID WHERE TD.TrainingID=@TrainingID";
+            DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID) });
+            if (dt.Rows.Count == 0) { Response.Redirect("~/Trainee/MyTrainings.aspx"); return; }
+            DataRow r = dt.Rows[0];
+            lblTrainingID.Text = Convert.ToString(r["TrainingID"]); lblBatch.Text = Convert.ToString(r["Batch"]); lblTrainingType.Text = Convert.ToString(r["TrainingType"]); lblOrganizer.Text = Convert.ToString(r["TrainingOrganizer"]); lblLocation.Text = Convert.ToString(r["TrainingLocation"]); lblDateFrom.Text = Convert.ToString(r["DateFrom"]); lblDateTo.Text = Convert.ToString(r["DateTo"]); lblCategory.Text = Convert.ToString(r["TrainingCategory"]); lblDays.Text = Convert.ToString(r["NoOfDays"]); lblStartTime.Text = Convert.ToString(r["StartTime"]); lblRemarks.Text = Convert.ToString(r["Remarks"]); lblCourse.Text = Convert.ToString(r["CourseName"]);
         }
 
         private void LoadProgress()
         {
-            string sql =
-                "SELECT COUNT(*) TotalSession,SUM(CASE WHEN ISNULL(SA.AttendanceStatus,'Pending')='Completed' THEN 1 ELSE 0 END) AttendanceCompleted " +
-                "FROM SessionMaster SM LEFT JOIN SessionAttendance SA ON SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID " +
-                "WHERE SM.TrainingID=@TrainingID";
-            SqlParameter[] param =
-            {
-                new SqlParameter("@TrainingID", TrainingID),
-                new SqlParameter("@EmpID", EmpID)
-            };
-            DataTable dt = objDB.GetDataTable(sql, param);
-            if (dt.Rows.Count == 0)
-            {
-                progressBar.Style["width"] = "0%";
-                lblProgress.Text = "0%";
-                return;
-            }
-            int total = Convert.ToInt32(dt.Rows[0]["TotalSession"]);
-            int completed = dt.Rows[0]["AttendanceCompleted"] == DBNull.Value ? 0 : Convert.ToInt32(dt.Rows[0]["AttendanceCompleted"]);
-            int percentage = total > 0 ? completed * 100 / total : 0;
-            progressBar.Style["width"] = percentage + "%";
-            progressBar.Attributes["aria-valuenow"] = percentage.ToString();
-            lblProgress.Text = percentage + "%";
-            lblNextActivity.Text = completed == total ? "Complete required training activities" : "Complete Remaining Sessions";
+            string empID = Session["EmpID"].ToString();
+            DataTable dt = objDB.GetDataTable(@"SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID) });
+            if (dt.Rows.Count == 0) return;
+            DataRow r = dt.Rows[0];
+            bool attendanceRequired = Convert.ToBoolean(r["AttendanceRequired"]), preRequired = Convert.ToBoolean(r["InitialAssessmentRequired"]), postRequired = Convert.ToBoolean(r["FinalAssessmentRequired"]), feedbackRequired = Convert.ToBoolean(r["FeedbackRequired"]), certificateRequired = Convert.ToBoolean(r["CertificateRequired"]);
+            bool attendanceDone = Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID) OR NOT EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND NOT EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID AND SA.AttendanceStatus='Completed')) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", empID) })) == 1;
+            bool preDone = Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM TestMaster T INNER JOIN SessionMaster SM ON SM.SessionID=T.SessionID WHERE SM.TrainingID=@TrainingID AND T.TestType='Pre') OR NOT EXISTS(SELECT 1 FROM TestMaster T INNER JOIN SessionMaster SM ON SM.SessionID=T.SessionID WHERE SM.TrainingID=@TrainingID AND T.TestType='Pre' AND NOT EXISTS(SELECT 1 FROM TestAttempt A WHERE A.TestID=T.TestID AND A.EmpID=@EmpID)) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", empID) })) == 1;
+            bool postDone = Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM TestMaster T INNER JOIN SessionMaster SM ON SM.SessionID=T.SessionID WHERE SM.TrainingID=@TrainingID AND T.TestType='Post') OR NOT EXISTS(SELECT 1 FROM TestMaster T INNER JOIN SessionMaster SM ON SM.SessionID=T.SessionID WHERE SM.TrainingID=@TrainingID AND T.TestType='Post' AND NOT EXISTS(SELECT 1 FROM TestAttempt A WHERE A.TestID=T.TestID AND A.EmpID=@EmpID)) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", empID) })) == 1;
+            bool batchFeedbackDone = Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN EXISTS(SELECT 1 FROM Feedback WHERE TrainingID=@TrainingID AND EmpID=@EmpID) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", empID) })) == 1;
+            bool questionnaireAvailable = Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingFeedbackCategory TFC INNER JOIN FeedbackQuestionMaster FQM ON FQM.CategoryID=TFC.CategoryID WHERE TFC.TrainingID=@TrainingID AND FQM.Active=1) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID) })) == 1;
+            bool attendanceGate = !attendanceRequired || attendanceDone, requiredTestsDone = (!preRequired || preDone) && (!postRequired || postDone), feedbackGate = !feedbackRequired || batchFeedbackDone;
+            if (btnBatchFeedback != null) { btnBatchFeedback.Visible = feedbackRequired; btnBatchFeedback.Enabled = feedbackRequired && questionnaireAvailable && attendanceGate && requiredTestsDone && !batchFeedbackDone; }
+            if (btnCertificate != null) { btnCertificate.Visible = certificateRequired; btnCertificate.Enabled = certificateRequired && attendanceGate && requiredTestsDone && feedbackGate; }
         }
 
-        private void LoadWorkflow()
-        {
-            string sql =
-                "SELECT TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,TD.FeedbackRequired,TD.CertificateRequired," +
-                "ISNULL(TP.PreExamCompleted,0) AS PreExamCompleted,ISNULL(TP.PostExamCompleted,0) AS PostExamCompleted," +
-                "ISNULL(TP.BatchFeedbackCompleted,0) AS BatchFeedbackCompleted," +
-                "CASE WHEN NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL((SELECT TOP 1 AttendanceStatus FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID),'Pending')<>'Completed') THEN 1 ELSE 0 END AS AttendanceDone," +
-                "CASE WHEN EXISTS (SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') THEN 1 ELSE 0 END AS CertificateReady " +
-                "FROM TrainingDetails TD LEFT JOIN TrainingProgress TP ON TP.TrainingID=TD.TrainingID AND TP.EmpID=@EmpID " +
-                "WHERE TD.TrainingID=@TrainingID";
-            SqlParameter[] param =
-            {
-                new SqlParameter("@TrainingID", TrainingID),
-                new SqlParameter("@EmpID", EmpID)
-            };
-            DataTable dt = objDB.GetDataTable(sql, param);
-            if (dt.Rows.Count == 0)
-            {
-                btnBatchFeedback.Visible = false;
-                btnCertificate.Visible = false;
-                btnBatchFeedback.Enabled = false;
-                btnCertificate.Enabled = false;
-                return;
-            }
-            DataRow dr = dt.Rows[0];
-            bool attendanceRequired = Convert.ToBoolean(dr["AttendanceRequired"]);
-            bool preRequired = Convert.ToBoolean(dr["InitialAssessmentRequired"]);
-            bool postRequired = Convert.ToBoolean(dr["FinalAssessmentRequired"]);
-            bool feedbackRequired = Convert.ToBoolean(dr["FeedbackRequired"]);
-            bool certificateRequired = Convert.ToBoolean(dr["CertificateRequired"]);
-            bool attendanceDone = Convert.ToBoolean(dr["AttendanceDone"]);
-            bool preDone = Convert.ToBoolean(dr["PreExamCompleted"]);
-            bool postDone = Convert.ToBoolean(dr["PostExamCompleted"]);
-            bool batchFeedbackDone = Convert.ToBoolean(dr["BatchFeedbackCompleted"]);
-            bool certificateReady = Convert.ToBoolean(dr["CertificateReady"]);
-
-            // The trainee page is batch-feedback only. A questionnaire must be assigned
-            // to the training before the feedback action becomes usable.
-            bool questionnaireAvailable =
-                Convert.ToInt32(
-                    objDB.ExecuteScalar(
-                        "SELECT CASE WHEN EXISTS (" +
-                        "SELECT 1 FROM TrainingFeedbackCategory TFC " +
-                        "INNER JOIN FeedbackQuestionMaster FQM ON FQM.CategoryID=TFC.CategoryID " +
-                        "WHERE TFC.TrainingID=@TrainingID AND FQM.Active=1" +
-                        ") THEN 1 ELSE 0 END",
-                        new SqlParameter("@TrainingID", TrainingID))) == 1;
-
-            bool attendanceGate = !attendanceRequired || attendanceDone;
-            bool requiredTestsDone = (!preRequired || preDone) && (!postRequired || postDone);
-            bool feedbackGate = !feedbackRequired || batchFeedbackDone;
-            bool workflowComplete = certificateRequired && attendanceGate && requiredTestsDone && feedbackGate;
-
-            if (workflowComplete && !certificateReady)
-            {
-                Training.Business.Certificate.CertificateGenerator generator =
-                    new Training.Business.Certificate.CertificateGenerator();
-                generator.GenerateCertificate(TrainingID, EmpID);
-                certificateReady = Convert.ToInt32(
-                    objDB.ExecuteScalar(
-                        "SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') THEN 1 ELSE 0 END",
-                        param)) == 1;
-            }
-
-            // Hide optional actions completely; show them only when the corresponding
-            // training requirement is enabled.
-            btnBatchFeedback.Visible = feedbackRequired;
-            btnCertificate.Visible = certificateRequired;
-
-            btnBatchFeedback.Enabled =
-                feedbackRequired && questionnaireAvailable && attendanceGate && requiredTestsDone && !batchFeedbackDone;
-
-            btnCertificate.Enabled =
-                certificateRequired && attendanceGate && requiredTestsDone && feedbackGate;
-
-            // Requirement-aware grid columns:
-            // 0 No, 1 Session, 2 Topic, 3 Trainer, 4 Date, 5 Time,
-            // 6 Attendance, 7 Pre Test, 8 Post Test, 9 Action.
-            if (gvSession.Columns.Count >= 10)
-            {
-                gvSession.Columns[6].Visible = attendanceRequired;
-                gvSession.Columns[7].Visible = preRequired;
-                gvSession.Columns[8].Visible = postRequired;
-            }
-        }
-
-        protected void btnBatchFeedback_Click(object sender, EventArgs e)
-        {
-            Session["TrainingID"] = TrainingID;
-            Response.Redirect("TraineeFeedback.aspx", false);
-        }
-
-        protected void btnCertificate_Click(object sender, EventArgs e)
-        {
-            Session["TrainingID"] = TrainingID;
-            Session["CertificateFromTraining"] = true;
-            Session["SessionID"] = "CERTIFICATE";
-            Response.Redirect("MyCertificate.aspx", false);
-        }
-
-        protected void btnBack_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("MyTrainings.aspx");
-        }
+        private void LoadWorkflow() { }
     }
 }
