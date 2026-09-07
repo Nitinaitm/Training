@@ -48,7 +48,13 @@ INNER JOIN TrainingDetails TD ON TCT.TrainingID=TD.TrainingID
 INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID
 WHERE TCT.TrainingID=@TrainingID AND CTM.Active=1";
 
-            DataTable dt = objDB.GetDataTable(sql, new SqlParameter("@TrainingID", trainingID));
+            DataTable dt = objDB.GetDataTable(
+                sql,
+                new SqlParameter[]
+                {
+                    new SqlParameter("@TrainingID", trainingID)
+                });
+
             if (dt.Rows.Count == 0)
             {
                 Response.Write("Certificate template is not configured for this training.");
