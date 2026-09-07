@@ -76,7 +76,7 @@ namespace Training.Admin
         private void BindCourse() { using (SqlConnection con = new SqlConnection(constr)) using (SqlCommand cmd = new SqlCommand("SELECT CourseID,CourseName FROM CourseMaster ORDER BY CourseName", con)) { con.Open(); ddlCourse.DataSource = cmd.ExecuteReader(); ddlCourse.DataTextField = "CourseName"; ddlCourse.DataValueField = "CourseID"; ddlCourse.DataBind(); } }
         private void BindStartTime() { ddlStartTime.Items.Clear(); ddlStartTime.Items.Add(new ListItem("Select Start Time", "")); for (int h = 0; h < 24; h++) for (int m = 0; m < 60; m += 30) { DateTime t = DateTime.Today.AddHours(h).AddMinutes(m); ddlStartTime.Items.Add(new ListItem(t.ToString("hh:mm tt"), t.ToString("HH:mm"))); } }
 
-        protected void btnCreate_Click(object sender, EventArgs e)
+        protected void btnSave_Click(object sender, EventArgs e)
         {
             try
             {
@@ -94,7 +94,7 @@ namespace Training.Admin
                     {
                         using (SqlCommand cmd = new SqlCommand(@"UPDATE TrainingDetails SET TrainingID=@NewTrainingID,TrainingType=@TrainingType,TrainingOrganizer=@TrainingOrganizer,TrainingLocation=@TrainingLocation,Batch=@Batch,DateFrom=@DateFrom,DateTo=@DateTo,CourseID=@CourseID,TrainingCategory=@TrainingCategory,NoOfDays=@NoOfDays,StartTime=@StartTime,Remarks=@Remarks,BatchStrength=@BatchStrength,Hours=@Hours,UpdatedOn=GETDATE(),UpdatedBy=@UpdatedBy,HostelRequiredTrainee=@HostelRequiredTrainee,AttendanceRequired=@AttendanceRequired,AssessmentRequired=@AssessmentRequired,AssessmentMode=@AssessmentMode,InitialAssessmentRequired=@InitialAssessmentRequired,SessionAssessmentRequired=@SessionAssessmentRequired,FinalAssessmentRequired=@FinalAssessmentRequired,FeedbackRequired=@FeedbackRequired,CertificateRequired=@CertificateRequired,TrainerHostelRequired=@TrainerHostelRequired,TraineeHostelRequired=@TraineeHostelRequired WHERE TrainingID=@OldTrainingID", con))
                         {
-                            AddParameters(cmd, trainingID, oldTrainingID, fromDate, toDate); cmd.ExecuteNonQuery();
+                            AddParameters(cmd, trainingID, oldTrainingID, fromDate, toDate); cmd.Parameters.AddWithValue("@UpdatedBy", "Admin"); cmd.ExecuteNonQuery();
                         }
                         Session["TrainingID"] = trainingID; lblMessage.Text = "Batch Updated Successfully";
                     }
@@ -110,6 +110,11 @@ namespace Training.Admin
                 }
             }
             catch (Exception ex) { lblMessage.Text = ex.Message; lblMessage.ForeColor = Color.Red; }
+        }
+
+        protected void btnUpdate_Click(object sender, EventArgs e)
+        {
+            btnSave_Click(sender, e);
         }
 
         private void AddParameters(SqlCommand cmd, string trainingID, string oldTrainingID, DateTime fromDate, DateTime toDate)
