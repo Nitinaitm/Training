@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
@@ -267,6 +267,8 @@ namespace Training.Trainee
         protected void btnCertificate_Click(object sender, EventArgs e)
         {
             Session["TrainingID"] = TrainingID;
+            Session["CertificateFromTraining"] = true;
+            Session["SessionID"] = "CERTIFICATE";
             Response.Redirect("MyCertificate.aspx", false);
         }
 
