@@ -9,142 +9,25 @@
 
 namespace Training.Admin {
     
-    
     public partial class CertificatePreview {
         
-        /// <summary>
-        /// btnBack control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnBack;
-        
-        /// <summary>
-        /// divCertificate control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl divCertificate;
-        
-        /// <summary>
-        /// imgLogo control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Image imgLogo;
-        
-        /// <summary>
-        /// lblHeader control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblHeader;
-        
-        /// <summary>
-        /// lblTitle control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblTitle;
-        
-        /// <summary>
-        /// lblEmployee control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divBody;
         protected global::System.Web.UI.WebControls.Label lblEmployee;
-        
-        /// <summary>
-        /// lblCourse control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblCourse;
-        
-        /// <summary>
-        /// lblDuration control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblDuration;
-        
-        /// <summary>
-        /// imgLeftSignature control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divLeftSignature;
         protected global::System.Web.UI.WebControls.Image imgLeftSignature;
-        
-        /// <summary>
-        /// lblLeftName control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblLeftName;
-        
-        /// <summary>
-        /// lblLeftDesignation control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblLeftDesignation;
-        
-        /// <summary>
-        /// imgRightSignature control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divRightSignature;
         protected global::System.Web.UI.WebControls.Image imgRightSignature;
-        
-        /// <summary>
-        /// lblRightName control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblRightName;
-        
-        /// <summary>
-        /// lblRightDesignation control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblRightDesignation;
-        
-        /// <summary>
-        /// lblFooter control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblFooter;
     }
 }
