@@ -80,6 +80,10 @@ public class clsDataAccess
 
     }
 
+    public DataTable GetDataTable(string query, SqlParameter param)
+    {
+        return GetDataTable(query, new SqlParameter[] { param });
+    }
 
     public DataTable GetDataTable(string query, SqlParameter[] param)
     {
@@ -139,8 +143,6 @@ public class clsDataAccess
         }
 
     }
-
-
 
     public int ExecuteSql(string Query, SqlParameter[] param)
     {
@@ -208,8 +210,6 @@ public class clsDataAccess
 
 
     }
-
-
 
     public string ExecuteScalar(string strSql)
     {
@@ -348,7 +348,6 @@ public class clsDataAccess
 
     //    FillGridView(gvShow);
     //}
-
     //public void FillGridView(GridView gvShow, string sql, int totRecCount)
     //{
     //    _dt = GetDataTable(sql);
