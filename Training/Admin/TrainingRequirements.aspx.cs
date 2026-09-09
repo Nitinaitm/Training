@@ -10,22 +10,13 @@ namespace Training.Admin
     public partial class TrainingRequirements : Page
     {
         private readonly clsDataAccess db = new clsDataAccess();
-
         private string TrainingID { get { return Session["TrainingID"] == null ? "" : Session["TrainingID"].ToString(); } }
         private string Actor { get { return Session["UserID"] == null ? "Admin" : Session["UserID"].ToString(); } }
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(TrainingID))
-            {
-                Response.Redirect("TrainingList.aspx");
-                return;
-            }
-            if (!IsPostBack)
-            {
-                LoadBatchStatus();
-                LoadSessions();
-            }
+            if (string.IsNullOrWhiteSpace(TrainingID)) { Response.Redirect("TrainingList.aspx"); return; }
+            if (!IsPostBack) { LoadBatchStatus(); LoadSessions(); }
         }
 
         private void LoadBatchStatus()
@@ -38,10 +29,10 @@ namespace Training.Admin
             bool fs = Convert.ToBoolean(r["FeedbackSkipped"]);
             bool cr = Convert.ToBoolean(r["CertificateRequired"]);
             bool cs = Convert.ToBoolean(r["CertificateSkipped"]);
-            lblFeedbackStatus.Text = !fr ? "Not Required" : (fs ? "Skipped" : "Required");
-            lblCertificateStatus.Text = !cr ? "Not Required" : (cs ? "Skipped" : "Required");
-            btnFeedback.Visible = fr;
-            btnCertificate.Visible = cr;
+            lblFeedbackStatus.Text = fs ? "Skipped" : (fr ? "Required" : "Not Required");
+            lblCertificateStatus.Text = cs ? "Skipped" : (cr ? "Required" : "Not Required");
+            btnFeedback.Visible = fr || fs;
+            btnCertificate.Visible = cr || cs;
             btnFeedback.Text = fs ? "Unskip Feedback" : "Skip Feedback";
             btnCertificate.Text = cs ? "Unskip Certificate" : "Skip Certificate";
             btnFeedback.CssClass = fs ? "btn btn-outline-success mt-2" : "btn btn-outline-danger mt-2";
@@ -54,15 +45,8 @@ namespace Training.Admin
             gvSessions.DataBind();
         }
 
-        protected void btnFeedback_Click(object sender, EventArgs e)
-        {
-            ToggleBatch("Feedback", "FeedbackSkipped", "FeedbackSkipReason", txtFeedbackReason.Text.Trim());
-        }
-
-        protected void btnCertificate_Click(object sender, EventArgs e)
-        {
-            ToggleBatch("Certificate", "CertificateSkipped", "CertificateSkipReason", txtCertificateReason.Text.Trim());
-        }
+        protected void btnFeedback_Click(object sender, EventArgs e) { ToggleBatch("Feedback", "FeedbackSkipped", "FeedbackSkipReason", txtFeedbackReason.Text.Trim()); }
+        protected void btnCertificate_Click(object sender, EventArgs e) { ToggleBatch("Certificate", "CertificateSkipped", "CertificateSkipReason", txtCertificateReason.Text.Trim()); }
 
         private void ToggleBatch(string label, string flag, string reasonColumn, string reason)
         {
@@ -70,9 +54,7 @@ namespace Training.Admin
             if (!skipped)
             {
                 if (string.IsNullOrWhiteSpace(reason)) { ShowError("Skip reason is mandatory for " + label + "."); return; }
-                string byColumn = reasonColumn.Replace("Reason", "By");
-                string onColumn = reasonColumn.Replace("Reason", "On");
-                db.ExecuteSql("UPDATE TrainingDetails SET " + flag + "=1," + reasonColumn + "=@Reason," + byColumn + "=@By," + onColumn + "=GETDATE() WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@Reason", reason), new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
+                db.ExecuteSql("UPDATE TrainingDetails SET " + flag + "=1," + reasonColumn + "=@Reason," + reasonColumn.Replace("Reason", "By") + "=@By," + reasonColumn.Replace("Reason", "On") + "=GETDATE() WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@Reason", reason), new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
                 ShowSuccess(label + " has been skipped.");
             }
             else
