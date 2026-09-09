@@ -14,19 +14,23 @@ namespace Training.Admin
             string trainingID = Convert.ToString(Session["TrainingID"]);
             if (!string.IsNullOrWhiteSpace(trainingID) && gvSession != null)
             {
-                DataTable dt = new clsDataAccess().GetDataTable(@"SELECT S.SessionID,TR.TrainerID FROM SessionMaster S LEFT JOIN TrainerMaster TR ON TR.TrainerID=S.TrainerID WHERE S.TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
-                Dictionary<string, string> trainerMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                foreach (DataRow row in dt.Rows) trainerMap[Convert.ToString(row["SessionID"])] = Convert.ToString(row["TrainerID"]);
+                DataTable dt = new clsDataAccess().GetDataTable(@"SELECT S.SessionID,TR.TrainerID,ISNULL(TR.EmpID,'') EmpID FROM SessionMaster S LEFT JOIN TrainerMaster TR ON TR.TrainerID=S.TrainerID WHERE S.TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+                Dictionary<string, Tuple<string,string>> trainerMap = new Dictionary<string, Tuple<string,string>>(StringComparer.OrdinalIgnoreCase);
+                foreach (DataRow row in dt.Rows)
+                    trainerMap[Convert.ToString(row["SessionID"])] = Tuple.Create(Convert.ToString(row["TrainerID"]), Convert.ToString(row["EmpID"]));
 
                 for (int i = 0; i < gvSession.Rows.Count; i++)
                 {
                     string sessionID = Convert.ToString(gvSession.DataKeys[i].Value);
-                    string trainerID;
-                    if (!trainerMap.TryGetValue(sessionID, out trainerID)) continue;
-                    if (gvSession.Rows[i].Cells.Count > 6)
+                    Tuple<string,string> trainer;
+                    if (!trainerMap.TryGetValue(sessionID, out trainer)) continue;
+                    if (gvSession.Rows[i].Cells.Count <= 6) continue;
+
+                    foreach (Control control in gvSession.Rows[i].Cells[6].Controls)
                     {
-                        gvSession.Rows[i].Cells[6].Controls.Clear();
-                        gvSession.Rows[i].Cells[6].Controls.Add(new LiteralControl("<div style='font-weight:bold;color:#0d6efd;'>" + Server.HtmlEncode(trainerID) + "</div>"));
+                        LiteralControl literal = control as LiteralControl;
+                        if (literal == null) continue;
+                        if (!string.IsNullOrWhiteSpace(trainer.Item2)) literal.Text = literal.Text.Replace(trainer.Item2, trainer.Item1);
                     }
                 }
             }
