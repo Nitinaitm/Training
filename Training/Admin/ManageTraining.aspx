@@ -17,6 +17,7 @@
 <asp:Button ID="btnUpdateTraining" runat="server" Text="Update Batch" CssClass="btn btn-warning btn-action" BackColor="Gray" BorderColor="Gray" OnClick="btnUpdateTraining_Click" />
 <asp:Button ID="btnAssignSession" runat="server" Text="Assign Sessions & Trainers" CssClass="btn btn-warning btn-action" OnClick="btnAssignSession_Click" />
 <asp:Button ID="btnAssignTrainee" runat="server" Text="Assign Trainee" CssClass="btn btn-primary btn-action" OnClick="btnAssignTrainee_Click" />
+<asp:Button ID="btnRequirements" runat="server" Text="Training Requirements / Skip" CssClass="btn btn-danger btn-action" OnClick="btnRequirements_Click" />
 <asp:Button ID="btnAssignFeedback" runat="server" Text="Feedback Template" CssClass="btn btn-primary btn-action" OnClick="btnAssignFeedback_Click" />
 <asp:Button ID="btnCertificateTemplate" runat="server" Text="Certificate Template" CssClass="btn btn-primary btn-action" Enabled="false" OnClick="btnCertificateTemplate_Click" />
 <asp:Button ID="btnAssignHostel" runat="server" Text="Assign Hostel" CssClass="btn btn-info btn-action" Visible="false" OnClick="btnAssignHostel_Click" />
