@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Drawing;
 
 namespace Training.Trainer
 {
@@ -20,6 +21,7 @@ namespace Training.Trainer
                 TrainerSummary1.LoadTraining(Session["TrainingID"].ToString());
                 SessionSummary1.LoadSession(Session["SessionID"].ToString());
                 LoadWorkflow();
+                LoadSkipStatus();
             }
         }
 
@@ -41,6 +43,79 @@ namespace Training.Trainer
             btnAttendance.Visible = Convert.ToBoolean(r["AttendanceRequired"]);
             btnPreTest.Visible = Convert.ToBoolean(r["InitialAssessmentRequired"]);
             btnPostTest.Visible = Convert.ToBoolean(r["FinalAssessmentRequired"]);
+        }
+
+        private void LoadSkipStatus()
+        {
+            DataTable dt = obj.GetDataTable(
+                "SELECT AttendanceSkipped,PreAssessmentSkipped,PostAssessmentSkipped FROM SessionMaster WHERE SessionID=@SessionID",
+                new SqlParameter[] { new SqlParameter("@SessionID", Session["SessionID"].ToString()) });
+            if (dt.Rows.Count == 0) return;
+
+            bool attendance = Convert.ToBoolean(dt.Rows[0]["AttendanceSkipped"]);
+            bool pre = Convert.ToBoolean(dt.Rows[0]["PreAssessmentSkipped"]);
+            bool post = Convert.ToBoolean(dt.Rows[0]["PostAssessmentSkipped"]);
+
+            lblAttendanceSkip.Text = attendance ? "Skipped" : "Required";
+            lblPreSkip.Text = pre ? "Skipped" : "Required";
+            lblPostSkip.Text = post ? "Skipped" : "Required";
+
+            btnSkipAttendance.Visible = !attendance && btnAttendance.Visible;
+            btnSkipPre.Visible = !pre && btnPreTest.Visible;
+            btnSkipPost.Visible = !post && btnPostTest.Visible;
+        }
+
+        private bool Skip(string flagColumn, string reasonColumn, TextBoxValue reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason.Value))
+            {
+                lblSkipMessage.ForeColor = Color.Red;
+                lblSkipMessage.Text = "Skip reason is mandatory.";
+                return false;
+            }
+
+            string actor = Session["UserID"] == null ? "Trainer" : Session["UserID"].ToString();
+            string sql = "UPDATE SessionMaster SET " + flagColumn + "=1," + reasonColumn + "=@Reason," + reasonColumn.Replace("Reason", "By") + "=@By," + reasonColumn.Replace("Reason", "On") + "=GETDATE() WHERE SessionID=@SessionID";
+            obj.ExecuteSql(sql, new SqlParameter[]
+            {
+                new SqlParameter("@Reason", reason.Value.Trim()),
+                new SqlParameter("@By", actor),
+                new SqlParameter("@SessionID", Session["SessionID"].ToString())
+            });
+            return true;
+        }
+
+        protected void btnSkipAttendance_Click(object sender, EventArgs e)
+        {
+            if (!IsRequired("AttendanceRequired")) return;
+            if (Skip("AttendanceSkipped", "AttendanceSkipReason", new TextBoxValue(txtAttendanceSkipReason.Text)))
+            {
+                lblSkipMessage.ForeColor = Color.Green;
+                lblSkipMessage.Text = "Attendance has been skipped for this session.";
+                LoadSkipStatus();
+            }
+        }
+
+        protected void btnSkipPre_Click(object sender, EventArgs e)
+        {
+            if (!IsRequired("InitialAssessmentRequired")) return;
+            if (Skip("PreAssessmentSkipped", "PreAssessmentSkipReason", new TextBoxValue(txtPreSkipReason.Text)))
+            {
+                lblSkipMessage.ForeColor = Color.Green;
+                lblSkipMessage.Text = "Pre-Test has been skipped for this session.";
+                LoadSkipStatus();
+            }
+        }
+
+        protected void btnSkipPost_Click(object sender, EventArgs e)
+        {
+            if (!IsRequired("FinalAssessmentRequired")) return;
+            if (Skip("PostAssessmentSkipped", "PostAssessmentSkipReason", new TextBoxValue(txtPostSkipReason.Text)))
+            {
+                lblSkipMessage.ForeColor = Color.Green;
+                lblSkipMessage.Text = "Post-Test has been skipped for this session.";
+                LoadSkipStatus();
+            }
         }
 
         protected void btnAttendance_Click(object sender, EventArgs e)
@@ -79,13 +154,18 @@ namespace Training.Trainer
         private bool IsRequired(string column)
         {
             if (column != "AttendanceRequired" && column != "InitialAssessmentRequired" && column != "FinalAssessmentRequired")
-            {
                 return false;
-            }
+
             object value = obj.ExecuteScalar(
                 "SELECT " + column + " FROM TrainingDetails WHERE TrainingID=@TrainingID",
                 new SqlParameter[] { new SqlParameter("@TrainingID", Session["TrainingID"].ToString()) });
             return value != null && value != DBNull.Value && Convert.ToBoolean(value);
+        }
+
+        private sealed class TextBoxValue
+        {
+            public string Value { get; private set; }
+            public TextBoxValue(string value) { Value = value; }
         }
     }
 }
