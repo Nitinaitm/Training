@@ -17,15 +17,35 @@ IF COL_LENGTH('dbo.TrainingDetails','FeedbackSkipped') IS NULL ALTER TABLE dbo.T
 IF COL_LENGTH('dbo.TrainingDetails','FeedbackSkipReason') IS NULL ALTER TABLE dbo.TrainingDetails ADD FeedbackSkipReason nvarchar(500) NULL;
 IF COL_LENGTH('dbo.TrainingDetails','FeedbackSkipBy') IS NULL ALTER TABLE dbo.TrainingDetails ADD FeedbackSkipBy nvarchar(100) NULL;
 IF COL_LENGTH('dbo.TrainingDetails','FeedbackSkipOn') IS NULL ALTER TABLE dbo.TrainingDetails ADD FeedbackSkipOn datetime NULL;
+IF COL_LENGTH('dbo.TrainingDetails','FeedbackSkipForcedUnrequire') IS NULL ALTER TABLE dbo.TrainingDetails ADD FeedbackSkipForcedUnrequire bit NOT NULL CONSTRAINT DF_TrainingDetails_FeedbackSkipForcedUnrequire DEFAULT(0);
 IF COL_LENGTH('dbo.TrainingDetails','CertificateSkipped') IS NULL ALTER TABLE dbo.TrainingDetails ADD CertificateSkipped bit NOT NULL CONSTRAINT DF_TrainingDetails_CertificateSkipped DEFAULT(0);
 IF COL_LENGTH('dbo.TrainingDetails','CertificateSkipReason') IS NULL ALTER TABLE dbo.TrainingDetails ADD CertificateSkipReason nvarchar(500) NULL;
 IF COL_LENGTH('dbo.TrainingDetails','CertificateSkipBy') IS NULL ALTER TABLE dbo.TrainingDetails ADD CertificateSkipBy nvarchar(100) NULL;
 IF COL_LENGTH('dbo.TrainingDetails','CertificateSkipOn') IS NULL ALTER TABLE dbo.TrainingDetails ADD CertificateSkipOn datetime NULL;
+IF COL_LENGTH('dbo.TrainingDetails','CertificateSkipForcedUnrequire') IS NULL ALTER TABLE dbo.TrainingDetails ADD CertificateSkipForcedUnrequire bit NOT NULL CONSTRAINT DF_TrainingDetails_CertificateSkipForcedUnrequire DEFAULT(0);
 IF COL_LENGTH('dbo.TestMaster','SkipForcedUnpublish') IS NULL ALTER TABLE dbo.TestMaster ADD SkipForcedUnpublish bit NOT NULL CONSTRAINT DF_TestMaster_SkipForcedUnpublish DEFAULT(0);
 GO
 
-/* If a session requirement is skipped, its corresponding published test is temporarily unpublished.
-   When the requirement is unskipped, only tests that were unpublished by this mechanism are restored. */
+IF OBJECT_ID('dbo.trg_TrainingDetails_RequirementSkip','TR') IS NOT NULL DROP TRIGGER dbo.trg_TrainingDetails_RequirementSkip;
+GO
+CREATE TRIGGER dbo.trg_TrainingDetails_RequirementSkip ON dbo.TrainingDetails AFTER INSERT, UPDATE AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE TD SET FeedbackRequired=0, FeedbackSkipForcedUnrequire=1
+    FROM dbo.TrainingDetails TD INNER JOIN inserted I ON I.TrainingID=TD.TrainingID
+    WHERE ISNULL(I.FeedbackSkipped,0)=1 AND ISNULL(I.FeedbackSkipForcedUnrequire,0)=0 AND ISNULL(TD.FeedbackRequired,0)=1;
+    UPDATE TD SET FeedbackRequired=1, FeedbackSkipForcedUnrequire=0
+    FROM dbo.TrainingDetails TD INNER JOIN inserted I ON I.TrainingID=TD.TrainingID
+    WHERE ISNULL(I.FeedbackSkipped,0)=0 AND ISNULL(I.FeedbackSkipForcedUnrequire,0)=1;
+    UPDATE TD SET CertificateRequired=0, CertificateSkipForcedUnrequire=1
+    FROM dbo.TrainingDetails TD INNER JOIN inserted I ON I.TrainingID=TD.TrainingID
+    WHERE ISNULL(I.CertificateSkipped,0)=1 AND ISNULL(I.CertificateSkipForcedUnrequire,0)=0 AND ISNULL(TD.CertificateRequired,0)=1;
+    UPDATE TD SET CertificateRequired=1, CertificateSkipForcedUnrequire=0
+    FROM dbo.TrainingDetails TD INNER JOIN inserted I ON I.TrainingID=TD.TrainingID
+    WHERE ISNULL(I.CertificateSkipped,0)=0 AND ISNULL(I.CertificateSkipForcedUnrequire,0)=1;
+END
+GO
+
 IF OBJECT_ID('dbo.trg_SessionMaster_RequirementSkip','TR') IS NOT NULL DROP TRIGGER dbo.trg_SessionMaster_RequirementSkip;
 GO
 CREATE TRIGGER dbo.trg_SessionMaster_RequirementSkip ON dbo.SessionMaster AFTER INSERT, UPDATE AS
@@ -58,8 +78,6 @@ BEGIN
 END
 GO
 
-/* Database-level safety: when attendance is required and a session is not skipped,
-   a trainee cannot start a Pre/Post test unless attendance is Present. */
 IF OBJECT_ID('dbo.trg_TestAttempt_AttendanceGate','TR') IS NOT NULL DROP TRIGGER dbo.trg_TestAttempt_AttendanceGate;
 GO
 CREATE TRIGGER dbo.trg_TestAttempt_AttendanceGate ON dbo.TestAttempt AFTER INSERT, UPDATE AS
