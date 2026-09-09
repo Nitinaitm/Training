@@ -1,0 +1,7 @@
+<Project>
+  <ItemGroup>
+    <Compile Include="Training\Admin\TrainingRequirements.aspx.cs" />
+    <Compile Include="Training\Admin\TrainingRequirements.aspx.designer.cs" />
+    <Content Include="Training\Admin\TrainingRequirements.aspx" />
+  </ItemGroup>
+</Project>
