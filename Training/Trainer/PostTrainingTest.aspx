@@ -84,7 +84,10 @@
             clsDataAccess db = new clsDataAccess();
             object required = db.ExecuteScalar(
                 "SELECT FinalAssessmentRequired FROM TrainingDetails WHERE TrainingID=@TrainingID",
-                new System.Data.SqlClient.SqlParameter("@TrainingID", Session["TrainingID"].ToString()));
+                new System.Data.SqlClient.SqlParameter[]
+                {
+                    new System.Data.SqlClient.SqlParameter("@TrainingID", Session["TrainingID"].ToString())
+                });
 
             if (required == null || required == DBNull.Value || !Convert.ToBoolean(required))
             {
