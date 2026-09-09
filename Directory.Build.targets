@@ -14,5 +14,6 @@
     <Compile Include="Trainer\SessionAttendance.Lifecycle.cs" />
     <Compile Include="Trainer\SessionDetails.Flexibility.cs" />
     <Compile Include="Trainee\MySessions.Flexibility.cs" />
+    <Compile Include="Trainee\MyTrainings.Flexibility.cs" />
   </ItemGroup>
 </Project>
