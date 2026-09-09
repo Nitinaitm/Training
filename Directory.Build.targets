@@ -3,5 +3,12 @@
     <Compile Include="Training\Admin\TrainingRequirements.aspx.cs" />
     <Compile Include="Training\Admin\TrainingRequirements.aspx.designer.cs" />
     <Content Include="Training\Admin\TrainingRequirements.aspx" />
+
+    <Compile Include="Training\Admin\CreateBatch.Lifecycle.cs" />
+    <Compile Include="Training\Admin\AssignSession.Lifecycle.cs" />
+    <Compile Include="Training\Admin\AssignTrainee.Lifecycle.cs" />
+    <Compile Include="Training\Admin\TrainingRequirements.Lifecycle.cs" />
+    <Compile Include="Training\Admin\ManageTraining.Lifecycle.cs" />
+    <Compile Include="Training\Trainer\SessionAttendance.Lifecycle.cs" />
   </ItemGroup>
 </Project>
