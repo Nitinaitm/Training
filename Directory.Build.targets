@@ -6,7 +6,6 @@
 
     <Compile Include="Admin\CreateBatch.Lifecycle.cs" />
     <Compile Include="Admin\AssignSession.Lifecycle.cs" />
-    <Compile Include="Admin\AssignSession.Flexibility.cs" />
     <Compile Include="Admin\AssignTrainee.Lifecycle.cs" />
     <Compile Include="Admin\TrainingRequirements.Lifecycle.cs" />
     <Compile Include="Admin\ManageTraining.Lifecycle.cs" />
