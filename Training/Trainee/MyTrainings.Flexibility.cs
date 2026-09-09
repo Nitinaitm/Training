@@ -11,10 +11,11 @@ namespace Training.Trainee
             base.OnPreRender(e);
 
             string empID = Convert.ToString(Session["EmpID"]).ToUpperInvariant();
-            foreach (GridViewRow row in gvTraining.Rows)
+            for (int i = 0; i < gvTraining.Rows.Count; i++)
             {
-                if (row.RowType != DataControlRowType.DataRow || row.DataItem == null) continue;
-                string trainingID = Convert.ToString(DataBinder.Eval(row.DataItem, "TrainingID"));
+                GridViewRow row = gvTraining.Rows[i];
+                if (row.RowType != DataControlRowType.DataRow) continue;
+                string trainingID = Convert.ToString(gvTraining.DataKeys[i].Value);
                 if (string.IsNullOrWhiteSpace(trainingID)) continue;
 
                 bool attendanceRequired = GetBool("SELECT AttendanceRequired FROM TrainingDetails WHERE TrainingID=@TrainingID", trainingID);
@@ -30,6 +31,7 @@ namespace Training.Trainee
                 bool postDone = !postRequired || GetCount(@"SELECT COUNT(*) FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S.PostAssessmentSkipped,0)=0 AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=S.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1)", trainingID, empID) == 0;
                 bool feedbackDone = !feedbackRequired || feedbackSkipped || GetCount("SELECT COUNT(*) FROM Feedback WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND Submitted=1", trainingID, empID) > 0;
 
+                // Attendance is available while pending, not after it is completed.
                 SetButton(row, "lnkAttendance", attendanceRequired && !attendanceDone);
                 SetButton(row, "lnkFeedback", feedbackRequired && !feedbackSkipped && attendanceDone && preDone && postDone);
                 SetButton(row, "lnkCertificate", certificateRequired && !certificateSkipped && attendanceDone && preDone && postDone && feedbackDone);
@@ -41,7 +43,7 @@ namespace Training.Trainee
             LinkButton b = row.FindControl(id) as LinkButton;
             if (b == null) return;
             b.Enabled = enabled;
-            if (!enabled) b.CssClass += " disabled";
+            if (!enabled && !b.CssClass.Contains("disabled")) b.CssClass += " disabled";
         }
 
         private bool GetBool(string sql, string trainingID)
