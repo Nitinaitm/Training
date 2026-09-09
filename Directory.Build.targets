@@ -13,5 +13,6 @@
     <Compile Include="Admin\CertificateTemplate.Lifecycle.cs" />
     <Compile Include="Trainer\SessionAttendance.Lifecycle.cs" />
     <Compile Include="Trainer\SessionDetails.Flexibility.cs" />
+    <Compile Include="Trainee\MySessions.Flexibility.cs" />
   </ItemGroup>
 </Project>
