@@ -2,6 +2,7 @@ using System;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 
 namespace Training.Trainer
 {
@@ -10,21 +11,24 @@ namespace Training.Trainer
         protected override void OnPreInit(EventArgs e)
         {
             base.OnPreInit(e);
-
-            if (IsPostBack && IsTrainingCompleted())
-            {
-                Response.Redirect("~/Trainer/Default.aspx", true);
-            }
-
-            if (IsPostBack && IsAttendanceSkipped())
-            {
-                Response.Redirect("~/Trainer/SessionDetails.aspx", true);
-            }
+            if (IsPostBack && IsTrainingCompleted()) Response.Redirect("~/Trainer/Default.aspx", true);
+            if (IsPostBack && IsAttendanceSkipped()) Response.Redirect("~/Trainer/SessionDetails.aspx", true);
         }
 
         protected override void OnPreRender(EventArgs e)
         {
-            if (IsAttendanceSkipped())
+            if (!IsAttendanceSkipped())
+            {
+                foreach (GridViewRow row in gvAttendance.Rows)
+                {
+                    DropDownList ddl = row.FindControl("ddlAttendance") as DropDownList;
+                    if (ddl != null && ddl.SelectedIndex < 0 && ddl.Items.FindByValue("Present") != null)
+                        ddl.SelectedValue = "Present";
+                    else if (ddl != null && ddl.SelectedValue == "" && ddl.Items.FindByValue("Present") != null)
+                        ddl.SelectedValue = "Present";
+                }
+            }
+            else
             {
                 gvAttendance.Enabled = false;
                 btnSaveAttendance.Enabled = false;
