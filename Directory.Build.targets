@@ -1,14 +1,14 @@
 <Project>
   <ItemGroup>
-    <Compile Include="Training\Admin\TrainingRequirements.aspx.cs" />
-    <Compile Include="Training\Admin\TrainingRequirements.aspx.designer.cs" />
-    <Content Include="Training\Admin\TrainingRequirements.aspx" />
+    <Compile Include="Admin\TrainingRequirements.aspx.cs" />
+    <Compile Include="Admin\TrainingRequirements.aspx.designer.cs" />
+    <Content Include="Admin\TrainingRequirements.aspx" />
 
-    <Compile Include="Training\Admin\CreateBatch.Lifecycle.cs" />
-    <Compile Include="Training\Admin\AssignSession.Lifecycle.cs" />
-    <Compile Include="Training\Admin\AssignTrainee.Lifecycle.cs" />
-    <Compile Include="Training\Admin\TrainingRequirements.Lifecycle.cs" />
-    <Compile Include="Training\Admin\ManageTraining.Lifecycle.cs" />
-    <Compile Include="Training\Trainer\SessionAttendance.Lifecycle.cs" />
+    <Compile Include="Admin\CreateBatch.Lifecycle.cs" />
+    <Compile Include="Admin\AssignSession.Lifecycle.cs" />
+    <Compile Include="Admin\AssignTrainee.Lifecycle.cs" />
+    <Compile Include="Admin\TrainingRequirements.Lifecycle.cs" />
+    <Compile Include="Admin\ManageTraining.Lifecycle.cs" />
+    <Compile Include="Trainer\SessionAttendance.Lifecycle.cs" />
   </ItemGroup>
 </Project>
