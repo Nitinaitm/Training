@@ -22,15 +22,9 @@ namespace Training.Admin
 
             if (completed)
             {
-                btnUpdateTraining.Visible = false;
-                btnAssignSession.Visible = false;
-                btnAssignTrainee.Visible = false;
-                btnRequirements.Visible = false;
-                btnAssignFeedback.Visible = false;
-                btnAssignHostel.Visible = false;
-                btnCertificateTemplate.Visible = false;
-                btnStartTraining.Visible = false;
-                btnAttendance.Visible = true;
+                btnUpdateTraining.Visible = false; btnAssignSession.Visible = false; btnAssignTrainee.Visible = false;
+                btnRequirements.Visible = false; btnAssignFeedback.Visible = false; btnAssignHostel.Visible = false;
+                btnCertificateTemplate.Visible = false; btnStartTraining.Visible = false; btnAttendance.Visible = true;
             }
             else
             {
@@ -44,10 +38,8 @@ namespace Training.Admin
                 }
                 else
                 {
-                    btnCertificateTemplate.Visible = false;
-                    btnCertificateTemplate.Enabled = false;
-                    btnStartTraining.Enabled = false;
-                    btnRequirements.Visible = true;
+                    btnCertificateTemplate.Visible = false; btnCertificateTemplate.Enabled = false;
+                    btnStartTraining.Enabled = false; btnRequirements.Visible = true;
                 }
             }
 
@@ -111,9 +103,18 @@ namespace Training.Admin
             bool feedbackAssigned = GetCount("SELECT COUNT(*) FROM TrainingFeedbackCategory WHERE TrainingID=@TrainingID", trainingID) > 0;
             bool certConfigured = GetCount("SELECT COUNT(*) FROM TrainingCertificateTemplate WHERE TrainingID=@TrainingID AND ISNULL(TemplateID,'')<>'' AND ISNULL(CourseTitle,'')<>''", trainingID) > 0;
 
-            bool attendanceDone = !attendanceReq || (sessionCount > 0 && trainees && GetCount(@"SELECT COUNT(*) FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0 AND EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND A.AssignmentStatus='Assigned') AND EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND A.AssignmentStatus='Assigned' AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Completed'))", trainingID) == 0);
-            bool prePublished = sessionCount > 0 && GetCount("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(PreAssessmentSkipped,0)=0", trainingID) > 0 && GetCount("SELECT COUNT(*) FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S.PreAssessmentSkipped,0)=0 AND NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1)", trainingID) == 0;
-            bool postPublished = sessionCount > 0 && GetCount("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(PostAssessmentSkipped,0)=0", trainingID) > 0 && GetCount("SELECT COUNT(*) FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S.PostAssessmentSkipped,0)=0 AND NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType='Post' AND TM.IsPublished=1)", trainingID) == 0);
+            int attendanceApplicable = GetCount("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(AttendanceSkipped,0)=0", trainingID);
+            bool attendanceSkipped = sessionCount > 0 && attendanceApplicable == 0;
+            bool attendanceDone = !attendanceReq || attendanceSkipped || (sessionCount > 0 && trainees && GetCount(@"SELECT COUNT(*) FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0 AND EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND A.AssignmentStatus='Assigned') AND EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND A.AssignmentStatus='Assigned' AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Completed'))", trainingID) == 0);
+
+            int preApplicable = GetCount("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(PreAssessmentSkipped,0)=0", trainingID);
+            bool preSkipped = sessionCount > 0 && preApplicable == 0;
+            bool prePublished = sessionCount > 0 && preApplicable > 0 && GetCount("SELECT COUNT(*) FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S.PreAssessmentSkipped,0)=0 AND NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1)", trainingID) == 0;
+
+            int postApplicable = GetCount("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(PostAssessmentSkipped,0)=0", trainingID);
+            bool postSkipped = sessionCount > 0 && postApplicable == 0;
+            bool postPublished = sessionCount > 0 && postApplicable > 0 && GetCount("SELECT COUNT(*) FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S.PostAssessmentSkipped,0)=0 AND NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType='Post' AND TM.IsPublished=1)", trainingID) == 0;
+
             bool feedbackDone = !feedbackReq || feedbackSkip || (trainees && GetCount("SELECT COUNT(*) FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND A.AssignmentStatus='Assigned' AND NOT EXISTS (SELECT 1 FROM Feedback F WHERE F.TrainingID=A.TrainingID AND F.EmpID=A.EmpID AND F.Submitted=1)", trainingID) == 0);
             bool certDone = !certReq || certSkip || (trainees && GetCount("SELECT COUNT(*) FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND A.AssignmentStatus='Assigned' AND NOT EXISTS (SELECT 1 FROM TrainingCertificate C WHERE C.TrainingID=A.TrainingID AND C.EmpID=A.EmpID AND C.CertificateStatus='A')", trainingID) == 0);
 
@@ -123,9 +124,9 @@ namespace Training.Admin
             h.Append(StageHtml("Assign Trainees", true, trainees, false, ref n));
             h.Append(StageHtml("Feedback Assigned", feedbackReq, feedbackAssigned, feedbackSkip, ref n));
             h.Append(StageHtml("Certificate Template", certReq, certConfigured, certSkip, ref n));
-            h.Append(StageHtml("Attendance Completed", attendanceReq, attendanceDone, false, ref n));
-            h.Append(StageHtml("Pre-Test Completed", preReq, prePublished, false, ref n));
-            h.Append(StageHtml("Post-Test Completed", postReq, postPublished, false, ref n));
+            h.Append(StageHtml("Attendance Completed", attendanceReq, attendanceDone, attendanceSkipped, ref n));
+            h.Append(StageHtml("Pre-Test Completed", preReq, prePublished, preSkipped, ref n));
+            h.Append(StageHtml("Post-Test Completed", postReq, postPublished, postSkipped, ref n));
             h.Append(StageHtml("Feedback Submitted", feedbackReq, feedbackDone, feedbackSkip, ref n));
             h.Append(StageHtml("Certificate Generated", certReq, certDone, certSkip, ref n));
             litBatchLifecycle.Text = "<div class='stage-line'>" + h.ToString() + "</div>";
