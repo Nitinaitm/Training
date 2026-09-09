@@ -41,7 +41,15 @@ namespace Training.Admin
 
         private void LoadSessions()
         {
-            gvSessions.DataSource = db.GetDataTable(@"SELECT SessionID,ISNULL(AttendanceSkipped,0) AttendanceSkipped,ISNULL(PreAssessmentSkipped,0) PreAssessmentSkipped,ISNULL(PostAssessmentSkipped,0) PostAssessmentSkipped FROM SessionMaster WHERE TrainingID=@TrainingID ORDER BY SessionID", P("@TrainingID", TrainingID));
+            gvSessions.DataSource = db.GetDataTable(@"SELECT SessionID,
+ISNULL(AttendanceSkipped,0) AttendanceSkipped,
+ISNULL(PreAssessmentSkipped,0) PreAssessmentSkipped,
+ISNULL(PostAssessmentSkipped,0) PostAssessmentSkipped,
+ISNULL(TD.AttendanceRequired,0) AttendanceRequired,
+ISNULL(TD.InitialAssessmentRequired,0) InitialAssessmentRequired,
+ISNULL(TD.FinalAssessmentRequired,0) FinalAssessmentRequired
+FROM SessionMaster SM INNER JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID
+WHERE SM.TrainingID=@TrainingID ORDER BY SM.SessionID", P("@TrainingID", TrainingID));
             gvSessions.DataBind();
         }
 
@@ -50,9 +58,11 @@ namespace Training.Admin
 
         private void ToggleBatch(string label, string flag, string reasonColumn, string reason)
         {
+            bool required = Convert.ToBoolean(db.ExecuteScalar("SELECT " + (label == "Feedback" ? "FeedbackRequired" : "CertificateRequired") + " FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID)));
             bool skipped = Convert.ToBoolean(db.ExecuteScalar("SELECT ISNULL(" + flag + ",0) FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID)));
             if (!skipped)
             {
+                if (!required) { ShowError(label + " is not required for this training."); return; }
                 if (string.IsNullOrWhiteSpace(reason)) { ShowError("Skip reason is mandatory for " + label + "."); return; }
                 db.ExecuteSql("UPDATE TrainingDetails SET " + flag + "=1," + reasonColumn + "=@Reason," + reasonColumn.Replace("Reason", "By") + "=@By," + reasonColumn.Replace("Reason", "On") + "=GETDATE() WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@Reason", reason), new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
                 ShowSuccess(label + " has been skipped.");
@@ -73,12 +83,18 @@ namespace Training.Admin
             if (e.CommandName == "Attendance") reasonBox = (TextBox)row.FindControl("txtAttendanceReason");
             if (e.CommandName == "Pre") reasonBox = (TextBox)row.FindControl("txtPreReason");
             if (e.CommandName == "Post") reasonBox = (TextBox)row.FindControl("txtPostReason");
+
             string sessionID = e.CommandArgument.ToString();
             string flag = e.CommandName == "Attendance" ? "AttendanceSkipped" : (e.CommandName == "Pre" ? "PreAssessmentSkipped" : "PostAssessmentSkipped");
             string reasonColumn = e.CommandName == "Attendance" ? "AttendanceSkipReason" : (e.CommandName == "Pre" ? "PreAssessmentSkipReason" : "PostAssessmentSkipReason");
+            string requiredColumn = e.CommandName == "Attendance" ? "AttendanceRequired" : (e.CommandName == "Pre" ? "InitialAssessmentRequired" : "FinalAssessmentRequired");
+
+            bool required = Convert.ToBoolean(db.ExecuteScalar("SELECT TD." + requiredColumn + " FROM SessionMaster SM INNER JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID WHERE SM.SessionID=@SessionID AND SM.TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@SessionID", sessionID), new SqlParameter("@TrainingID", TrainingID) }));
             bool skipped = Convert.ToBoolean(db.ExecuteScalar("SELECT ISNULL(" + flag + ",0) FROM SessionMaster WHERE SessionID=@SessionID AND TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@SessionID", sessionID), new SqlParameter("@TrainingID", TrainingID) }));
+
             if (!skipped)
             {
+                if (!required) { ShowError("This requirement is not enabled for the training."); return; }
                 if (reasonBox == null || string.IsNullOrWhiteSpace(reasonBox.Text)) { ShowError("Skip reason is mandatory."); return; }
                 db.ExecuteSql("UPDATE SessionMaster SET " + flag + "=1," + reasonColumn + "=@Reason," + reasonColumn.Replace("Reason", "By") + "=@By," + reasonColumn.Replace("Reason", "On") + "=GETDATE() WHERE SessionID=@SessionID AND TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@Reason", reasonBox.Text.Trim()), new SqlParameter("@By", Actor), new SqlParameter("@SessionID", sessionID), new SqlParameter("@TrainingID", TrainingID) });
                 ShowSuccess(e.CommandName + " requirement skipped for session " + sessionID + ".");
