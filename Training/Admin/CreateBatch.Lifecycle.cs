@@ -19,6 +19,22 @@ namespace Training.Admin
             }
         }
 
+        protected override void OnPreRender(EventArgs e)
+        {
+            base.OnPreRender(e);
+
+            // CreateBatch ke initial screen par TrainingID nahi hoti.
+            // Batch save hone ke baad TrainingID generate hoti hai, tabhi
+            // Sessions/Trainers aur Trainees ke actions available honge.
+            bool batchCreated = !string.IsNullOrWhiteSpace(txtTrainingID.Text) ||
+                                 (Session["TrainingID"] != null && !string.IsNullOrWhiteSpace(Session["TrainingID"].ToString()));
+
+            btnCreateSessions.Enabled = batchCreated;
+            btnAssignTrainee.Enabled = batchCreated;
+            btnAssignFeedback.Enabled = batchCreated;
+            btnAssignFeedback.Visible = batchCreated;
+        }
+
         private bool IsTrainingCompleted(string trainingID)
         {
             if (string.IsNullOrWhiteSpace(trainingID))
