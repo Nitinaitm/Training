@@ -9,6 +9,7 @@
     <Compile Include="Admin\AssignTrainee.Lifecycle.cs" />
     <Compile Include="Admin\TrainingRequirements.Lifecycle.cs" />
     <Compile Include="Admin\ManageTraining.Lifecycle.cs" />
+    <Compile Include="Admin\CertificateTemplate.Lifecycle.cs" />
     <Compile Include="Trainer\SessionAttendance.Lifecycle.cs" />
   </ItemGroup>
 </Project>
