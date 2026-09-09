@@ -1,0 +1,26 @@
+<%@ Page Title="Training Requirements" Language="C#" MasterPageFile="~/AdminMaster.Master" AutoEventWireup="true" CodeBehind="TrainingRequirements.aspx.cs" Inherits="Training.Admin.TrainingRequirements" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<style>.main-card{background:#fff;padding:25px;border-radius:12px;box-shadow:0 0 10px #d9d9d9;margin-top:20px}.heading{font-size:26px;font-weight:700;margin-bottom:20px}.skip-card{border:1px solid #dee2e6;border-radius:10px;padding:18px;margin-bottom:20px}.reason{max-width:500px}.table td,.table th{vertical-align:middle}</style>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+<div class="container-fluid"><div class="main-card">
+<div class="heading">Training Requirements</div>
+<asp:Label ID="lblTraining" runat="server" CssClass="fw-bold" />
+<div class="skip-card mt-3">
+<h5>Batch-wise Requirements</h5>
+<div class="row g-3">
+<div class="col-md-6"><b>Feedback</b><br /><asp:Label ID="lblFeedbackStatus" runat="server" CssClass="badge bg-secondary" /><asp:TextBox ID="txtFeedbackReason" runat="server" TextMode="MultiLine" Rows="2" CssClass="form-control reason mt-2" placeholder="Reason required when skipping Feedback" /><asp:Button ID="btnFeedback" runat="server" CssClass="btn btn-outline-danger mt-2" OnClick="btnFeedback_Click" /></div>
+<div class="col-md-6"><b>Certificate</b><br /><asp:Label ID="lblCertificateStatus" runat="server" CssClass="badge bg-secondary" /><asp:TextBox ID="txtCertificateReason" runat="server" TextMode="MultiLine" Rows="2" CssClass="form-control reason mt-2" placeholder="Reason required when skipping Certificate" /><asp:Button ID="btnCertificate" runat="server" CssClass="btn btn-outline-danger mt-2" OnClick="btnCertificate_Click" /></div>
+</div></div>
+<div class="skip-card"><h5>Session-wise Requirements</h5><p class="text-muted">Admin can skip or unskip Attendance, Pre-Test and Post-Test for each session.</p>
+<asp:GridView ID="gvSessions" runat="server" AutoGenerateColumns="False" CssClass="table table-bordered table-striped" DataKeyNames="SessionID" OnRowCommand="gvSessions_RowCommand">
+<Columns>
+<asp:BoundField DataField="SessionID" HeaderText="Session" />
+<asp:TemplateField HeaderText="Attendance"><ItemTemplate><asp:Label runat="server" Text='<%# Convert.ToBoolean(Eval("AttendanceSkipped")) ? "Skipped" : "Required" %>' CssClass='<%# Convert.ToBoolean(Eval("AttendanceSkipped")) ? "badge bg-secondary" : "badge bg-success" %>' /><br /><asp:TextBox ID="txtReason" runat="server" CssClass="form-control mt-1" placeholder="Skip reason" /><asp:Button ID="btn" runat="server" Text='<%# Convert.ToBoolean(Eval("AttendanceSkipped")) ? "Unskip" : "Skip" %>' CommandName="Attendance" CommandArgument='<%# Eval("SessionID") %>' CssClass="btn btn-sm btn-outline-danger mt-1" /></ItemTemplate></asp:TemplateField>
+<asp:TemplateField HeaderText="Pre-Test"><ItemTemplate><asp:Label runat="server" Text='<%# Convert.ToBoolean(Eval("PreAssessmentSkipped")) ? "Skipped" : "Required" %>' CssClass='<%# Convert.ToBoolean(Eval("PreAssessmentSkipped")) ? "badge bg-secondary" : "badge bg-success" %>' /><br /><asp:TextBox ID="txtReason" runat="server" CssClass="form-control mt-1" placeholder="Skip reason" /><asp:Button ID="btn" runat="server" Text='<%# Convert.ToBoolean(Eval("PreAssessmentSkipped")) ? "Unskip" : "Skip" %>' CommandName="Pre" CommandArgument='<%# Eval("SessionID") %>' CssClass="btn btn-sm btn-outline-danger mt-1" /></ItemTemplate></asp:TemplateField>
+<asp:TemplateField HeaderText="Post-Test"><ItemTemplate><asp:Label runat="server" Text='<%# Convert.ToBoolean(Eval("PostAssessmentSkipped")) ? "Skipped" : "Required" %>' CssClass='<%# Convert.ToBoolean(Eval("PostAssessmentSkipped")) ? "badge bg-secondary" : "badge bg-success" %>' /><br /><asp:TextBox ID="txtReason" runat="server" CssClass="form-control mt-1" placeholder="Skip reason" /><asp:Button ID="btn" runat="server" Text='<%# Convert.ToBoolean(Eval("PostAssessmentSkipped")) ? "Unskip" : "Skip" %>' CommandName="Post" CommandArgument='<%# Eval("SessionID") %>' CssClass="btn btn-sm btn-outline-danger mt-1" /></ItemTemplate></asp:TemplateField>
+</Columns></asp:GridView></div>
+<asp:Label ID="lblMessage" runat="server" Font-Bold="true" />
+</div></div>
+</asp:Content>
