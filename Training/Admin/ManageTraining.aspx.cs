@@ -37,17 +37,65 @@ namespace Training.Admin
         private bool IsPostTestRequired() { return GetRequirement("FinalAssessmentRequired"); }
 
         private bool IsFeedbackAssigned() { return Convert.ToInt32(new clsDataAccess().ExecuteScalar("SELECT COUNT(*) FROM TrainingFeedbackCategory WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID))) > 0; }
-        private bool IsTraineeAssigned() { return Convert.ToInt32(new clsDataAccess().ExecuteScalar("SELECT COUNT(*) FROM TrainingAssignment WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID))) > 0; }
-        private bool IsCertificateTemplateConfigured() { return Convert.ToInt32(new clsDataAccess().ExecuteScalar("SELECT COUNT(*) FROM TrainingCertificateTemplate WHERE TrainingID=@TrainingID AND ISNULL(TemplateID,'')<>'' AND ISNULL(CourseTitle,'')<>''", P("@TrainingID", TrainingID))) > 0; }
+        private bool IsTraineeAssigned() { return Convert.ToInt32(new clsDataAccess().ExecuteScalar("SELECT COUNT(*) FROM TrainingAssignment WHERE TrainingID=@TrainingID AND ISNULL(AssignmentStatus,'Assigned')='Assigned'", P("@TrainingID", TrainingID))) > 0; }
+        private bool IsCertificateTemplateConfigured() { return Convert.ToInt32(new clsDataAccess().ExecuteScalar("SELECT COUNT(*) FROM TrainingCertificateTemplate WHERE TrainingID=@TrainingID AND ISNULL(TemplateID,'')<>''", P("@TrainingID", TrainingID))) > 0; }
         private bool HasSessionsAndTrainers() { object value = new clsDataAccess().ExecuteScalar("SELECT CASE WHEN COUNT(*) > 0 AND COUNT(*) = SUM(CASE WHEN ISNULL(TrainerID,'')<>'' THEN 1 ELSE 0 END) THEN 1 ELSE 0 END FROM SessionMaster WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID)); return Convert.ToInt32(value) == 1; }
+
+        private int GetAssignedTraineeCount() { return Convert.ToInt32(new clsDataAccess().ExecuteScalar("SELECT COUNT(*) FROM TrainingAssignment WHERE TrainingID=@TrainingID AND ISNULL(AssignmentStatus,'Assigned')='Assigned'", P("@TrainingID", TrainingID))); }
+
+        private int GetCompletedAttendanceCount()
+        {
+            string q = @"SELECT COUNT(*) FROM TrainingAssignment A
+WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned'
+AND NOT EXISTS (
+ SELECT 1 FROM SessionMaster S
+ WHERE S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0
+ AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Completed')
+)";
+            return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID)));
+        }
+
+        private int GetCompletedTestCount(string testType)
+        {
+            string skipColumn = testType == "Pre" ? "PreAssessmentSkipped" : "PostAssessmentSkipped";
+            string q = @"SELECT COUNT(*) FROM TrainingAssignment A
+WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned'
+AND NOT EXISTS (
+ SELECT 1 FROM SessionMaster S
+ WHERE S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + @",0)=0
+ AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1)
+ AND NOT EXISTS (
+   SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID
+   WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1
+   AND TA.EmpID=A.EmpID AND TA.Submitted=1
+ )
+)";
+            return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@TestType", testType) }));
+        }
+
+        private int GetFeedbackSubmittedCount()
+        {
+            string q = @"SELECT COUNT(*) FROM TrainingAssignment A
+WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned'
+AND EXISTS (SELECT 1 FROM Feedback F WHERE F.TrainingID=@TrainingID AND F.EmpID=A.EmpID AND F.Submitted=1)";
+            return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID)));
+        }
+
+        private int GetCertificateGeneratedCount()
+        {
+            string q = @"SELECT COUNT(*) FROM TrainingAssignment A
+WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned'
+AND EXISTS (SELECT 1 FROM TrainingCertificate C WHERE C.TrainingID=@TrainingID AND C.EmpID=A.EmpID AND C.CertificateStatus='A')";
+            return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID)));
+        }
 
         private bool AreAllAttendanceCompleted()
         {
-            string q = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID)
+            string q = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned')
 AND EXISTS (SELECT 1 FROM SessionMaster S WHERE S.TrainingID=@TrainingID)
 AND NOT EXISTS (
  SELECT 1 FROM TrainingAssignment A CROSS JOIN SessionMaster S
- WHERE A.TrainingID=@TrainingID AND S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0
+ WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned' AND S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0
  AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Completed')
 ) THEN 1 ELSE 0 END";
             return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID))) == 1;
@@ -56,12 +104,12 @@ AND NOT EXISTS (
         private bool AreAllTestsCompleted(string testType)
         {
             string skipColumn = testType == "Pre" ? "PreAssessmentSkipped" : "PostAssessmentSkipped";
-            string q = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID)
+            string q = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned')
 AND EXISTS (SELECT 1 FROM SessionMaster S WHERE S.TrainingID=@TrainingID)
 AND NOT EXISTS (
  SELECT 1 FROM TrainingAssignment A CROSS JOIN SessionMaster S
  INNER JOIN TrainingDetails TD ON TD.TrainingID=A.TrainingID
- WHERE A.TrainingID=@TrainingID AND S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + @",0)=0
+ WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned' AND S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + @",0)=0
  AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1)
  AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(S.AttendanceSkipped,0)=1 OR EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Present'))
  AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TA.EmpID=A.EmpID AND TA.Submitted=1)
@@ -71,28 +119,44 @@ AND NOT EXISTS (
 
         private bool IsFeedbackSubmitted()
         {
-            string q = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID)
-AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND NOT EXISTS (SELECT 1 FROM Feedback F WHERE F.TrainingID=@TrainingID AND F.EmpID=A.EmpID AND F.Submitted=1)) THEN 1 ELSE 0 END";
+            string q = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned')
+AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned' AND NOT EXISTS (SELECT 1 FROM Feedback F WHERE F.TrainingID=@TrainingID AND F.EmpID=A.EmpID AND F.Submitted=1)) THEN 1 ELSE 0 END";
             return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID))) == 1;
         }
 
         private bool IsCertificateGenerated()
         {
-            string q = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID)
-AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND NOT EXISTS (SELECT 1 FROM TrainingCertificate C WHERE C.TrainingID=@TrainingID AND C.EmpID=A.EmpID AND C.CertificateStatus='A')) THEN 1 ELSE 0 END";
+            string q = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned')
+AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned' AND NOT EXISTS (SELECT 1 FROM TrainingCertificate C WHERE C.TrainingID=@TrainingID AND C.EmpID=A.EmpID AND C.CertificateStatus='A')) THEN 1 ELSE 0 END";
             return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID))) == 1;
         }
 
-        private string Stage(string label, bool required, bool complete, bool skipped, ref int number)
+        private string Stage(string label, bool required, bool complete, bool skipped, int completed, int total, ref int number)
         {
             string css;
             string state;
             string bubble;
+            string title = "";
+            string style = "";
+
             if (skipped) { css = "skipped"; state = "Skipped"; bubble = "–"; }
             else if (!required) { css = "na"; state = "Not Required"; bubble = "–"; }
-            else if (complete) { css = "done"; state = "✓ Completed"; bubble = "✓"; number++; }
-            else { css = "pending"; state = "Pending"; bubble = number.ToString(); number++; }
-            return "<div class='stage-item " + css + "'><div class='stage-bubble'>" + bubble + "</div><div class='stage-label'>" + label + "</div><div class='stage-state'>" + state + "</div></div>";
+            else
+            {
+                if (total > 0)
+                {
+                    if (completed < 0) completed = 0;
+                    if (completed > total) completed = total;
+                    int percent = (int)Math.Round(completed * 100.0 / total);
+                    title = " title='" + completed + "/" + total + " (" + percent + "%)'";
+                    if (completed >= total) { css = "done"; state = "✓ Completed"; bubble = "✓"; }
+                    else { css = "partial"; state = "In Progress"; bubble = number.ToString(); style = " style='background:conic-gradient(#198754 0% " + percent + "%, #dc3545 " + percent + "% 100%);'"; }
+                }
+                else if (complete) { css = "done"; state = "✓ Completed"; bubble = "✓"; }
+                else { css = "pending"; state = "Pending"; bubble = number.ToString(); }
+                number++;
+            }
+            return "<div class='stage-item " + css + "'><div class='stage-bubble'" + title + style + ">" + bubble + "</div><div class='stage-label'>" + label + "</div><div class='stage-state'>" + state + "</div></div>";
         }
 
         private void BuildLifecycle()
@@ -110,17 +174,24 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             bool poc = !por || AreAllTestsCompleted("Post");
             bool fs = !feedbackRaw || feedbackSkipped || IsFeedbackSubmitted();
             bool cg = !certificateRaw || certificateSkipped || IsCertificateGenerated();
+            int total = GetAssignedTraineeCount();
+            int attendanceDone = ar ? GetCompletedAttendanceCount() : 0;
+            int preDone = pr ? GetCompletedTestCount("Pre") : 0;
+            int postDone = por ? GetCompletedTestCount("Post") : 0;
+            int feedbackDone = feedbackRaw && !feedbackSkipped ? GetFeedbackSubmittedCount() : 0;
+            int certificateDone = certificateRaw && !certificateSkipped ? GetCertificateGeneratedCount() : 0;
+
             int n = 1; StringBuilder h = new StringBuilder();
-            h.Append(Stage("Create Batch", true, true, false, ref n));
-            h.Append(Stage("Assign Sessions & Trainers", true, sa, false, ref n));
-            h.Append(Stage("Assign Trainees", true, ta, false, ref n));
-            h.Append(Stage("Feedback Assigned", feedbackRaw, fa, feedbackSkipped, ref n));
-            h.Append(Stage("Certificate Template", certificateRaw, ct, certificateSkipped, ref n));
-            h.Append(Stage("Attendance Completed", ar, ac, false, ref n));
-            h.Append(Stage("Pre-Test Completed", pr, pc, false, ref n));
-            h.Append(Stage("Post-Test Completed", por, poc, false, ref n));
-            h.Append(Stage("Feedback Submitted", feedbackRaw, fs, feedbackSkipped, ref n));
-            h.Append(Stage("Certificate Generated", certificateRaw, cg, certificateSkipped, ref n));
+            h.Append(Stage("Create Batch", true, true, false, 0, 0, ref n));
+            h.Append(Stage("Assign Sessions & Trainers", true, sa, false, 0, 0, ref n));
+            h.Append(Stage("Assign Trainees", true, ta, false, 0, 0, ref n));
+            h.Append(Stage("Feedback Assigned", feedbackRaw, fa, feedbackSkipped, 0, 0, ref n));
+            h.Append(Stage("Certificate Template", certificateRaw, ct, certificateSkipped, 0, 0, ref n));
+            h.Append(Stage("Attendance Completed", ar, ac, false, attendanceDone, total, ref n));
+            h.Append(Stage("Pre-Test Completed", pr, pc, false, preDone, total, ref n));
+            h.Append(Stage("Post-Test Completed", por, poc, false, postDone, total, ref n));
+            h.Append(Stage("Feedback Submitted", feedbackRaw, fs, feedbackSkipped, feedbackDone, total, ref n));
+            h.Append(Stage("Certificate Generated", certificateRaw, cg, certificateSkipped, certificateDone, total, ref n));
             litBatchLifecycle.Text = "<div class='stage-line'>" + h.ToString() + "</div>";
         }
 
@@ -157,20 +228,19 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             btnCertificateTemplate.Enabled = certificateRequired && ta && !workflow.Contains("E") && !certificateSkipped;
             btnAssignSession.Text = sa ? "Assign Sessions & Trainers ✓" : "Assign Sessions & Trainers";
             btnAssignTrainee.Text = ta ? "Assign Trainee ✓" : "Assign Trainee";
-            if (certificateRequired && ta && !workflow.Contains("E") && !certificateSkipped) btnCertificateTemplate.Text = ct ? "Certificate Template ✓" : "Certificate Template";
+            if (certificateRequired && ta && !certificateSkipped) btnCertificateTemplate.Text = ct ? "Certificate Template ✓" : "Certificate Template";
 
             if (workflow.Contains("E"))
             {
-                // Training is already started. Admin must still be able to add/change
-                // sessions/trainers and trainees during the training.
                 btnUpdateTraining.Visible = false;
                 btnAssignSession.Visible = true;
                 btnAssignTrainee.Visible = true;
                 btnStartTraining.Visible = true;
                 btnStartTraining.Enabled = false;
                 btnAssignHostel.Visible = false;
-                btnCertificateTemplate.Visible = false;
+                btnCertificateTemplate.Visible = certificateRequired && !certificateSkipped;
                 btnCertificateTemplate.Enabled = false;
+                btnCertificateTemplate.Text = ct ? "Certificate Template ✓" : "Certificate Template";
                 btnAttendance.Visible = true;
                 btnAttendance.Text = ac ? "Attendance ✓" : "Attendance";
                 btnAssignSession.Text = sa ? "Assign Sessions & Trainers ✓" : "Assign Sessions & Trainers";
