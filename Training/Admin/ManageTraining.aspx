@@ -11,7 +11,6 @@
 (function () {
     function fixLifecycle() {
         var items = document.querySelectorAll('.stage-line .stage-item');
-        var pendingNo = 1;
         for (var i = 0; i < items.length; i++) {
             var bubble = items[i].querySelector('.stage-bubble');
             if (!bubble) continue;
@@ -21,7 +20,7 @@
                 bubble.removeAttribute('title');
             }
             if (items[i].classList.contains('partial') || items[i].classList.contains('pending')) {
-                bubble.textContent = pendingNo++;
+                bubble.textContent = '';
             }
         }
     }
