@@ -1,9 +1,15 @@
-<%@ Page Title="Edit Employee" Language="C#" MasterPageFile="~/AdminMaster.Master" AutoEventWireup="true" %>
-<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+<%@ Page Title="Edit Employee" Language="C#" AutoEventWireup="true" %>
+<!DOCTYPE html>
+<html>
+<head runat="server">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Edit Employee</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-<style>.edit-card{background:#fff;border-radius:12px;box-shadow:0 0 10px #d9d9d9;padding:25px;margin:20px auto;max-width:900px}.heading{font-size:26px;font-weight:700;color:#198754;margin-bottom:20px}.readonly{background:#eef3f8!important}</style>
-</asp:Content>
-<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+<style>body{background:#f5f5f5;margin:0}.edit-card{background:#fff;border-radius:12px;box-shadow:0 0 10px #d9d9d9;padding:25px;margin:20px auto;max-width:900px}.heading{font-size:26px;font-weight:700;color:#198754;margin-bottom:20px}.readonly{background:#eef3f8!important}</style>
+</head>
+<body>
+<form id="form1" runat="server">
 <div class="container-fluid"><div class="edit-card"><div class="heading">Edit Employee</div>
 <asp:HiddenField ID="hfEmpID" runat="server"/><div class="row">
 <div class="col-md-6 mb-3"><label>Employee ID</label><asp:TextBox ID="txtEmpID" runat="server" CssClass="form-control readonly" ReadOnly="true"/></div>
@@ -13,9 +19,11 @@
 <div class="col-md-4 mb-3"><label>Company</label><asp:DropDownList ID="ddlCompany" runat="server" CssClass="form-select"/></div>
 <div class="col-md-4 mb-3"><label>Designation</label><asp:DropDownList ID="ddlDesignation" runat="server" CssClass="form-select"/></div>
 <div class="col-md-4 mb-3"><label>Posting Place</label><asp:DropDownList ID="ddlPostingPlace" runat="server" CssClass="form-select"/></div>
-<div class="col-12 mt-2"><asp:Button ID="btnUpdate" runat="server" Text="Update Employee" CssClass="btn btn-success" OnClick="btnUpdate_Click"/><button type="button" class="btn btn-secondary" onclick="window.parent.location.reload();">Close</button></div>
+<div class="col-12 mt-2"><asp:Button ID="btnUpdate" runat="server" Text="Update Employee" CssClass="btn btn-success" OnClick="btnUpdate_Click"/> <button type="button" class="btn btn-secondary" onclick="window.parent.location.reload();">Close</button></div>
 <div class="col-12 mt-3"><asp:Label ID="lblMessage" runat="server" Font-Bold="true"/></div></div></div></div>
-</asp:Content>
+</form>
+</body>
+</html>
 <script runat="server">
 protected void Page_Load(object sender, System.EventArgs e)
 {
