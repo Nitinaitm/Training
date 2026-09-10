@@ -94,7 +94,13 @@ namespace Training.Trainer
         protected void btnMaterial_Click(object sender, EventArgs e) { Response.Redirect("~/Trainer/TrainingMaterial.aspx"); }
         protected void btnQuestionBank_Click(object sender, EventArgs e) { Response.Redirect("~/Trainer/QuestionBank.aspx"); }
         protected void btnPreTest_Click(object sender, EventArgs e) { if (!IsRequired("InitialAssessmentRequired")) return; Response.Redirect("~/Trainer/PreTrainingTest.aspx"); }
-        protected void btnPostTest_Click(object sender, EventArgs e) { if (!IsRequired("FinalAssessmentRequired")) return; Response.Redirect("~/Trainer/PostTrainingTest.aspx"); }
+        protected void btnPostTest_Click(object sender, EventArgs e)
+        {
+            if (!IsRequired("FinalAssessmentRequired")) return;
+            object skipped = obj.ExecuteScalar("SELECT ISNULL(PostAssessmentSkipped,0) FROM SessionMaster WHERE SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@SessionID", Session["SessionID"].ToString()) });
+            if (skipped != null && skipped != DBNull.Value && Convert.ToBoolean(skipped)) return;
+            Response.Redirect("~/Trainer/PostTrainingTest.aspx");
+        }
         protected void btnTestResult_Click(object sender, EventArgs e) { Response.Redirect("~/Trainer/TestResult.aspx"); }
 
         private bool IsRequired(string column)
