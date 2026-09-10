@@ -11,16 +11,15 @@ namespace Training.Trainer
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            string role = Convert.ToString(Session["Role"]);
+            if (Session["TrainerID"] == null || !role.Equals("Trainer", StringComparison.OrdinalIgnoreCase))
+            {
+                Response.Redirect("~/Default.aspx");
+                return;
+            }
+
             if (!IsPostBack)
             {
-                if (Session["TrainerID"] == null)
-                {
-                    // For demo - Remove in production
-                    Session["TrainerID"] = "TRIN002";
-                    Session["TrainerName"] = "Trainer";
-                    // Response.Redirect("~/TrainerLogin.aspx");
-                }
-
                 LoadTrainerInfo();
             }
         }
@@ -32,7 +31,6 @@ namespace Training.Trainer
                 if (Session["TrainerID"] == null) return;
 
                 string trainerID = Session["TrainerID"].ToString();
-
                 string query = @"SELECT 
                                     TM.TrainerID, 
                                     CASE WHEN TM.TrainerType='Internal' THEN E.EmpName ELSE TM.NameExternal END AS TrainerName,
@@ -49,7 +47,6 @@ namespace Training.Trainer
                     DataRow dr = dt.Rows[0];
                     lblTrainerName.Text = dr["TrainerName"]?.ToString() ?? "Trainer";
                     lblDesignation.Text = dr["Designation"].ToString();
-                    // Session["TrainerName"] = lblTrainerName.Text;
                 }
                 else
                 {
