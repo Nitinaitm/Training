@@ -74,8 +74,39 @@ namespace Training.Trainer
             SetDefaultValues();
         }
 
-        // The remainder of this class is unchanged from the existing implementation.
         private void LoadTestQuestions() { string sql="SELECT TQ.QuestionID,QB.Question,QB.DifficultyLevel,TQ.Marks,QB.QuestionOwnerType FROM TestQuestion TQ INNER JOIN QuestionBank QB ON TQ.QuestionID=QB.QuestionID WHERE TQ.TestID=@TestID ORDER BY TQ.QuestionOrder"; DataTable dt=objDB.GetDataTable(sql,new SqlParameter[]{new SqlParameter("@TestID",ViewState["TestID"])}); ViewState["SelectedQuestions"]=dt; gvQuestion.DataSource=dt; gvQuestion.DataBind(); }
+
+        private void LoadQuestionPool()
+        {
+            if (ViewState["TopicID"] == null || ViewState["TrainerID"] == null)
+            {
+                lblPool.Text = "0 questions";
+                return;
+            }
+
+            string sql = "SELECT DifficultyLevel, COUNT(*) AS QuestionCount FROM QuestionBank WHERE TopicID=@TopicID AND IsActive=1 AND ((QuestionOwnerType='Admin') OR (QuestionOwnerType='Trainer' AND ApprovalStatus='Approved') OR (QuestionOwnerType='Trainer' AND OwnerID=@TrainerID)) GROUP BY DifficultyLevel";
+            DataTable dt = objDB.GetDataTable(sql, new SqlParameter[]
+            {
+                new SqlParameter("@TopicID", ViewState["TopicID"]),
+                new SqlParameter("@TrainerID", ViewState["TrainerID"])
+            });
+
+            int easy = 0, medium = 0, hard = 0, total = 0;
+            foreach (DataRow row in dt.Rows)
+            {
+                int count = Convert.ToInt32(row["QuestionCount"]);
+                total += count;
+                switch (row["DifficultyLevel"].ToString())
+                {
+                    case "Easy": easy = count; break;
+                    case "Medium": medium = count; break;
+                    case "Hard": hard = count; break;
+                }
+            }
+
+            lblPool.Text = "Total: " + total + " | Easy: " + easy + " | Medium: " + medium + " | Hard: " + hard;
+        }
+
         private void LoadTest() { DataTable dt=objDB.GetDataTable("SELECT * FROM TestMaster WHERE TestID=@TestID",new SqlParameter[]{new SqlParameter("@TestID",ViewState["TestID"])}); if(dt.Rows.Count==0)return; txtTestTitle.Text=dt.Rows[0]["TestTitle"].ToString(); txtDuration.Text=dt.Rows[0]["Duration"].ToString(); txtTotalQuestions.Text=dt.Rows[0]["TotalQuestions"].ToString(); txtPassing.Text=dt.Rows[0]["PassingPercentage"].ToString(); chkRandom.Checked=Convert.ToBoolean(dt.Rows[0]["RandomQuestion"]); chkShuffle.Checked=Convert.ToBoolean(dt.Rows[0]["ShuffleOption"]); chkAllowRetest.Checked=Convert.ToBoolean(dt.Rows[0]["AllowRetest"]); txtAttempt.Text=dt.Rows[0]["MaxAttempt"].ToString(); decimal totalMarks=Convert.ToDecimal(dt.Rows[0]["TotalMarks"]); int totalQuestion=Convert.ToInt32(dt.Rows[0]["TotalQuestions"]); if(totalQuestion>0)txtMarks.Text=(totalMarks/totalQuestion).ToString("0.##"); if(dt.Rows[0]["IsPublished"].ToString()=="True"){btnPublish.Enabled=false;btnPublish.Text="Published";btnGenerateQuestions.Enabled=false;btnSaveDraft.Enabled=false;} }
         private void SetDefaultValues() { txtTestTitle.Text=lblSession.Text+" Post Training Test"; txtDuration.Text="30"; txtTotalQuestions.Text="20"; txtMarks.Text="1"; txtPassing.Text="40"; txtAttempt.Text="1"; txtEasy.Text="5"; txtMedium.Text="10"; txtHard.Text="5"; chkRandom.Checked=true; chkShuffle.Checked=true; chkAllowRetest.Checked=false; }
 
