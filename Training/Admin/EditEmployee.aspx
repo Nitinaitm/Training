@@ -17,34 +17,28 @@
 <div class="col-12 mt-3"><asp:Label ID="lblMessage" runat="server" Font-Bold="true"/></div></div></div></div>
 </asp:Content>
 <script runat="server">
-using System;
-using System.Data;
-using System.Data.SqlClient;
-using System.Configuration;
-using System.Web.UI.WebControls;
-
-protected void Page_Load(object sender, EventArgs e)
+protected void Page_Load(object sender, System.EventArgs e)
 {
-    if (!string.Equals(Convert.ToString(Session["Role"]), "Admin", StringComparison.OrdinalIgnoreCase) && !string.Equals(Convert.ToString(Session["Role"]), "SuperAdmin", StringComparison.OrdinalIgnoreCase) && !string.Equals(Convert.ToString(Session["Role"]), "Nodal", StringComparison.OrdinalIgnoreCase)) { Response.Redirect("~/Default.aspx"); return; }
+    if (!string.Equals(System.Convert.ToString(Session["Role"]), "Admin", StringComparison.OrdinalIgnoreCase) && !string.Equals(System.Convert.ToString(Session["Role"]), "SuperAdmin", StringComparison.OrdinalIgnoreCase) && !string.Equals(System.Convert.ToString(Session["Role"]), "Nodal", StringComparison.OrdinalIgnoreCase)) { Response.Redirect("~/Default.aspx"); return; }
     if (!IsPostBack) LoadEmployee(Request.QueryString["EmpID"]);
 }
 private void LoadEmployee(string empID)
 {
     if (string.IsNullOrWhiteSpace(empID)) { lblMessage.Text="Invalid Employee ID."; return; }
-    DataTable dt=new clsDataAccess().GetDataTable("SELECT TOP 1 EmpID,EmpName,MobileNo,EmailId,EmpCompany,EmpDesignation,EmpPostingPlace FROM EmpBasicMaster WHERE EmpID=@EmpID",new SqlParameter[]{new SqlParameter("@EmpID",empID)});
+    System.Data.DataTable dt=new clsDataAccess().GetDataTable("SELECT TOP 1 EmpID,EmpName,MobileNo,EmailId,EmpCompany,EmpDesignation,EmpPostingPlace FROM EmpBasicMaster WHERE EmpID=@EmpID",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@EmpID",empID)});
     if(dt.Rows.Count==0){lblMessage.Text="Employee not found.";return;}
-    DataRow r=dt.Rows[0]; hfEmpID.Value=Convert.ToString(r["EmpID"]); txtEmpID.Text=Convert.ToString(r["EmpID"]); txtEmpName.Text=Convert.ToString(r["EmpName"]); txtMobile.Text=Convert.ToString(r["MobileNo"]); txtEmail.Text=Convert.ToString(r["EmailId"]);
-    BindList(ddlCompany,"SELECT DISTINCT EmpCompany FROM EmpBasicMaster WHERE ISNULL(EmpCompany,'')<>'' ORDER BY EmpCompany","EmpCompany",Convert.ToString(r["EmpCompany"]));
-    BindList(ddlDesignation,"SELECT DISTINCT EmpDesignation FROM EmpBasicMaster WHERE ISNULL(EmpDesignation,'')<>'' ORDER BY EmpDesignation","EmpDesignation",Convert.ToString(r["EmpDesignation"]));
-    BindList(ddlPostingPlace,"SELECT DISTINCT EmpPostingPlace FROM EmpBasicMaster WHERE ISNULL(EmpPostingPlace,'')<>'' ORDER BY EmpPostingPlace","EmpPostingPlace",Convert.ToString(r["EmpPostingPlace"]));
+    System.Data.DataRow r=dt.Rows[0]; hfEmpID.Value=System.Convert.ToString(r["EmpID"]); txtEmpID.Text=System.Convert.ToString(r["EmpID"]); txtEmpName.Text=System.Convert.ToString(r["EmpName"]); txtMobile.Text=System.Convert.ToString(r["MobileNo"]); txtEmail.Text=System.Convert.ToString(r["EmailId"]);
+    BindList(ddlCompany,"SELECT DISTINCT EmpCompany FROM EmpBasicMaster WHERE ISNULL(EmpCompany,'')<>'' ORDER BY EmpCompany","EmpCompany",System.Convert.ToString(r["EmpCompany"]));
+    BindList(ddlDesignation,"SELECT DISTINCT EmpDesignation FROM EmpBasicMaster WHERE ISNULL(EmpDesignation,'')<>'' ORDER BY EmpDesignation","EmpDesignation",System.Convert.ToString(r["EmpDesignation"]));
+    BindList(ddlPostingPlace,"SELECT DISTINCT EmpPostingPlace FROM EmpBasicMaster WHERE ISNULL(EmpPostingPlace,'')<>'' ORDER BY EmpPostingPlace","EmpPostingPlace",System.Convert.ToString(r["EmpPostingPlace"]));
 }
-private void BindList(DropDownList ddl,string sql,string field,string selected){DataTable dt=new clsDataAccess().GetDataTable(sql);ddl.Items.Clear();ddl.Items.Add(new ListItem("Select",""));foreach(DataRow r in dt.Rows)ddl.Items.Add(new ListItem(Convert.ToString(r[field]),Convert.ToString(r[field])));if(ddl.Items.FindByValue(selected)!=null)ddl.SelectedValue=selected;}
-protected void btnUpdate_Click(object sender,EventArgs e)
+private void BindList(System.Web.UI.WebControls.DropDownList ddl,string sql,string field,string selected){System.Data.DataTable dt=new clsDataAccess().GetDataTable(sql);ddl.Items.Clear();ddl.Items.Add(new System.Web.UI.WebControls.ListItem("Select",""));foreach(System.Data.DataRow r in dt.Rows)ddl.Items.Add(new System.Web.UI.WebControls.ListItem(System.Convert.ToString(r[field]),System.Convert.ToString(r[field])));if(ddl.Items.FindByValue(selected)!=null)ddl.SelectedValue=selected;}
+protected void btnUpdate_Click(object sender,System.EventArgs e)
 {
     if(string.IsNullOrWhiteSpace(hfEmpID.Value)){lblMessage.Text="Invalid Employee ID.";return;}
     if(string.IsNullOrWhiteSpace(txtMobile.Text)||!System.Text.RegularExpressions.Regex.IsMatch(txtMobile.Text.Trim(),"^[0-9]{10}$")){lblMessage.Text="Enter valid 10 digit mobile number.";return;}
     string sql="UPDATE EmpBasicMaster SET MobileNo=@MobileNo,EmailId=@EmailId,EmpCompany=@EmpCompany,EmpDesignation=@EmpDesignation,EmpPostingPlace=@EmpPostingPlace WHERE EmpID=@EmpID";
-    int rows=new clsDataAccess().ExecuteSql(sql,new SqlParameter[]{new SqlParameter("@MobileNo",txtMobile.Text.Trim()),new SqlParameter("@EmailId",txtEmail.Text.Trim()),new SqlParameter("@EmpCompany",ddlCompany.SelectedValue),new SqlParameter("@EmpDesignation",ddlDesignation.SelectedValue),new SqlParameter("@EmpPostingPlace",ddlPostingPlace.SelectedValue),new SqlParameter("@EmpID",hfEmpID.Value)});
+    int rows=new clsDataAccess().ExecuteSql(sql,new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@MobileNo",txtMobile.Text.Trim()),new System.Data.SqlClient.SqlParameter("@EmailId",txtEmail.Text.Trim()),new System.Data.SqlClient.SqlParameter("@EmpCompany",ddlCompany.SelectedValue),new System.Data.SqlClient.SqlParameter("@EmpDesignation",ddlDesignation.SelectedValue),new System.Data.SqlClient.SqlParameter("@EmpPostingPlace",ddlPostingPlace.SelectedValue),new System.Data.SqlClient.SqlParameter("@EmpID",hfEmpID.Value)});
     if(rows>0){lblMessage.ForeColor=System.Drawing.Color.Green;lblMessage.Text="Employee updated successfully.";string script="if(window.parent&&window.parent!==window){window.parent.location.reload();}";ClientScript.RegisterStartupScript(GetType(),"reloadParent",script,true);}else{lblMessage.ForeColor=System.Drawing.Color.Red;lblMessage.Text="No changes were saved.";}
 }
 </script>
