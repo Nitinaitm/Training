@@ -1,0 +1,120 @@
+<%@ Control Language="C#" AutoEventWireup="true" %>
+<style>
+.bl-wrap{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;margin:0 0 20px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.bl-title{font-size:19px;font-weight:700;color:#198754;margin-bottom:18px}.bl-track{display:flex;align-items:flex-start;gap:8px;overflow-x:auto;padding:6px 2px 12px}.bl-item{min-width:150px;text-align:center}.bl-bubble{width:58px;height:58px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.18)}.bl-label{font-weight:700;font-size:13px;color:#334155}.bl-state{font-size:12px;margin-top:3px;color:#64748b}.bl-connector{height:4px;min-width:35px;background:#dee2e6;margin-top:27px;border-radius:5px}.bl-note{font-size:11px;color:#64748b;margin-top:4px}@media(max-width:768px){.bl-item{min-width:125px}.bl-bubble{width:52px;height:52px}.bl-connector{min-width:22px}}
+</style>
+<div id="pnlLifecycle" runat="server" class="bl-wrap" visible="false">
+    <div class="bl-title">Batch Lifecycle</div>
+    <asp:Literal ID="litLifecycle" runat="server" />
+</div>
+<script runat="server">
+using System;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using System.Web;
+
+protected override void OnPreRender(EventArgs e)
+{
+    base.OnPreRender(e);
+    try
+    {
+        string role = Convert.ToString(Session["Role"]);
+        string trainingID = Convert.ToString(Session["TrainingID"]);
+        if (string.IsNullOrWhiteSpace(trainingID) && string.Equals(role, "Trainer", StringComparison.OrdinalIgnoreCase))
+        {
+            string sessionID = Convert.ToString(Session["SessionID"]);
+            if (!string.IsNullOrWhiteSpace(sessionID))
+                trainingID = Convert.ToString(new clsDataAccess().ExecuteScalar("SELECT TrainingID FROM SessionMaster WHERE SessionID=@SessionID AND TrainerID=@TrainerID", new SqlParameter[] { new SqlParameter("@SessionID", sessionID), new SqlParameter("@TrainerID", Convert.ToString(Session["TrainerID"])) }));
+        }
+        if (string.IsNullOrWhiteSpace(trainingID)) return;
+        DataTable td = new clsDataAccess().GetDataTable(@"SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired,ISNULL(FeedbackSkipped,0) FeedbackSkipped,ISNULL(CertificateSkipped,0) CertificateSkipped,Batch,BatchStrength FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+        if (td.Rows.Count == 0) return;
+        DataRow r = td.Rows[0];
+        bool trainee = string.Equals(role, "Trainee", StringComparison.OrdinalIgnoreCase);
+        string empID = Convert.ToString(Session["EmpID"]);
+        string trainerID = Convert.ToString(Session["TrainerID"]);
+        StringBuilder html = new StringBuilder();
+        int stageNo = 1;
+        AddStage(html, "Attendance", Convert.ToBoolean(r["AttendanceRequired"]), GetAttendance(trainingID, empID, trainerID, trainee), out stageNo);
+        AddStage(html, "Pre-Test", Convert.ToBoolean(r["InitialAssessmentRequired"]), GetAssessment(trainingID, "Pre", empID, trainerID, trainee), out stageNo);
+        AddStage(html, "Post-Test", Convert.ToBoolean(r["FinalAssessmentRequired"]), GetAssessment(trainingID, "Post", empID, trainerID, trainee), out stageNo);
+        AddStage(html, "Feedback", Convert.ToBoolean(r["FeedbackRequired"]), GetFeedback(trainingID, empID, trainee), out stageNo, Convert.ToBoolean(r["FeedbackSkipped"]));
+        AddStage(html, "Certificate", Convert.ToBoolean(r["CertificateRequired"]), GetCertificate(trainingID, empID, trainee), out stageNo, Convert.ToBoolean(r["CertificateSkipped"]));
+        litLifecycle.Text = html.ToString();
+        pnlLifecycle.Visible = true;
+    }
+    catch { pnlLifecycle.Visible = false; }
+}
+
+private void AddStage(StringBuilder html, string name, bool required, StageInfo info, out int stageNo, bool skipped=false)
+{
+    stageNo = 1;
+    string state = !required ? "Not Required" : skipped ? "Skipped" : info.State;
+    string bubble = !required || skipped ? "#6c757d" : info.Percent >= 100 ? "#198754" : info.Percent <= 0 ? "#dc3545" : "conic-gradient(#198754 0% " + info.Percent + "%, #dc3545 " + info.Percent + "% 100%)";
+    string style = bubble.StartsWith("#") ? "background:" + bubble + ";" : "background:" + bubble + ";";
+    string value = required && !skipped ? (info.Total > 0 ? info.Completed + "/" + info.Total + " (" + info.Percent.ToString("0") + "%)" : info.State) : state;
+    if (html.Length > 0) html.Append("<div class='bl-connector'></div>");
+    html.Append("<div class='bl-item'><div class='bl-bubble' style='" + style + "' title='" + HttpUtility.HtmlAttributeEncode(value) + "'>" + HttpUtility.HtmlEncode(required && !skipped && info.Percent >= 100 ? "✓" : stageNo.ToString()) + "</div><div class='bl-label'>" + HttpUtility.HtmlEncode(name) + "</div><div class='bl-state'>" + HttpUtility.HtmlEncode(state) + "</div><div class='bl-note'>" + HttpUtility.HtmlEncode(value) + "</div></div>");
+    stageNo++;
+}
+
+private StageInfo GetAttendance(string trainingID, string empID, string trainerID, bool trainee)
+{
+    clsDataAccess db = new clsDataAccess();
+    string sql;
+    SqlParameter[] p;
+    if (trainee)
+    {
+        sql = @"SELECT COUNT(*) Total, SUM(CASE WHEN EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID AND SA.AttendanceStatus IN ('Present','Completed')) THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0";
+        p = new SqlParameter[]{new SqlParameter("@TrainingID",trainingID),new SqlParameter("@EmpID",empID)};
+    }
+    else
+    {
+        sql = @"SELECT COUNT(*) Total, SUM(CASE WHEN EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.AttendanceStatus='Completed') THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND SM.TrainerID=@TrainerID";
+        p = new SqlParameter[]{new SqlParameter("@TrainingID",trainingID),new SqlParameter("@TrainerID",trainerID)};
+    }
+    return ReadStage(db.GetDataTable(sql,p));
+}
+
+private StageInfo GetAssessment(string trainingID, string type, string empID, string trainerID, bool trainee)
+{
+    string skip = type == "Pre" ? "PreAssessmentSkipped" : "PostAssessmentSkipped";
+    string sql;
+    SqlParameter[] p;
+    if (trainee)
+    {
+        sql = @"SELECT COUNT(*) Total,SUM(CASE WHEN EXISTS(SELECT 1 FROM TestMaster T WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1) AND EXISTS(SELECT 1 FROM TestMaster T INNER JOIN TestAttempt A ON A.TestID=T.TestID WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1 AND A.EmpID=@EmpID AND A.Submitted=1) THEN 1 WHEN ISNULL(SM." + skip + ",0)=1 THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND (ISNULL(SM." + skip + ",0)=0 OR ISNULL(SM." + skip + ",0)=1)";
+        p = new SqlParameter[]{new SqlParameter("@TrainingID",trainingID),new SqlParameter("@Type",type),new SqlParameter("@EmpID",empID)};
+    }
+    else
+    {
+        sql = @"SELECT COUNT(*) Total,SUM(CASE WHEN ISNULL(SM." + skip + ",0)=1 OR EXISTS(SELECT 1 FROM TestMaster T WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1) THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND SM.TrainerID=@TrainerID";
+        p = new SqlParameter[]{new SqlParameter("@TrainingID",trainingID),new SqlParameter("@Type",type),new SqlParameter("@TrainerID",trainerID)};
+    }
+    return ReadStage(new clsDataAccess().GetDataTable(sql,p));
+}
+
+private StageInfo GetFeedback(string trainingID, string empID, bool trainee)
+{
+    string sql = trainee ? "SELECT COUNT(*) Total,SUM(CASE WHEN Submitted=1 THEN 1 ELSE 0 END) Completed FROM Feedback WHERE TrainingID=@TrainingID AND EmpID=@EmpID" : "SELECT (SELECT COUNT(*) FROM TrainingAssignment WHERE TrainingID=@TrainingID AND ISNULL(AssignmentStatus,'Assigned')='Assigned') Total,(SELECT COUNT(DISTINCT EmpID) FROM Feedback WHERE TrainingID=@TrainingID AND Submitted=1) Completed";
+    SqlParameter[] p = trainee ? new SqlParameter[]{new SqlParameter("@TrainingID",trainingID),new SqlParameter("@EmpID",empID)} : new SqlParameter[]{new SqlParameter("@TrainingID",trainingID)};
+    return ReadStage(new clsDataAccess().GetDataTable(sql,p));
+}
+
+private StageInfo GetCertificate(string trainingID, string empID, bool trainee)
+{
+    string sql = trainee ? "SELECT 1 Total,CASE WHEN EXISTS(SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID) THEN 1 ELSE 0 END Completed" : "SELECT (SELECT COUNT(*) FROM TrainingAssignment WHERE TrainingID=@TrainingID AND ISNULL(AssignmentStatus,'Assigned')='Assigned') Total,(SELECT COUNT(DISTINCT EmpID) FROM TrainingCertificate WHERE TrainingID=@TrainingID) Completed";
+    SqlParameter[] p = trainee ? new SqlParameter[]{new SqlParameter("@TrainingID",trainingID),new SqlParameter("@EmpID",empID)} : new SqlParameter[]{new SqlParameter("@TrainingID",trainingID)};
+    return ReadStage(new clsDataAccess().GetDataTable(sql,p));
+}
+
+private StageInfo ReadStage(DataTable dt)
+{
+    int total=0, completed=0;
+    if(dt.Rows.Count>0){ total=dt.Rows[0]["Total"]==DBNull.Value?0:Convert.ToInt32(dt.Rows[0]["Total"]); completed=dt.Rows[0]["Completed"]==DBNull.Value?0:Convert.ToInt32(dt.Rows[0]["Completed"]); }
+    decimal pct=total>0 ? Math.Round(completed*100m/total,0) : 0;
+    return new StageInfo{Total=total,Completed=completed,Percent=pct,State=total==0?"Pending":completed>=total?"Completed":completed==0?"Pending":"In Progress"};
+}
+private class StageInfo { public int Total; public int Completed; public decimal Percent; public string State; }
+</script>
