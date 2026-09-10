@@ -13,6 +13,22 @@ namespace Training.Admin
         string TrainingID = "";
         string AdminID = "";
 
+        protected void Page_Init(object sender, EventArgs e)
+        {
+            System.Web.UI.WebControls.Panel nextPanel = new System.Web.UI.WebControls.Panel();
+            nextPanel.ID = "pnlNextStage";
+            nextPanel.CssClass = "text-end mt-4 mb-4";
+            System.Web.UI.WebControls.Button nextButton = new System.Web.UI.WebControls.Button();
+            nextButton.ID = "btnNextStage";
+            nextButton.Text = "Next →";
+            nextButton.CssClass = "btn btn-primary btn-lg";
+            nextButton.PostBackUrl = "~/Admin/ManageTraining.aspx";
+            nextPanel.Controls.Add(nextButton);
+            System.Web.UI.Control placeholder = Master == null ? null : Master.FindControl("ContentPlaceHolder1");
+            if (placeholder != null && placeholder.FindControl("pnlNextStage") == null)
+                placeholder.Controls.Add(nextPanel);
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             string userID = Convert.ToString(Session["UserID"]);
