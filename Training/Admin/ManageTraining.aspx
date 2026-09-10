@@ -4,8 +4,25 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 <style>
 .main-card{background:#fff;padding:25px;border-radius:12px;box-shadow:0 0 10px #d9d9d9;margin-top:20px}.page-heading{font-size:28px;font-weight:bold;color:#198754;margin-bottom:20px}.info-box{margin-bottom:12px}.action-card{margin-top:20px;background:#fff;border:1px solid #dee2e6;border-radius:10px;padding:20px}.btn-action{min-width:180px;margin-right:10px;margin-bottom:10px}.status-badge{font-size:16px;padding:8px 15px}
-.lifecycle{margin:20px 0 25px;padding:20px;border:1px solid #dee2e6;border-radius:12px;background:#f8f9fa}.lifecycle-title{font-size:20px;font-weight:700;margin-bottom:18px;text-align:center}.stage-scroll{overflow-x:auto;padding:8px 0 12px}.stage-line{display:flex;align-items:flex-start;min-width:1050px}.stage-item{flex:1;position:relative;text-align:center}.stage-item:not(:last-child):after{content:"";position:absolute;top:17px;left:50%;width:100%;height:4px;background:#dc3545;z-index:0}.stage-item.done:not(:last-child):after{background:#198754}.stage-bubble{position:relative;z-index:1;width:36px;height:36px;line-height:36px;border-radius:50%;margin:0 auto 8px;background:#dc3545;color:#fff;font-weight:700;border:3px solid #fff;box-shadow:0 0 0 1px #dc3545}.stage-item.done .stage-bubble{background:#198754;box-shadow:0 0 0 1px #198754}.stage-item.na .stage-bubble{background:#adb5bd;box-shadow:0 0 0 1px #adb5bd}.stage-label{font-size:12px;font-weight:600;line-height:1.25;padding:0 4px}.stage-state{font-size:10px;margin-top:3px;color:#dc3545}.stage-item.done .stage-state{color:#198754}.stage-item.na .stage-state{color:#6c757d}@media(max-width:768px){.main-card{padding:15px}.stage-scroll{margin-left:-5px;margin-right:-5px}}
+.lifecycle{margin:20px 0 25px;padding:20px;border:1px solid #dee2e6;border-radius:12px;background:#f8f9fa}.lifecycle-title{font-size:20px;font-weight:700;margin-bottom:18px;text-align:center}.stage-scroll{overflow-x:auto;padding:8px 0 12px}.stage-line{display:flex;align-items:flex-start;min-width:900px}.stage-item{flex:1;position:relative;text-align:center}.stage-item:not(:last-child):after{content:"";position:absolute;top:17px;left:50%;width:100%;height:4px;background:#dc3545;z-index:0}.stage-item.done:not(:last-child):after{background:#198754}.stage-bubble{position:relative;z-index:1;width:52px;height:52px;line-height:46px;border-radius:50%;margin:0 auto 8px;background:#dc3545;color:#fff;font-weight:700;font-size:13px;border:3px solid #fff;box-shadow:0 0 0 1px #dc3545;cursor:help}.stage-item.done .stage-bubble{background:#198754;box-shadow:0 0 0 1px #198754}.stage-item.na .stage-bubble,.stage-item.skipped .stage-bubble{background:#adb5bd;box-shadow:0 0 0 1px #adb5bd}.stage-label{font-size:12px;font-weight:600;line-height:1.25;padding:0 4px}.stage-state{font-size:10px;margin-top:3px;color:#dc3545}.stage-item.done .stage-state{color:#198754}.stage-item.na .stage-state,.stage-item.skipped .stage-state{color:#6c757d}
+/* Only progress stages are shown here; setup stages remain handled by the workflow buttons. */
+.stage-line .stage-item:nth-child(-n+5),.stage-line .stage-item:nth-child(10){display:none}
+@media(max-width:768px){.main-card{padding:15px}.stage-scroll{margin-left:-5px;margin-right:-5px}}
 </style>
+<script type="text/javascript">
+(function () {
+    function showProgressPercentages() {
+        var bubbles = document.querySelectorAll('.stage-line .stage-bubble[title]');
+        for (var i = 0; i < bubbles.length; i++) {
+            var match = bubbles[i].getAttribute('title').match(/\((\d+)%\)/);
+            if (match) bubbles[i].textContent = match[1] + '%';
+        }
+    }
+    if (window.addEventListener) window.addEventListener('load', showProgressPercentages);
+    else window.attachEvent('onload', showProgressPercentages);
+    if (window.Sys && Sys.Application) Sys.Application.add_load(showProgressPercentages);
+})();
+</script>
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 <div class="container-fluid"><div class="main-card">
