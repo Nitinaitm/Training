@@ -30,6 +30,7 @@
                 <asp:Button ID="btnQuestionBank" runat="server" Text="Question Bank" CssClass="btn btn-info btn-action" OnClick="btnQuestionBank_Click" />
                 <asp:Button ID="btnPreTest" runat="server" Text="Pre Training Test" CssClass="btn btn-warning btn-action" OnClick="btnPreTest_Click" />
                 <asp:Button ID="btnPostTest" runat="server" Text="Post Training Test" CssClass="btn btn-dark btn-action" OnClick="btnPostTest_Click" />
+                <asp:Button ID="btnTestResult" runat="server" Text="Test Result" CssClass="btn btn-success btn-action" OnClick="btnTestResult_Click" />
             </div>
 
             <asp:Panel ID="pnlSkip" runat="server" CssClass="skip-card">
