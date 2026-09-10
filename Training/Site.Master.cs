@@ -13,6 +13,11 @@ namespace Training
         {
             String activepage = Request.RawUrl;
 
+            if (Page.Header != null)
+            {
+                Page.Header.Controls.Add(new LiteralControl("<style>.training-cell{display:none !important;}</style>"));
+            }
+
             //if (activepage.Contains("/Rules"))
             //{
             //    test2.Attributes.Add("class", "nav-item nav-link active");
@@ -22,8 +27,6 @@ namespace Training
             {
                 test2.Attributes.Add("class", "nav-item nav-link active");
             }
-
-
 
             else
             {
