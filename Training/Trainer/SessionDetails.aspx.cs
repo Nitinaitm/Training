@@ -95,6 +95,7 @@ namespace Training.Trainer
         protected void btnQuestionBank_Click(object sender, EventArgs e) { Response.Redirect("~/Trainer/QuestionBank.aspx"); }
         protected void btnPreTest_Click(object sender, EventArgs e) { if (!IsRequired("InitialAssessmentRequired")) return; Response.Redirect("~/Trainer/PreTrainingTest.aspx"); }
         protected void btnPostTest_Click(object sender, EventArgs e) { if (!IsRequired("FinalAssessmentRequired")) return; Response.Redirect("~/Trainer/PostTrainingTest.aspx"); }
+        protected void btnTestResult_Click(object sender, EventArgs e) { Response.Redirect("~/Trainer/TestResult.aspx"); }
 
         private bool IsRequired(string column)
         {
