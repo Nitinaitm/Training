@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Web.UI;
 
 namespace Training
 {
@@ -12,6 +13,13 @@ namespace Training
                 Response.Redirect("~/Default.aspx");
                 return;
             }
+
+            try
+            {
+                Control lifecycle = LoadControl("~/BatchLifecycle.ascx");
+                ContentPlaceHolder1.Controls.Add(lifecycle);
+            }
+            catch { }
         }
     }
 }
