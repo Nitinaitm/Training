@@ -67,6 +67,13 @@ namespace Training.Trainee
             int count = result == null ? 0 : Convert.ToInt32(result);
             if (count > 0) return;
 
+            if (!CanGenerateCertificate(trainingID, empID))
+            {
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                lblMessage.Text = "Certificate is available only after completing all required training activities.";
+                return;
+            }
+
             try
             {
                 CertificateGenerator generator = new CertificateGenerator();
@@ -82,6 +89,47 @@ namespace Training.Trainee
                 lblMessage.ForeColor = System.Drawing.Color.Red;
                 lblMessage.Text = "Certificate generation error: " + ex.Message;
             }
+        }
+
+        private bool CanGenerateCertificate(string trainingID, string empID)
+        {
+            DataTable dt = objDB.GetDataTable(@"SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired,ISNULL(FeedbackSkipped,0) FeedbackSkipped,ISNULL(CertificateSkipped,0) CertificateSkipped FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+            if (dt.Rows.Count == 0) return false;
+            DataRow r = dt.Rows[0];
+
+            if (!Convert.ToBoolean(r["CertificateRequired"]) || Convert.ToBoolean(r["CertificateSkipped"])) return false;
+
+            if (Convert.ToBoolean(r["AttendanceRequired"]) && !AreAllRequiredSessionAttendanceCompleted(trainingID, empID)) return false;
+            if (Convert.ToBoolean(r["InitialAssessmentRequired"]) && !AreAllRequiredSessionTestsCompleted(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
+            if (Convert.ToBoolean(r["FinalAssessmentRequired"]) && !AreAllRequiredSessionTestsCompleted(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
+
+            if (Convert.ToBoolean(r["FeedbackRequired"]) && !Convert.ToBoolean(r["FeedbackSkipped"]) && !IsFeedbackSubmitted(trainingID, empID)) return false;
+
+            return true;
+        }
+
+        private bool AreAllRequiredSessionAttendanceCompleted(string trainingID, string empID)
+        {
+            object v = objDB.ExecuteScalar(@"SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID AND SA.AttendanceStatus IN ('Present','Completed'))) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) });
+            return v != null && Convert.ToInt32(v) == 1;
+        }
+
+        private bool AreAllRequiredSessionTestsCompleted(string trainingID, string empID, string testType, string skipColumn)
+        {
+            string sql = @"SELECT CASE WHEN NOT EXISTS (
+                SELECT 1 FROM SessionMaster SM
+                WHERE SM.TrainingID=@TrainingID AND ISNULL(SM." + skipColumn + @",0)=0
+                AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1)
+                AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1)
+            ) THEN 1 ELSE 0 END";
+            object v = objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID), new SqlParameter("@TestType", testType) });
+            return v != null && Convert.ToInt32(v) == 1;
+        }
+
+        private bool IsFeedbackSubmitted(string trainingID, string empID)
+        {
+            object v = objDB.ExecuteScalar("SELECT COUNT(*) FROM Feedback WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND ISNULL(Submitted,0)=1", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) });
+            return v != null && Convert.ToInt32(v) > 0;
         }
 
         protected void gvCertificate_RowCommand(object sender, GridViewCommandEventArgs e)
