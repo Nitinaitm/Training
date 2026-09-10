@@ -14,12 +14,36 @@ namespace Training.Trainer
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["TrainerID"] == null) Response.Redirect("~/Default.aspx");
-
-            if (Session["TestID"] == null)
+            if (Session["TrainerID"] == null)
             {
-                Response.Redirect("~/Trainer/PreTrainingTest.aspx");
+                Response.Redirect("~/Default.aspx");
                 return;
+            }
+
+            if (Session["TestID"] == null || string.IsNullOrWhiteSpace(Session["TestID"].ToString()))
+            {
+                string trainerID = Session["TrainerID"].ToString();
+                object testID = obj.ExecuteScalar(@"SELECT TOP 1 TM.TestID
+                    FROM TestMaster TM
+                    INNER JOIN SessionMaster SM ON SM.SessionID=TM.SessionID
+                    WHERE SM.TrainerID=@TrainerID AND ISNULL(TM.IsActive,1)=1
+                    ORDER BY TM.TestID DESC",
+                    new SqlParameter[] { new SqlParameter("@TrainerID", trainerID) });
+
+                if (testID == null || testID == DBNull.Value)
+                {
+                    lblTestID.Text = "";
+                    lblTitle.Text = "No test result available";
+                    lblPassing.Text = "";
+                    lblQuestions.Text = "";
+                    lblTotal.Text = "0";
+                    lblPassed.Text = "0";
+                    lblFailed.Text = "0";
+                    lblAvgScore.Text = "0%";
+                    return;
+                }
+
+                Session["TestID"] = testID.ToString();
             }
 
             if (!IsPostBack)
@@ -115,11 +139,7 @@ namespace Training.Trainer
 
         protected void btnBack_Click(object sender, EventArgs e)
         {
-            string referrer = Request.UrlReferrer?.ToString() ?? "";
-            if (referrer.Contains("PostTrainingTest"))
-                Response.Redirect("~/Trainer/PostTrainingTest.aspx");
-            else
-                Response.Redirect("~/Trainer/PreTrainingTest.aspx");
+            Response.Redirect("~/Trainer/TestResult.aspx");
         }
 
         protected void btnExport_Click(object sender, EventArgs e)
@@ -130,7 +150,6 @@ namespace Training.Trainer
 
             if (dt.Rows.Count == 0) return;
 
-            // Change column names for Excel
             dt.Columns["EmpID"].ColumnName = "Employee ID";
             dt.Columns["EmpName"].ColumnName = "Employee Name";
             dt.Columns["EmpDesignation"].ColumnName = "Designation";
@@ -149,22 +168,16 @@ namespace Training.Trainer
             StringWriter sw = new StringWriter();
             HtmlTextWriter hw = new HtmlTextWriter(sw);
 
-            // Write header
             hw.Write("<table border='1'><tr>");
             foreach (DataColumn col in dt.Columns)
-            {
                 hw.Write("<th>" + col.ColumnName + "</th>");
-            }
             hw.Write("</tr>");
 
-            // Write data
             foreach (DataRow row in dt.Rows)
             {
                 hw.Write("<tr>");
                 foreach (DataColumn col in dt.Columns)
-                {
                     hw.Write("<td>" + row[col].ToString() + "</td>");
-                }
                 hw.Write("</tr>");
             }
             hw.Write("</table>");
@@ -173,8 +186,6 @@ namespace Training.Trainer
             Response.Flush();
             Response.End();
         }
-
-        // TestResult.aspx.cs में Add करें
 
         protected void gvResults_RowCommand(object sender, GridViewCommandEventArgs e)
         {
