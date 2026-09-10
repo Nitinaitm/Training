@@ -74,7 +74,14 @@ namespace Training.Trainer
             SetDefaultValues();
         }
 
-        private void LoadTestQuestions() { string sql="SELECT TQ.QuestionID,QB.Question,QB.DifficultyLevel,TQ.Marks,QB.QuestionOwnerType FROM TestQuestion TQ INNER JOIN QuestionBank QB ON TQ.QuestionID=QB.QuestionID WHERE TQ.TestID=@TestID ORDER BY TQ.QuestionOrder"; DataTable dt=objDB.GetDataTable(sql,new SqlParameter[]{new SqlParameter("@TestID",ViewState["TestID"])}); ViewState["SelectedQuestions"]=dt; gvQuestion.DataSource=dt; gvQuestion.DataBind(); }
+        private void LoadTestQuestions()
+        {
+            string sql="SELECT TQ.QuestionID,QB.Question,QB.DifficultyLevel,TQ.Marks,QB.QuestionOwnerType FROM TestQuestion TQ INNER JOIN QuestionBank QB ON TQ.QuestionID=QB.QuestionID WHERE TQ.TestID=@TestID ORDER BY TQ.QuestionOrder";
+            DataTable dt=objDB.GetDataTable(sql,new SqlParameter[]{new SqlParameter("@TestID",ViewState["TestID"])});
+            ViewState["SelectedQuestions"]=dt;
+            gvQuestion.DataSource=dt;
+            gvQuestion.DataBind();
+        }
 
         private void LoadQuestionPool()
         {
@@ -107,9 +114,48 @@ namespace Training.Trainer
             lblPool.Text = "Total: " + total + " | Easy: " + easy + " | Medium: " + medium + " | Hard: " + hard;
         }
 
-        private void LoadTest() { DataTable dt=objDB.GetDataTable("SELECT * FROM TestMaster WHERE TestID=@TestID",new SqlParameter[]{new SqlParameter("@TestID",ViewState["TestID"])}); if(dt.Rows.Count==0)return; txtTestTitle.Text=dt.Rows[0]["TestTitle"].ToString(); txtDuration.Text=dt.Rows[0]["Duration"].ToString(); txtTotalQuestions.Text=dt.Rows[0]["TotalQuestions"].ToString(); txtPassing.Text=dt.Rows[0]["PassingPercentage"].ToString(); chkRandom.Checked=Convert.ToBoolean(dt.Rows[0]["RandomQuestion"]); chkShuffle.Checked=Convert.ToBoolean(dt.Rows[0]["ShuffleOption"]); chkAllowRetest.Checked=Convert.ToBoolean(dt.Rows[0]["AllowRetest"]); txtAttempt.Text=dt.Rows[0]["MaxAttempt"].ToString(); decimal totalMarks=Convert.ToDecimal(dt.Rows[0]["TotalMarks"]); int totalQuestion=Convert.ToInt32(dt.Rows[0]["TotalQuestions"]); if(totalQuestion>0)txtMarks.Text=(totalMarks/totalQuestion).ToString("0.##"); if(dt.Rows[0]["IsPublished"].ToString()=="True"){btnPublish.Enabled=false;btnPublish.Text="Published";btnGenerateQuestions.Enabled=false;btnSaveDraft.Enabled=false;} }
-        private void SetDefaultValues() { txtTestTitle.Text=lblSession.Text+" Post Training Test"; txtDuration.Text="30"; txtTotalQuestions.Text="20"; txtMarks.Text="1"; txtPassing.Text="40"; txtAttempt.Text="1"; txtEasy.Text="5"; txtMedium.Text="10"; txtHard.Text="5"; chkRandom.Checked=true; chkShuffle.Checked=true; chkAllowRetest.Checked=false; }
+        private void LoadTest()
+        {
+            DataTable dt=objDB.GetDataTable("SELECT * FROM TestMaster WHERE TestID=@TestID",new SqlParameter[]{new SqlParameter("@TestID",ViewState["TestID"])});
+            if(dt.Rows.Count==0)return;
+            txtTestTitle.Text=dt.Rows[0]["TestTitle"].ToString();
+            txtDuration.Text=dt.Rows[0]["Duration"].ToString();
+            txtTotalQuestions.Text=dt.Rows[0]["TotalQuestions"].ToString();
+            txtPassing.Text=dt.Rows[0]["PassingPercentage"].ToString();
+            chkRandom.Checked=Convert.ToBoolean(dt.Rows[0]["RandomQuestion"]);
+            chkShuffle.Checked=Convert.ToBoolean(dt.Rows[0]["ShuffleOption"]);
+            chkAllowRetest.Checked=Convert.ToBoolean(dt.Rows[0]["AllowRetest"]);
+            txtAttempt.Text=dt.Rows[0]["MaxAttempt"].ToString();
+            decimal totalMarks=Convert.ToDecimal(dt.Rows[0]["TotalMarks"]);
+            int totalQuestion=Convert.ToInt32(dt.Rows[0]["TotalQuestions"]);
+            if(totalQuestion>0)txtMarks.Text=(totalMarks/totalQuestion).ToString("0.##");
+            if(dt.Rows[0]["IsPublished"].ToString()=="True"){btnPublish.Enabled=false;btnPublish.Text="Published";btnGenerateQuestions.Enabled=false;btnSaveDraft.Enabled=false;}
+        }
 
-        // Existing event handlers and helper methods continue below in the source file.
+        private void SetDefaultValues()
+        {
+            txtTestTitle.Text=lblSession.Text+" Post Training Test";
+            txtDuration.Text="30";
+            txtTotalQuestions.Text="20";
+            txtMarks.Text="1";
+            txtPassing.Text="40";
+            txtAttempt.Text="1";
+            txtEasy.Text="5";
+            txtMedium.Text="10";
+            txtHard.Text="5";
+            chkRandom.Checked=true;
+            chkShuffle.Checked=true;
+            chkAllowRetest.Checked=false;
+        }
+
+        protected void gvQuestion_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                Label lbl = e.Row.FindControl("lblSlNo") as Label;
+                if (lbl != null)
+                    lbl.Text = (e.Row.RowIndex + 1).ToString();
+            }
+        }
     }
 }
