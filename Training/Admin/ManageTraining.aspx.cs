@@ -150,10 +150,10 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
                     int percent = (int)Math.Round(completed * 100.0 / total);
                     title = " title='" + completed + "/" + total + " (" + percent + "%)'";
                     if (completed >= total) { css = "done"; state = "✓ Completed"; bubble = "✓"; }
-                    else { css = "partial"; state = "In Progress"; bubble = ""; style = " style='background:conic-gradient(#198754 0% " + percent + "%, #dc3545 " + percent + "% 100%);'"; }
+                    else { css = "partial"; state = "In Progress"; bubble = number.ToString(); style = " style='background:conic-gradient(#198754 0% " + percent + "%, #dc3545 " + percent + "% 100%);'"; }
                 }
                 else if (complete) { css = "done"; state = "✓ Completed"; bubble = "✓"; }
-                else { css = "pending"; state = "Pending"; bubble = ""; }
+                else { css = "pending"; state = "Pending"; bubble = number.ToString(); }
                 number++;
             }
             return "<div class='stage-item " + css + "'><div class='stage-bubble'" + title + style + ">" + bubble + "</div><div class='stage-label'>" + label + "</div><div class='stage-state'>" + state + "</div></div>";
@@ -197,14 +197,17 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
 
         private void LoadWorkflow()
         {
-            string workflow = ""; bool certificateRequired = false;
+            string workflow = ""; bool hostelRequired = false; bool certificateRequired = false;
             using (SqlConnection con = new SqlConnection(constr))
             {
-                SqlCommand cmd = new SqlCommand(@"SELECT TrainingStatus,WorkflowStatus,CertificateRequired FROM TrainingDetails WHERE TrainingID=@TrainingID", con);
+                SqlCommand cmd = new SqlCommand(@"SELECT HostelRequiredTrainee,TrainerHostelRequired,TraineeHostelRequired,TrainingStatus,WorkflowStatus,CertificateRequired FROM TrainingDetails WHERE TrainingID=@TrainingID", con);
                 cmd.Parameters.AddWithValue("@TrainingID", TrainingID); con.Open(); SqlDataReader dr = cmd.ExecuteReader();
                 if (!dr.Read()) return;
                 lblStatus.Text = dr["TrainingStatus"].ToString(); workflow = dr["WorkflowStatus"].ToString(); certificateRequired = Convert.ToBoolean(dr["CertificateRequired"]);
-                dr.Close();
+                bool th = dr["TrainerHostelRequired"] != DBNull.Value && Convert.ToBoolean(dr["TrainerHostelRequired"]);
+                bool trh = dr["TraineeHostelRequired"] != DBNull.Value && Convert.ToBoolean(dr["TraineeHostelRequired"]);
+                bool legacy = string.Equals(dr["HostelRequiredTrainee"].ToString(), "Yes", StringComparison.OrdinalIgnoreCase);
+                hostelRequired = th || trh || legacy; dr.Close();
             }
             bool ta = IsTraineeAssigned(); bool sa = HasSessionsAndTrainers(); bool fr = IsFeedbackRequired();
             bool feedbackSkipped = GetRequirement("FeedbackSkipped"); bool certificateSkipped = GetRequirement("CertificateSkipped");
@@ -220,6 +223,7 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             btnStartTraining.Visible = true;
             btnStartTraining.Enabled = !workflow.Contains("E");
             btnAttendance.Visible = false;
+            btnAssignHostel.Visible = hostelRequired;
             btnCertificateTemplate.Visible = certificateRequired && !certificateSkipped;
             btnCertificateTemplate.Enabled = certificateRequired && ta && !workflow.Contains("E") && !certificateSkipped;
             btnAssignSession.Text = sa ? "Assign Sessions & Trainers ✓" : "Assign Sessions & Trainers";
@@ -233,6 +237,7 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
                 btnAssignTrainee.Visible = true;
                 btnStartTraining.Visible = true;
                 btnStartTraining.Enabled = false;
+                btnAssignHostel.Visible = false;
                 btnCertificateTemplate.Visible = certificateRequired && !certificateSkipped;
                 btnCertificateTemplate.Enabled = false;
                 btnCertificateTemplate.Text = ct ? "Certificate Template ✓" : "Certificate Template";
@@ -241,6 +246,7 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
                 btnAssignSession.Text = sa ? "Assign Sessions & Trainers ✓" : "Assign Sessions & Trainers";
                 btnAssignTrainee.Text = ta ? "Assign Trainee ✓" : "Assign Trainee";
             }
+            else if (hostelRequired) btnAssignHostel.Text = "Assign Hostel";
             BuildLifecycle();
         }
 
@@ -274,15 +280,23 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             if (!IsTraineeAssigned()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Please assign trainee before configuring certificate template."; return; }
             Response.Redirect("CertificateTemplate.aspx");
         }
+        protected void btnHostelNo_Click(object sender, EventArgs e) { UpdateHostelRequirement("No"); StartTraining(); }
+        protected void btnHostelYes_Click(object sender, EventArgs e) { UpdateHostelRequirement("Yes"); pnlHostelConfirmation.Visible = false; Response.Redirect("AssignHostel.aspx"); }
+        private void UpdateHostelRequirement(string hostelRequired)
+        {
+            new clsDataAccess().ExecuteSql("UPDATE TrainingDetails SET HostelRequiredTrainee=@HostelRequiredTrainee,UpdatedOn=GETDATE(),UpdatedBy=@UpdatedBy WHERE TrainingID=@TrainingID", new SqlParameter[]
+            { new SqlParameter("@HostelRequiredTrainee", hostelRequired), new SqlParameter("@UpdatedBy", Session["UserID"] == null ? "Admin" : Session["UserID"].ToString()), new SqlParameter("@TrainingID", TrainingID) });
+        }
         private void StartTraining()
         {
-            if (IsFeedbackRequired() && !IsFeedbackAssigned()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Feedback is required. Please assign Feedback before starting training."; return; }
-            if (IsCertificateRequired() && !IsCertificateTemplateConfigured()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Certificate is required. Please configure Certificate Template before starting training."; return; }
-            clsWorkflow.UpdateWorkflow(TrainingID, "InProgress", "E"); lblMessage.ForeColor = System.Drawing.Color.Green; lblMessage.Text = "Training has started successfully."; LoadWorkflow();
+            if (IsFeedbackRequired() && !IsFeedbackAssigned()) { pnlHostelConfirmation.Visible = false; lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Feedback is required. Please assign Feedback before starting training."; return; }
+            if (IsCertificateRequired() && !IsCertificateTemplateConfigured()) { pnlHostelConfirmation.Visible = false; lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Certificate is required. Please configure Certificate Template before starting training."; return; }
+            clsWorkflow.UpdateWorkflow(TrainingID, "InProgress", "E"); pnlHostelConfirmation.Visible = false; lblMessage.ForeColor = System.Drawing.Color.Green; lblMessage.Text = "Training has started successfully."; LoadWorkflow();
         }
         protected void btnAttendance_Click(object sender, EventArgs e) { Response.Redirect("TrainingAttendance.aspx"); }
         protected void btnUpdateTraining_Click(object sender, EventArgs e) { Response.Redirect("CreateBatch.aspx?mode=edit"); }
         protected void btnAssignSession_Click(object sender, EventArgs e) { Response.Redirect("AssignSession.aspx"); }
+        protected void btnAssignHostel_Click(object sender, EventArgs e) { Response.Redirect("AssignHostel.aspx"); }
         protected void btnAssignTrainee_Click(object sender, EventArgs e) { Response.Redirect("AssignTrainee.aspx"); }
     }
 }
