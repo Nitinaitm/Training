@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
@@ -20,120 +19,116 @@ namespace Training.Trainer
                 return;
             }
 
-            if (Session["TestID"] == null || string.IsNullOrWhiteSpace(Session["TestID"].ToString()))
+            if (Session["TrainingID"] == null || string.IsNullOrWhiteSpace(Session["TrainingID"].ToString()))
             {
-                string trainingID = Convert.ToString(Session["TrainingID"]);
-                string sessionID = Convert.ToString(Session["SessionID"]);
+                Response.Redirect("~/Default.aspx");
+                return;
+            }
 
-                object testID = null;
-
-                if (!string.IsNullOrWhiteSpace(trainingID) && !string.IsNullOrWhiteSpace(sessionID))
-                {
-                    testID = obj.ExecuteScalar(@"SELECT TOP 1 TM.TestID
-                        FROM TestMaster TM
-                        INNER JOIN SessionMaster SM ON SM.SessionID=TM.SessionID
-                        WHERE SM.TrainingID=@TrainingID
-                          AND SM.SessionID=@SessionID
-                          AND SM.TrainerID=@TrainerID
-                          AND ISNULL(TM.IsActive,1)=1
-                        ORDER BY CASE WHEN TM.TestType='Post' THEN 0 ELSE 1 END, TM.TestID DESC",
-                        new SqlParameter[]
-                        {
-                            new SqlParameter("@TrainingID", trainingID),
-                            new SqlParameter("@SessionID", sessionID),
-                            new SqlParameter("@TrainerID", Session["TrainerID"].ToString())
-                        });
-                }
-
-                if ((testID == null || testID == DBNull.Value) && !string.IsNullOrWhiteSpace(trainingID) && !string.IsNullOrWhiteSpace(sessionID))
-                {
-                    testID = obj.ExecuteScalar(@"SELECT TOP 1 TestID
-                        FROM TestMaster
-                        WHERE SessionID=@SessionID
-                          AND IsActive=1
-                        ORDER BY CASE WHEN TestType='Post' THEN 0 ELSE 1 END, TestID DESC",
-                        new SqlParameter[] { new SqlParameter("@SessionID", sessionID) });
-                }
-
-                if (testID == null || testID == DBNull.Value)
-                {
-                    lblTestID.Text = "";
-                    lblTitle.Text = "No test result available";
-                    lblPassing.Text = "";
-                    lblQuestions.Text = "";
-                    lblTotal.Text = "0";
-                    lblPassed.Text = "0";
-                    lblFailed.Text = "0";
-                    lblAvgScore.Text = "0%";
-                    return;
-                }
-
-                Session["TestID"] = testID.ToString();
+            if (Session["SessionID"] == null || string.IsNullOrWhiteSpace(Session["SessionID"].ToString()))
+            {
+                Response.Redirect("~/Trainer/SessionDetails.aspx");
+                return;
             }
 
             if (!IsPostBack)
             {
-                LoadTestInfo();
+                LoadSessionInfo();
                 LoadSummary();
                 BindGrid();
             }
         }
 
-        private string TestID => Session["TestID"].ToString();
+        private string TrainingID => Session["TrainingID"].ToString();
+        private string SessionID => Session["SessionID"].ToString();
 
-        private void LoadTestInfo()
+        private void LoadSessionInfo()
         {
-            string query = @"SELECT TestID, Title, PassingPercent, TotalQuestions FROM TestMaster WHERE TestID=@TestID AND IsActive=1";
-            SqlParameter[] param = new SqlParameter[] { new SqlParameter("@TestID", TestID) };
-            DataTable dt = obj.GetDataTable(query, param);
+            string query = @"SELECT SM.SessionID, SM.TrainingID, SM.Topic,
+                                    CONVERT(varchar(10), SM.SessionDate, 105) AS SessionDate,
+                                    TD.TrainingType
+                             FROM SessionMaster SM
+                             LEFT JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID
+                             WHERE SM.SessionID=@SessionID AND SM.TrainingID=@TrainingID";
 
-            if (dt.Rows.Count > 0)
+            DataTable dt = obj.GetDataTable(query, new SqlParameter[]
             {
-                DataRow dr = dt.Rows[0];
-                lblTestID.Text = dr["TestID"].ToString();
-                lblTitle.Text = dr["Title"].ToString();
-                lblPassing.Text = dr["PassingPercent"].ToString() + "%";
-                lblQuestions.Text = dr["TotalQuestions"].ToString();
+                new SqlParameter("@SessionID", SessionID),
+                new SqlParameter("@TrainingID", TrainingID)
+            });
+
+            if (dt.Rows.Count == 0)
+            {
+                Response.Redirect("~/Trainer/SessionDetails.aspx");
+                return;
             }
+
+            DataRow dr = dt.Rows[0];
+            lblTrainingID.Text = dr["TrainingID"].ToString();
+            lblSessionID.Text = dr["SessionID"].ToString();
+            lblTitle.Text = dr["Topic"].ToString();
+            lblPassing.Text = dr["SessionDate"].ToString();
+            lblQuestions.Text = dr["TrainingType"].ToString();
         }
 
         private void LoadSummary()
         {
-            string totalQuery = @"SELECT COUNT(*) FROM TestResult WHERE TestID=@TestID";
-            SqlParameter[] totalParam = new SqlParameter[] { new SqlParameter("@TestID", TestID) };
-            int total = Convert.ToInt32(obj.ExecuteScalar(totalQuery, totalParam) ?? "0");
-            lblTotal.Text = total.ToString();
+            string query = @"SELECT
+                COUNT(DISTINCT R.EmpID) AS Total,
+                COUNT(DISTINCT CASE WHEN R.Status='Pass' THEN R.EmpID END) AS Passed,
+                COUNT(DISTINCT CASE WHEN R.Status='Fail' THEN R.EmpID END) AS Failed,
+                ISNULL(AVG(R.Score),0) AS AvgScore
+                FROM TestResult R
+                INNER JOIN TestMaster TM ON TM.TestID=R.TestID
+                INNER JOIN SessionMaster SM ON SM.SessionID=TM.SessionID
+                WHERE SM.TrainingID=@TrainingID AND SM.SessionID=@SessionID";
 
-            string passedQuery = @"SELECT COUNT(*) FROM TestResult WHERE TestID=@TestID AND Status='Pass'";
-            SqlParameter[] passedParam = new SqlParameter[] { new SqlParameter("@TestID", TestID) };
-            int passed = Convert.ToInt32(obj.ExecuteScalar(passedQuery, passedParam) ?? "0");
-            lblPassed.Text = passed.ToString();
+            DataTable dt = obj.GetDataTable(query, new SqlParameter[]
+            {
+                new SqlParameter("@TrainingID", TrainingID),
+                new SqlParameter("@SessionID", SessionID)
+            });
 
-            string failedQuery = @"SELECT COUNT(*) FROM TestResult WHERE TestID=@TestID AND Status='Fail'";
-            SqlParameter[] failedParam = new SqlParameter[] { new SqlParameter("@TestID", TestID) };
-            int failed = Convert.ToInt32(obj.ExecuteScalar(failedQuery, failedParam) ?? "0");
-            lblFailed.Text = failed.ToString();
-
-            string avgQuery = @"SELECT ISNULL(AVG(Score),0) FROM TestResult WHERE TestID=@TestID";
-            SqlParameter[] avgParam = new SqlParameter[] { new SqlParameter("@TestID", TestID) };
-            object avg = obj.ExecuteScalar(avgQuery, avgParam);
-            lblAvgScore.Text = avg == null ? "0%" : Math.Round(Convert.ToDecimal(avg), 2).ToString() + "%";
+            if (dt.Rows.Count > 0)
+            {
+                lblTotal.Text = dt.Rows[0]["Total"].ToString();
+                lblPassed.Text = dt.Rows[0]["Passed"].ToString();
+                lblFailed.Text = dt.Rows[0]["Failed"].ToString();
+                lblAvgScore.Text = Math.Round(Convert.ToDecimal(dt.Rows[0]["AvgScore"]), 2).ToString() + "%";
+            }
         }
 
         private void BindGrid()
         {
-            string query = @"SELECT R.ResultID, R.EmpID, E.EmpName, E.EmpDesignation, R.TotalQuestions, R.CorrectAnswers, R.Score, R.Status, R.SubmittedOn FROM TestResult R INNER JOIN EmpBasicMaster E ON R.EmpID=E.EmpID WHERE R.TestID=@TestID ";
-            List<SqlParameter> parameters = new List<SqlParameter>();
-            parameters.Add(new SqlParameter("@TestID", TestID));
+            string query = @"SELECT
+                TA.EmpID,
+                E.EmpName,
+                E.EmpDesignation,
+                MAX(CASE WHEN TM.TestType='Pre' THEN R.ResultID END) AS PreResultID,
+                MAX(CASE WHEN TM.TestType='Pre' THEN R.Score END) AS PreScore,
+                MAX(CASE WHEN TM.TestType='Pre' THEN R.Status END) AS PreStatus,
+                MAX(CASE WHEN TM.TestType='Post' THEN R.ResultID END) AS PostResultID,
+                MAX(CASE WHEN TM.TestType='Post' THEN R.Score END) AS PostScore,
+                MAX(CASE WHEN TM.TestType='Post' THEN R.Status END) AS PostStatus
+                FROM TrainingAssignment TA
+                INNER JOIN EmpBasicMaster E ON E.EmpID=TA.EmpID
+                LEFT JOIN TestResult R ON R.EmpID=TA.EmpID
+                LEFT JOIN TestMaster TM ON TM.TestID=R.TestID AND TM.SessionID=@SessionID
+                WHERE TA.TrainingID=@TrainingID
+                  AND TA.AssignmentStatus='Assigned'
+                  AND EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=@SessionID AND SA.EmpID=TA.EmpID)
+                  AND (TM.TestID IS NOT NULL OR EXISTS (SELECT 1 FROM SessionAttendance SA2 WHERE SA2.SessionID=@SessionID AND SA2.EmpID=TA.EmpID))";
 
             if (!string.IsNullOrEmpty(txtSearch.Text.Trim()))
-            { query += " AND (E.EmpID LIKE @Search OR E.EmpName LIKE @Search)"; parameters.Add(new SqlParameter("@Search", "%" + txtSearch.Text.Trim() + "%")); }
+                query += " AND (E.EmpID LIKE @Search OR E.EmpName LIKE @Search)";
 
-            if (!string.IsNullOrEmpty(ddlStatus.SelectedValue))
-            { query += " AND R.Status = @Status"; parameters.Add(new SqlParameter("@Status", ddlStatus.SelectedValue)); }
+            query += " GROUP BY TA.EmpID, E.EmpName, E.EmpDesignation ORDER BY E.EmpName";
 
-            query += " ORDER BY R.Score DESC";
-            DataTable dt = obj.GetDataTable(query, parameters.ToArray());
+            SqlParameter[] parameters = string.IsNullOrEmpty(txtSearch.Text.Trim())
+                ? new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@SessionID", SessionID) }
+                : new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@SessionID", SessionID), new SqlParameter("@Search", "%" + txtSearch.Text.Trim() + "%") };
+
+            DataTable dt = obj.GetDataTable(query, parameters);
             gvResults.DataSource = dt;
             gvResults.DataBind();
         }
@@ -143,73 +138,18 @@ namespace Training.Trainer
         protected void btnReset_Click(object sender, EventArgs e)
         {
             txtSearch.Text = "";
-            ddlStatus.SelectedIndex = 0;
             BindGrid();
         }
 
         protected void gvResults_RowDataBound(object sender, GridViewRowEventArgs e)
         {
-            if (e.Row.RowType == DataControlRowType.DataRow)
-            {
-                Label lblStatus = (Label)e.Row.FindControl("lblStatus");
-                if (lblStatus != null)
-                {
-                    if (lblStatus.Text == "Pass")
-                        lblStatus.CssClass = "badge bg-success status-badge";
-                    else
-                        lblStatus.CssClass = "badge bg-danger status-badge";
-                }
-            }
-        }
-
-        protected void btnBack_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("~/Trainer/TestResult.aspx");
-        }
-
-        protected void btnExport_Click(object sender, EventArgs e)
-        {
-            string query = @"SELECT R.EmpID, E.EmpName, E.EmpDesignation, R.TotalQuestions, R.CorrectAnswers, R.Score, R.Status, R.SubmittedOn FROM TestResult R INNER JOIN EmpBasicMaster E ON R.EmpID=E.EmpID WHERE R.TestID=@TestID ORDER BY R.Score DESC";
-            SqlParameter[] param = new SqlParameter[] { new SqlParameter("@TestID", TestID) };
-            DataTable dt = obj.GetDataTable(query, param);
-
-            if (dt.Rows.Count == 0) return;
-
-            dt.Columns["EmpID"].ColumnName = "Employee ID";
-            dt.Columns["EmpName"].ColumnName = "Employee Name";
-            dt.Columns["EmpDesignation"].ColumnName = "Designation";
-            dt.Columns["TotalQuestions"].ColumnName = "Total Questions";
-            dt.Columns["CorrectAnswers"].ColumnName = "Correct Answers";
-            dt.Columns["Score"].ColumnName = "Score (%)";
-            dt.Columns["Status"].ColumnName = "Status";
-            dt.Columns["SubmittedOn"].ColumnName = "Submitted On";
-
-            Response.Clear();
-            Response.Buffer = true;
-            Response.AddHeader("content-disposition", "attachment;filename=TestResult.xls");
-            Response.Charset = "";
-            Response.ContentType = "application/vnd.ms-excel";
-
-            StringWriter sw = new StringWriter();
-            HtmlTextWriter hw = new HtmlTextWriter(sw);
-
-            hw.Write("<table border='1'><tr>");
-            foreach (DataColumn col in dt.Columns)
-                hw.Write("<th>" + col.ColumnName + "</th>");
-            hw.Write("</tr>");
-
-            foreach (DataRow row in dt.Rows)
-            {
-                hw.Write("<tr>");
-                foreach (DataColumn col in dt.Columns)
-                    hw.Write("<td>" + row[col].ToString() + "</td>");
-                hw.Write("</tr>");
-            }
-            hw.Write("</table>");
-
-            Response.Output.Write(sw.ToString());
-            Response.Flush();
-            Response.End();
+            if (e.Row.RowType != DataControlRowType.DataRow) return;
+            Label pre = (Label)e.Row.FindControl("lblPreStatus");
+            Label post = (Label)e.Row.FindControl("lblPostStatus");
+            if (pre != null && pre.Text == "Pass") pre.CssClass = "badge bg-success status-badge";
+            else if (pre != null && !string.IsNullOrEmpty(pre.Text)) pre.CssClass = "badge bg-danger status-badge";
+            if (post != null && post.Text == "Pass") post.CssClass = "badge bg-success status-badge";
+            else if (post != null && !string.IsNullOrEmpty(post.Text)) post.CssClass = "badge bg-danger status-badge";
         }
 
         protected void gvResults_RowCommand(object sender, GridViewCommandEventArgs e)
@@ -219,6 +159,55 @@ namespace Training.Trainer
                 Session["ResultID"] = e.CommandArgument.ToString();
                 Response.Redirect("~/Trainer/AnswerDetails.aspx");
             }
+        }
+
+        protected void btnExport_Click(object sender, EventArgs e)
+        {
+            string query = @"SELECT TA.EmpID, E.EmpName, E.EmpDesignation,
+                MAX(CASE WHEN TM.TestType='Pre' THEN R.Score END) AS PreScore,
+                MAX(CASE WHEN TM.TestType='Pre' THEN R.Status END) AS PreStatus,
+                MAX(CASE WHEN TM.TestType='Post' THEN R.Score END) AS PostScore,
+                MAX(CASE WHEN TM.TestType='Post' THEN R.Status END) AS PostStatus
+                FROM TrainingAssignment TA
+                INNER JOIN EmpBasicMaster E ON E.EmpID=TA.EmpID
+                LEFT JOIN TestResult R ON R.EmpID=TA.EmpID
+                LEFT JOIN TestMaster TM ON TM.TestID=R.TestID AND TM.SessionID=@SessionID
+                WHERE TA.TrainingID=@TrainingID AND TA.AssignmentStatus='Assigned'
+                AND EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=@SessionID AND SA.EmpID=TA.EmpID)
+                GROUP BY TA.EmpID,E.EmpName,E.EmpDesignation ORDER BY E.EmpName";
+
+            DataTable dt = obj.GetDataTable(query, new SqlParameter[]
+            {
+                new SqlParameter("@TrainingID", TrainingID),
+                new SqlParameter("@SessionID", SessionID)
+            });
+            if (dt.Rows.Count == 0) return;
+
+            Response.Clear();
+            Response.Buffer = true;
+            Response.AddHeader("content-disposition", "attachment;filename=SessionTestResult.xls");
+            Response.Charset = "";
+            Response.ContentType = "application/vnd.ms-excel";
+            StringWriter sw = new StringWriter();
+            HtmlTextWriter hw = new HtmlTextWriter(sw);
+            hw.Write("<table border='1'><tr>");
+            foreach (DataColumn col in dt.Columns) hw.Write("<th>" + col.ColumnName + "</th>");
+            hw.Write("</tr>");
+            foreach (DataRow row in dt.Rows)
+            {
+                hw.Write("<tr>");
+                foreach (DataColumn col in dt.Columns) hw.Write("<td>" + row[col].ToString() + "</td>");
+                hw.Write("</tr>");
+            }
+            hw.Write("</table>");
+            Response.Output.Write(sw.ToString());
+            Response.Flush();
+            Response.End();
+        }
+
+        protected void btnBack_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("~/Trainer/SessionDetails.aspx");
         }
     }
 }
