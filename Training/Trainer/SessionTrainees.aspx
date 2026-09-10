@@ -1,4 +1,6 @@
 <%@ Page Title="Session Trainees" Language="C#" MasterPageFile="~/TrainerMaster.Master" %>
+<%@ Import Namespace="System.Data" %>
+<%@ Import Namespace="System.Data.SqlClient" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 <style>.trainee-page{padding:20px}.trainee-title{font-size:24px;font-weight:600;margin-bottom:18px}.trainee-grid th{background:#198754;color:#fff;text-align:center}.trainee-grid td{vertical-align:middle}</style>
 </asp:Content>
