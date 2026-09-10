@@ -1,6 +1,9 @@
 (function () {
+    function findEmployeeGrid() {
+        return document.querySelector("table[id$='gvEmployee']") || document.getElementById('gvEmployee');
+    }
     function addEmployeeEditButtons() {
-        var grid = document.getElementById('gvEmployee');
+        var grid = findEmployeeGrid();
         if (!grid) return;
         var rows = grid.getElementsByTagName('tr');
         if (!rows.length) return;
