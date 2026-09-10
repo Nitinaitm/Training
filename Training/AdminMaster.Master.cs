@@ -16,6 +16,8 @@ namespace Training
                 Response.Redirect("~/Default.aspx");
                 return;
             }
+
+            Page.ClientScript.RegisterClientScriptInclude("EmployeeGridEdit", ResolveUrl("~/Scripts/employee-edit-grid.js"));
         }
     }
 }
