@@ -74,8 +74,8 @@ namespace Training.Trainee
         private void SetPostSkipped(){lblPostStatus.Text="Skipped";lblPostStatus.CssClass="badge badge-secondary status-badge";btnPostTest.Text="Post Test Skipped";btnPostTest.Enabled=false;btnPostTest.CommandArgument="";}
         private void SetPreNotPublished(){lblPreStatus.Text="Not Published";lblPreStatus.CssClass="badge badge-secondary status-badge";btnPreTest.Text="Pre Test Not Available";btnPreTest.Enabled=false;btnPreTest.CommandArgument="";}
         private void SetPostNotPublished(){lblPostStatus.Text="Not Published";lblPostStatus.CssClass="badge badge-secondary status-badge";btnPostTest.Text="Post Test Not Available";btnPostTest.Enabled=false;btnPostTest.CommandArgument="";}
-        protected void btnPreTest_Click(object sender,EventArgs e){if(!PreRequired||PreSkipped)return;if(btnPreTest.CommandArgument=="Result"){Session["ResultTestType"]="Pre";Response.Redirect("MyExamResult.aspx");return;}Response.Redirect("PreTrainingExam.aspx");}
-        protected void btnPostTest_Click(object sender,EventArgs e){if(!PostRequired||PostSkipped)return;if(btnPostTest.CommandArgument=="Result"){Session["ResultTestType"]="Post";Response.Redirect("MyExamResult.aspx");return;}Response.Redirect("PostTrainingExam.aspx");}
+        protected void btnPreTest_Click(object sender,EventArgs e){if(btnPreTest.CommandArgument=="Result"){Session["ResultTestType"]="Pre";Response.Redirect("MyExamResult.aspx");return;}LoadRequirements();if(!PreRequired||PreSkipped)return;Response.Redirect("PreTrainingExam.aspx");}
+        protected void btnPostTest_Click(object sender,EventArgs e){if(btnPostTest.CommandArgument=="Result"){Session["ResultTestType"]="Post";Response.Redirect("MyExamResult.aspx");return;}LoadRequirements();if(!PostRequired||PostSkipped)return;Response.Redirect("PostTrainingExam.aspx");}
         protected void btnBack_Click(object sender,EventArgs e){Response.Redirect("TrainingDetails.aspx");}
         protected void btnExam_Click(object sender,EventArgs e){Response.Redirect("MyExamResult.aspx");}
     }
