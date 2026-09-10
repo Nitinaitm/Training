@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Assign Trainee" Language="C#" MasterPageFile="~/AdminMaster.Master" AutoEventWireup="true" CodeBehind="AssignTrainee.aspx.cs" MaintainScrollPositionOnPostback="true" Inherits="Training.Admin.AssignTrainee" ClientIDMode="Static" %>
+<%@ Page Title="Assign Trainee" Language="C#" MasterPageFile="~/AdminMaster.Master" AutoEventWireup="true" CodeBehind="AssignTrainee.aspx.cs" MaintainScrollPositionOnPostback="true" Inherits="Training.Admin.AssignTrainee" ClientIDMode="Static" %>
 <%@ Register Src="~/Admin/TrainingSummary.ascx" TagPrefix="uc" TagName="TrainingSummary" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"/><script src="https://code.jquery.com/jquery-3.7.1.min.js"></script><script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -14,5 +14,17 @@
 <hr/><div class="section-title" runat="server" id="messageTotalAssigned">Total Trainee Assigned</div><asp:GridView ID="gvAssignedEmployee" runat="server" AutoGenerateColumns="False" CssClass="table table-bordered table-striped gridview" EmptyDataText="No Employee Assigned" OnRowCommand="gvAssignedEmployee_RowCommand"><Columns><asp:TemplateField HeaderText="Sl No"><ItemTemplate><%# Container.DataItemIndex+1 %></ItemTemplate></asp:TemplateField><asp:BoundField DataField="EmpID" HeaderText="Employee ID"/><asp:BoundField DataField="EmpName" HeaderText="Employee Name"/><asp:BoundField DataField="EmpDesignation" HeaderText="Designation"/><asp:BoundField DataField="EmpCompany" HeaderText="Company"/><asp:BoundField DataField="EmpPostingPlace" HeaderText="Posting Place"/><asp:TemplateField HeaderText="Mobile No"><ItemTemplate><%# GetEmployeeMobile(Eval("EmpID")) %></ItemTemplate></asp:TemplateField><asp:TemplateField HeaderText="Email ID"><ItemTemplate><%# GetEmployeeEmail(Eval("EmpID")) %></ItemTemplate></asp:TemplateField><asp:TemplateField HeaderText="Assignment Status"><ItemTemplate><asp:Label ID="lblStatus" runat="server" Text='<%# Eval("AssignmentStatus") %>' CssClass="badge bg-success"/></ItemTemplate></asp:TemplateField><asp:TemplateField HeaderText="Action"><ItemTemplate><asp:LinkButton ID="lnkRemove" runat="server" Text="Remove" CssClass="btn btn-danger btn-sm" CommandName="RemoveEmployee" CommandArgument='<%# Eval("AssignmentID") %>' OnClientClick="return confirm('Are you sure you want to remove this employee?');"/></ItemTemplate></asp:TemplateField></Columns></asp:GridView>
 <div class="text-center mt-3"><asp:Button ID="btnUpdateBatch" runat="server" Text="Update Batch" CssClass="btn btn-secondary" OnClick="btnUpdateBatch_Click"/> <asp:Button ID="btnPrevious" runat="server" Text="Update Sessions & Trainers" CssClass="btn btn-secondary" OnClick="btnPrevious_Click"/> <asp:Button ID="btnFinish" runat="server" Text="Finish Trainee Assignment" CssClass="btn btn-success" OnClick="btnFinish_Click"/></div>
 </div></div>
+<script runat="server">
+private string GetEmployeeMobile(object empID)
+{
+    object v = new Training.clsDataAccess().ExecuteScalar("SELECT TOP 1 MobileNo FROM EmpBasicMaster WHERE EmpID=@EmpID", new System.Data.SqlClient.SqlParameter[] { new System.Data.SqlClient.SqlParameter("@EmpID", Convert.ToString(empID)) });
+    return v == null || v == DBNull.Value ? "-" : v.ToString();
+}
+private string GetEmployeeEmail(object empID)
+{
+    object v = new Training.clsDataAccess().ExecuteScalar("SELECT TOP 1 EmailId FROM EmpBasicMaster WHERE EmpID=@EmpID", new System.Data.SqlClient.SqlParameter[] { new System.Data.SqlClient.SqlParameter("@EmpID", Convert.ToString(empID)) });
+    return v == null || v == DBNull.Value ? "-" : v.ToString();
+}
+</script>
 <script>$(function(){$('#lstCompany,#lstDesignation,#lstPostingPlace').select2({width:'100%',closeOnSelect:false});});if(typeof(Sys)!=='undefined')Sys.Application.add_load(function(){$('#lstCompany,#lstDesignation,#lstPostingPlace').select2({width:'100%',closeOnSelect:false});});function ToggleAll(cb){$('#gvCompanyEmployee input[type=checkbox]').prop('checked',cb.checked);}function SelectAllEmployee(){$('#gvCompanyEmployee input[type=checkbox]').prop('checked',true);}function ClearEmployeeSelection(){$('#gvCompanyEmployee input[type=checkbox]').prop('checked',false);}</script>
 </asp:Content>
