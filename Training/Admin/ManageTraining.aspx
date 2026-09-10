@@ -43,9 +43,11 @@
 <asp:Button ID="btnRequirements" runat="server" Text="Training Requirements / Skip" CssClass="btn btn-danger btn-action" OnClick="btnRequirements_Click" />
 <asp:Button ID="btnAssignFeedback" runat="server" Text="Feedback Template" CssClass="btn btn-primary btn-action" OnClick="btnAssignFeedback_Click" />
 <asp:Button ID="btnCertificateTemplate" runat="server" Text="Certificate Template" CssClass="btn btn-primary btn-action" Enabled="false" OnClick="btnCertificateTemplate_Click" />
+<asp:Button ID="btnAssignHostel" runat="server" Text="Assign Hostel" CssClass="btn btn-info btn-action" Visible="false" OnClick="btnAssignHostel_Click" />
 <asp:Button ID="btnStartTraining" runat="server" Text="Start Training" CssClass="btn btn-success btn-action" Visible="true" OnClick="btnStartTraining_Click" />
 <asp:Button ID="btnAttendance" runat="server" Text="Attendance" CssClass="btn btn-info btn-action" Visible="false" OnClick="btnAttendance_Click" />
 </div>
+<asp:Panel ID="pnlHostelConfirmation" runat="server" Visible="false" CssClass="card mt-3"><div class="card-header bg-warning text-dark"><b>Hostel Requirement</b></div><div class="card-body"><p>Is hostel accommodation required for trainees?</p><asp:Button ID="btnHostelYes" runat="server" Text="Yes" CssClass="btn btn-primary" CausesValidation="false" OnClick="btnHostelYes_Click" />&nbsp;<asp:Button ID="btnHostelNo" runat="server" Text="No" CssClass="btn btn-secondary" CausesValidation="false" OnClick="btnHostelNo_Click" /></div></asp:Panel>
 <div class="mt-3"><asp:Label ID="lblMessage" runat="server" Font-Bold="true" /></div>
 </div></div>
 </asp:Content>
