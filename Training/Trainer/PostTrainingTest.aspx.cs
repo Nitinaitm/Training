@@ -39,10 +39,18 @@ namespace Training.Trainer
 
         private bool CheckPostTrainingRequired()
         {
-            object result = objDB.ExecuteScalar("SELECT FinalAssessmentRequired FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", ViewState["TrainingID"]) });
-            if (result == null || result == DBNull.Value || !Convert.ToBoolean(result))
+            object result = objDB.ExecuteScalar("SELECT FinalAssessmentRequired,ISNULL((SELECT PostAssessmentSkipped FROM SessionMaster WHERE SessionID=@SessionID),0) AS PostAssessmentSkipped FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", ViewState["TrainingID"]), new SqlParameter("@SessionID", ViewState["SessionID"]) });
+            if (result == null || result == DBNull.Value) return false;
+            bool required = Convert.ToBoolean(result);
+            object skipped = objDB.ExecuteScalar("SELECT ISNULL(PostAssessmentSkipped,0) FROM SessionMaster WHERE SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@SessionID", ViewState["SessionID"]) });
+            if (!required)
             {
                 ScriptManager.RegisterStartupScript(this, GetType(), "PostTrainingRequired", "alert('Post-Training Assessment is not required for this training.');window.location='SessionDetails.aspx?SessionID=" + ViewState["SessionID"] + "';", true);
+                return false;
+            }
+            if (skipped != null && skipped != DBNull.Value && Convert.ToBoolean(skipped))
+            {
+                ScriptManager.RegisterStartupScript(this, GetType(), "PostTrainingSkipped", "alert('Post-Training Assessment has been skipped for this session.');window.location='SessionDetails.aspx?SessionID=" + ViewState["SessionID"] + "';", true);
                 return false;
             }
             return true;
