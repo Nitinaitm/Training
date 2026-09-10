@@ -44,6 +44,11 @@
                     <asp:RequiredFieldValidator ID="rfvCourse" runat="server" ControlToValidate="ddlCourse" InitialValue="" ValidationGroup="SaveGroup" CssClass="validation" ErrorMessage="Select Course"></asp:RequiredFieldValidator>
                 </div>
                 <div class="col-lg-4 mb-3">
+                    <label class="form-label">Batch Strength</label>
+                    <asp:TextBox ID="txtStrength" runat="server" CssClass="form-control" MaxLength="3" onkeypress="return isNumber(event);"></asp:TextBox>
+                    <asp:RegularExpressionValidator ID="revStrength" runat="server" ControlToValidate="txtStrength" ValidationGroup="SaveGroup" ValidationExpression="^\d+$" ErrorMessage="Enter valid Batch Strength" CssClass="validation"></asp:RegularExpressionValidator>
+                </div>
+                <div class="col-lg-4 mb-3">
                     <label class="form-label">Training Category *</label>
                     <asp:DropDownList ID="ddlTrainingCategory" runat="server" CssClass="form-select"></asp:DropDownList>
                     <asp:RequiredFieldValidator ID="rfvTrainingCategory" runat="server" ControlToValidate="ddlTrainingCategory" InitialValue="" ValidationGroup="SaveGroup" CssClass="validation" ErrorMessage="Select Training Category"></asp:RequiredFieldValidator>
@@ -86,11 +91,6 @@
                     <asp:RegularExpressionValidator ID="revHours" runat="server" ControlToValidate="txtHours" ValidationGroup="SaveGroup" ValidationExpression="^\d+(\.\d{1,2})?$" CssClass="validation" ErrorMessage="Enter valid Hours"></asp:RegularExpressionValidator>
                 </div>
                 <div class="col-lg-4 mb-3"></div>
-                <div class="col-lg-4 mb-3">
-                    <label class="form-label">Batch Strength</label>
-                    <asp:TextBox ID="txtStrength" runat="server" CssClass="form-control" MaxLength="3" onkeypress="return isNumber(event);"></asp:TextBox>
-                    <asp:RegularExpressionValidator ID="revStrength" runat="server" ControlToValidate="txtStrength" ValidationGroup="SaveGroup" ValidationExpression="^\d+$" ErrorMessage="Enter valid Batch Strength" CssClass="validation"></asp:RegularExpressionValidator>
-                </div>
                 <div class="col-12 mb-3">
                     <label class="form-label">Training Requirements</label>
                     <div class="row">
