@@ -22,13 +22,38 @@ namespace Training.Trainer
 
             if (Session["TestID"] == null || string.IsNullOrWhiteSpace(Session["TestID"].ToString()))
             {
-                string trainerID = Session["TrainerID"].ToString();
-                object testID = obj.ExecuteScalar(@"SELECT TOP 1 TM.TestID
-                    FROM TestMaster TM
-                    INNER JOIN SessionMaster SM ON SM.SessionID=TM.SessionID
-                    WHERE SM.TrainerID=@TrainerID AND ISNULL(TM.IsActive,1)=1
-                    ORDER BY TM.TestID DESC",
-                    new SqlParameter[] { new SqlParameter("@TrainerID", trainerID) });
+                string trainingID = Convert.ToString(Session["TrainingID"]);
+                string sessionID = Convert.ToString(Session["SessionID"]);
+
+                object testID = null;
+
+                if (!string.IsNullOrWhiteSpace(trainingID) && !string.IsNullOrWhiteSpace(sessionID))
+                {
+                    testID = obj.ExecuteScalar(@"SELECT TOP 1 TM.TestID
+                        FROM TestMaster TM
+                        INNER JOIN SessionMaster SM ON SM.SessionID=TM.SessionID
+                        WHERE SM.TrainingID=@TrainingID
+                          AND SM.SessionID=@SessionID
+                          AND SM.TrainerID=@TrainerID
+                          AND ISNULL(TM.IsActive,1)=1
+                        ORDER BY CASE WHEN TM.TestType='Post' THEN 0 ELSE 1 END, TM.TestID DESC",
+                        new SqlParameter[]
+                        {
+                            new SqlParameter("@TrainingID", trainingID),
+                            new SqlParameter("@SessionID", sessionID),
+                            new SqlParameter("@TrainerID", Session["TrainerID"].ToString())
+                        });
+                }
+
+                if ((testID == null || testID == DBNull.Value) && !string.IsNullOrWhiteSpace(trainingID) && !string.IsNullOrWhiteSpace(sessionID))
+                {
+                    testID = obj.ExecuteScalar(@"SELECT TOP 1 TestID
+                        FROM TestMaster
+                        WHERE SessionID=@SessionID
+                          AND IsActive=1
+                        ORDER BY CASE WHEN TestType='Post' THEN 0 ELSE 1 END, TestID DESC",
+                        new SqlParameter[] { new SqlParameter("@SessionID", sessionID) });
+                }
 
                 if (testID == null || testID == DBNull.Value)
                 {
