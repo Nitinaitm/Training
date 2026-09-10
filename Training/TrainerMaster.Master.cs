@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
@@ -22,6 +22,13 @@ namespace Training.Trainer
             {
                 LoadTrainerInfo();
             }
+
+            try
+            {
+                Control lifecycle = LoadControl("~/BatchLifecycle.ascx");
+                ContentPlaceHolder1.Controls.Add(lifecycle);
+            }
+            catch { }
         }
 
         private void LoadTrainerInfo()
