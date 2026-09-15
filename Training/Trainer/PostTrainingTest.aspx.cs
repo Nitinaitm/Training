@@ -21,7 +21,6 @@ namespace Training.Trainer
                 LoadSessionDetails();
                 if (!CheckPostTrainingRequired()) return;
                 LoadQuestionPool();
-                CheckAttendance();
                 CheckExistingTest();
             }
         }
@@ -39,7 +38,7 @@ namespace Training.Trainer
 
         private bool CheckPostTrainingRequired()
         {
-            object result = objDB.ExecuteScalar("SELECT FinalAssessmentRequired,ISNULL((SELECT PostAssessmentSkipped FROM SessionMaster WHERE SessionID=@SessionID),0) AS PostAssessmentSkipped FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", ViewState["TrainingID"]), new SqlParameter("@SessionID", ViewState["SessionID"]) });
+            object result = objDB.ExecuteScalar("SELECT FinalAssessmentRequired FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", ViewState["TrainingID"]) });
             if (result == null || result == DBNull.Value) return false;
             bool required = Convert.ToBoolean(result);
             object skipped = objDB.ExecuteScalar("SELECT ISNULL(PostAssessmentSkipped,0) FROM SessionMaster WHERE SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@SessionID", ViewState["SessionID"]) });
