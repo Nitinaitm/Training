@@ -7,6 +7,7 @@
 
 <%@ Register Src="~/Trainer/TrainerSummary.ascx" TagPrefix="uc" TagName="TrainerSummary" %>
 <%@ Register Src="~/Trainer/SessionSummary.ascx" TagPrefix="uc" TagName="SessionSummary" %>
+<%@ Register Src="~/BatchLifecycle.ascx" TagPrefix="uc2" TagName="BatchLifecycle" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -21,6 +22,7 @@
             <div class="page-heading">Session Details</div>
             <uc:TrainerSummary ID="TrainerSummary1" runat="server" />
             <uc:SessionSummary ID="SessionSummary1" runat="server" />
+            <uc2:BatchLifecycle ID="BatchLifecycle1" runat="server" />
 
             <div class="action-card">
                 <div class="action-title">Trainer Actions</div>
