@@ -62,7 +62,8 @@ namespace Training.Trainee
 
                 SetGridTestStatus(lblPre, sessionID, "Pre", preRequired, preSkipped, attendanceDone, true);
 
-                bool preDone = !preRequired || preSkipped || IsSubmitted(sessionID, "Pre");
+                bool prePublished = preRequired && !preSkipped && IsPublished(sessionID, "Pre");
+                bool preDone = !prePublished || IsSubmitted(sessionID, "Pre");
                 SetGridTestStatus(lblPost, sessionID, "Post", postRequired, postSkipped, attendanceDone && preDone, false);
             }
         }
