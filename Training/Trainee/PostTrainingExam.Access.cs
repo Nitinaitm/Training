@@ -74,9 +74,11 @@ namespace Training.Trainee
                 return;
             }
 
-            if (preRequired && !preSkipped && !IsSubmitted(sessionID, empID, "Pre"))
+            // Pre-Test is a prerequisite only when it is required, not skipped,
+            // and actually published. If it is not published, Post-Test remains available.
+            if (preRequired && !preSkipped && IsPublished(sessionID, "Pre") && !IsSubmitted(sessionID, empID, "Pre"))
             {
-                DenyAccess("Please complete the Pre-Training Test before starting the Post-Training Test.");
+                DenyAccess("Please complete the published Pre-Training Test before starting the Post-Training Test.");
                 return;
             }
         }
@@ -86,6 +88,19 @@ namespace Training.Trainee
             object value = objDB.ExecuteScalar(
                 "SELECT CASE WHEN EXISTS (SELECT 1 FROM TestMaster WHERE SessionID=@SessionID AND TestType='Post' AND IsPublished=1) THEN 1 ELSE 0 END",
                 new SqlParameter[] { new SqlParameter("@SessionID", sessionID) });
+
+            return value != null && value != DBNull.Value && Convert.ToInt32(value) == 1;
+        }
+
+        private bool IsPublished(string sessionID, string type)
+        {
+            object value = objDB.ExecuteScalar(
+                "SELECT CASE WHEN EXISTS (SELECT 1 FROM TestMaster WHERE SessionID=@SessionID AND TestType=@Type AND IsPublished=1) THEN 1 ELSE 0 END",
+                new SqlParameter[]
+                {
+                    new SqlParameter("@SessionID", sessionID),
+                    new SqlParameter("@Type", type)
+                });
 
             return value != null && value != DBNull.Value && Convert.ToInt32(value) == 1;
         }
