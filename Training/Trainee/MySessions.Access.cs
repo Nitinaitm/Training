@@ -68,10 +68,7 @@ namespace Training.Trainee
                         new SqlParameter("@EmpID", empID)
                     });
 
-                if (status.Rows.Count == 0)
-                {
-                    continue;
-                }
+                if (status.Rows.Count == 0) continue;
 
                 DataRow sr = status.Rows[0];
                 bool attendanceSkipped = Convert.ToBoolean(sr["AttendanceSkipped"]);
@@ -90,6 +87,100 @@ namespace Training.Trainee
                     bool preDone = !preRequired || preSkipped || IsSubmitted(sessionID, empID, "Pre");
                     SetTestStatus(lblPost, sessionID, empID, "Post", postRequired, postSkipped, attendanceDone && preDone, false);
                 }
+
+                if (sessionID == Session["SessionID"].ToString())
+                {
+                    RefreshButtons(sessionID, empID, attendanceDone, attendanceSkipped, preRequired, preSkipped, postRequired, postSkipped);
+                }
+            }
+        }
+
+        private void RefreshButtons(string sessionID, string empID, bool attendanceDone, bool attendanceSkipped, bool preRequired, bool preSkipped, bool postRequired, bool postSkipped)
+        {
+            bool prePublished = preRequired && !preSkipped && IsPublished(sessionID, "Pre");
+            bool postPublished = postRequired && !postSkipped && IsPublished(sessionID, "Post");
+            bool preCompleted = preRequired && !preSkipped && IsSubmitted(sessionID, empID, "Pre");
+            bool postCompleted = postRequired && !postSkipped && IsSubmitted(sessionID, empID, "Post");
+
+            btnPreTest.Visible = preRequired;
+            btnPostTest.Visible = postRequired;
+
+            if (!preRequired)
+            {
+                btnPreTest.Enabled = false;
+                btnPreTest.CommandArgument = "";
+            }
+            else if (preSkipped)
+            {
+                btnPreTest.Text = "Pre Test Skipped";
+                btnPreTest.Enabled = false;
+                btnPreTest.CommandArgument = "";
+            }
+            else if (!prePublished)
+            {
+                btnPreTest.Text = "Pre Test Not Available";
+                btnPreTest.Enabled = false;
+                btnPreTest.CommandArgument = "";
+            }
+            else if (!attendanceDone)
+            {
+                btnPreTest.Text = "Start Pre Test";
+                btnPreTest.Enabled = false;
+                btnPreTest.CommandArgument = "";
+            }
+            else if (preCompleted)
+            {
+                btnPreTest.Text = "View Result";
+                btnPreTest.Enabled = true;
+                btnPreTest.CommandArgument = "Result";
+            }
+            else
+            {
+                btnPreTest.Text = "Start Pre Test";
+                btnPreTest.Enabled = true;
+                btnPreTest.CommandArgument = "Start";
+            }
+
+            if (!postRequired)
+            {
+                btnPostTest.Enabled = false;
+                btnPostTest.CommandArgument = "";
+            }
+            else if (postSkipped)
+            {
+                btnPostTest.Text = "Post Test Skipped";
+                btnPostTest.Enabled = false;
+                btnPostTest.CommandArgument = "";
+            }
+            else if (!postPublished)
+            {
+                btnPostTest.Text = "Post Test Not Available";
+                btnPostTest.Enabled = false;
+                btnPostTest.CommandArgument = "";
+            }
+            else if (!attendanceDone)
+            {
+                btnPostTest.Text = "Start Post Test";
+                btnPostTest.Enabled = false;
+                btnPostTest.CommandArgument = "";
+            }
+            else if (preRequired && !preSkipped && !preCompleted)
+            {
+                btnPostTest.Text = "Waiting for Pre Test";
+                btnPostTest.Enabled = false;
+                btnPostTest.CommandArgument = "";
+            }
+            else if (postCompleted)
+            {
+                btnPostTest.Text = "View Result";
+                btnPostTest.Enabled = true;
+                btnPostTest.CommandArgument = "Result";
+            }
+            else
+            {
+                btnPostTest.Text = "Start Post Test";
+                btnPostTest.Enabled = true;
+                btnPostTest.CommandArgument = "Start";
             }
         }
 
