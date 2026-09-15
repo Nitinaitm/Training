@@ -125,8 +125,7 @@ WHERE SM.TrainingID=@TrainingID";
         {
             string skipColumn = testType == "Pre" ? "PreAssessmentSkipped" : "PostAssessmentSkipped";
             string q = @"SELECT CASE WHEN NOT EXISTS (
-SELECT 1
-FROM SessionMaster SM
+SELECT 1 FROM SessionMaster SM
 INNER JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID
 WHERE SM.TrainingID=@TrainingID
   AND ISNULL(SM." + skipColumn + @",0)=0
@@ -165,10 +164,10 @@ AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.Session
 
         private bool CanReachFeedback(bool attendanceRequired, bool preRequired, bool postRequired)
         {
-            if (postRequired && HasRequiredSessions("PostAssessmentSkipped")) return AreTestsDoneForTrainee("Post");
-            if (preRequired && HasRequiredSessions("PreAssessmentSkipped")) return AreTestsDoneForTrainee("Pre");
-            if (attendanceRequired && HasRequiredSessions("AttendanceSkipped")) return AreAllAttendanceDone();
-            return true;
+            bool attendanceDone = !attendanceRequired || !HasRequiredSessions("AttendanceSkipped") || AreAllAttendanceDone();
+            bool preDone = !preRequired || !HasRequiredSessions("PreAssessmentSkipped") || AreTestsDoneForTrainee("Pre");
+            bool postDone = !postRequired || !HasRequiredSessions("PostAssessmentSkipped") || AreTestsDoneForTrainee("Post");
+            return attendanceDone && preDone && postDone;
         }
 
         private bool CanDownloadCertificate(bool attendanceRequired, bool preRequired, bool postRequired, bool feedbackRequired, bool feedbackSkipped)
@@ -213,10 +212,6 @@ FROM TrainingDetails WHERE TrainingID=@TrainingID";
 
             bool feedbackDone = IsFeedbackSubmitted();
             bool canReachFeedback = CanReachFeedback(attendanceRequired, preRequired, postRequired);
-            bool certificateReady = Convert.ToInt32(objDB.ExecuteScalar(
-                "SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') THEN 1 ELSE 0 END",
-                new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", EmpID) })) == 1;
-
             bool canDownloadCertificate = CanDownloadCertificate(attendanceRequired, preRequired, postRequired, feedbackRequired, feedbackSkipped);
 
             btnBatchFeedback.Visible = feedbackRequired && !feedbackSkipped;
