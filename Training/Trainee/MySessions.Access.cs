@@ -20,6 +20,14 @@ namespace Training.Trainee
                 ScriptManager.RegisterStartupScript(this, GetType(), "PreTrainingAccessMessage", "alert('" + safe + "');", true);
             }
 
+            string postMessage = Session["PostTrainingAccessMessage"] as string;
+            if (!string.IsNullOrWhiteSpace(postMessage))
+            {
+                Session.Remove("PostTrainingAccessMessage");
+                string safe = postMessage.Replace("\\", "\\\\").Replace("'", "\\'");
+                ScriptManager.RegisterStartupScript(this, GetType(), "PostTrainingAccessMessage", "alert('" + safe + "');", true);
+            }
+
             RefreshTestStatuses();
         }
 
@@ -84,18 +92,19 @@ namespace Training.Trainee
 
                 if (lblPost != null)
                 {
-                    bool preDone = !preRequired || preSkipped || IsSubmitted(sessionID, empID, "Pre");
+                    bool prePublished = preRequired && !preSkipped && IsPublished(sessionID, "Pre");
+                    bool preDone = !prePublished || IsSubmitted(sessionID, empID, "Pre");
                     SetTestStatus(lblPost, sessionID, empID, "Post", postRequired, postSkipped, attendanceDone && preDone, false);
                 }
 
                 if (sessionID == Session["SessionID"].ToString())
                 {
-                    RefreshButtons(sessionID, empID, attendanceDone, attendanceSkipped, preRequired, preSkipped, postRequired, postSkipped);
+                    RefreshButtons(sessionID, empID, attendanceDone, preRequired, preSkipped, postRequired, postSkipped);
                 }
             }
         }
 
-        private void RefreshButtons(string sessionID, string empID, bool attendanceDone, bool attendanceSkipped, bool preRequired, bool preSkipped, bool postRequired, bool postSkipped)
+        private void RefreshButtons(string sessionID, string empID, bool attendanceDone, bool preRequired, bool preSkipped, bool postRequired, bool postSkipped)
         {
             bool prePublished = preRequired && !preSkipped && IsPublished(sessionID, "Pre");
             bool postPublished = postRequired && !postSkipped && IsPublished(sessionID, "Post");
@@ -107,6 +116,7 @@ namespace Training.Trainee
 
             if (!preRequired)
             {
+                btnPreTest.Text = "Pre Test Not Required";
                 btnPreTest.Enabled = false;
                 btnPreTest.CommandArgument = "";
             }
@@ -143,6 +153,7 @@ namespace Training.Trainee
 
             if (!postRequired)
             {
+                btnPostTest.Text = "Post Test Not Required";
                 btnPostTest.Enabled = false;
                 btnPostTest.CommandArgument = "";
             }
@@ -164,7 +175,7 @@ namespace Training.Trainee
                 btnPostTest.Enabled = false;
                 btnPostTest.CommandArgument = "";
             }
-            else if (preRequired && !preSkipped && !preCompleted)
+            else if (prePublished && !preCompleted)
             {
                 btnPostTest.Text = "Waiting for Pre Test";
                 btnPostTest.Enabled = false;
