@@ -1,12 +1,12 @@
-<%@ Page title="My Trainings" language="C#" masterpagefile="~/TraineeMaster.Master" autoeventwireup="true" codebehind="MyTrainings.aspx.cs" inherits="Training.Trainee.MyTrainings" %>
-<%@ Register src="~/Trainee/TraineeTrainingSummary.ascx" tagprefix="uc1" tagname="TraineeTrainingSummary" %>
+<%@ Page Title="My Trainings" Language="C#" MasterPageFile="~/TraineeMaster.Master" AutoEventWireup="true" CodeBehind="MyTrainings.aspx.cs" Inherits="Training.Trainee.MyTrainings" %>
+<%@ Register Src="~/Trainee/TraineeTrainingSummary.ascx" TagPrefix="uc1" TagName="TraineeTrainingSummary" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 <style>
 .search-card,.grid-card{border:0;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
 .gridview th{background:#198754;color:white;text-align:center;vertical-align:middle}.gridview td,.table td,.table th{vertical-align:middle!important}.badge-status{font-size:13px;padding:6px 10px;min-width:110px;display:inline-block;text-align:center}.page-title{font-size:24px;font-weight:600}.btn-group .btn{margin-right:4px}.btn-group{display:flex;flex-wrap:wrap;gap:4px}.progress{min-width:120px;height:20px}.btn[disabled],.btn.disabled{cursor:not-allowed;opacity:.55}
 </style>
 </asp:Content>
-<asp:content id="Content2" contentplaceholderid="ContentPlaceHolder1" runat="server">
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 <div class="container-fluid">
 <div class="row mb-3"><div class="col-md-12"><h3 class="page-title">My Trainings</h3></div></div>
 <div class="card search-card mb-3"><div class="card-body"><div class="row">
@@ -33,95 +33,26 @@ protected void gvTraining_DataBound(object sender, EventArgs e)
 {
     string empID = Session["EmpID"] == null ? "" : Session["EmpID"].ToString().ToUpperInvariant();
     if (string.IsNullOrWhiteSpace(empID)) return;
-    foreach (GridViewRow row in gvTraining.Rows)
+    foreach (System.Web.UI.WebControls.GridViewRow row in gvTraining.Rows)
     {
-        LinkButton feedback = row.FindControl("lnkFeedback") as LinkButton;
-        LinkButton certificate = row.FindControl("lnkCertificate") as LinkButton;
+        System.Web.UI.WebControls.LinkButton feedback = row.FindControl("lnkFeedback") as System.Web.UI.WebControls.LinkButton;
+        System.Web.UI.WebControls.LinkButton certificate = row.FindControl("lnkCertificate") as System.Web.UI.WebControls.LinkButton;
         if (feedback == null && certificate == null) continue;
         string trainingID = gvTraining.DataKeys[row.RowIndex].Value.ToString();
-
-        DataTable dt = objDB.GetDataTable(@"SELECT TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,
-TD.FeedbackRequired,ISNULL(TD.FeedbackSkipped,0) FeedbackSkipped,
-TD.CertificateRequired,ISNULL(TD.CertificateSkipped,0) CertificateSkipped,
-CASE WHEN EXISTS (SELECT 1 FROM Feedback F WHERE F.TrainingID=TD.TrainingID AND F.EmpID=@EmpID AND ISNULL(F.Submitted,0)=1) THEN 1 ELSE 0 END FeedbackSubmitted
-FROM TrainingDetails TD WHERE TD.TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) });
+        System.Data.DataTable dt = objDB.GetDataTable(@"SELECT TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,
+TD.FeedbackRequired,ISNULL(TD.FeedbackSkipped,0) FeedbackSkipped,TD.CertificateRequired,ISNULL(TD.CertificateSkipped,0) CertificateSkipped
+FROM TrainingDetails TD WHERE TD.TrainingID=@TrainingID", new System.Data.SqlClient.SqlParameter[] { new System.Data.SqlClient.SqlParameter("@TrainingID", trainingID) });
         if (dt.Rows.Count == 0) continue;
-        DataRow r = dt.Rows[0];
-
-        bool attendanceRequired = Convert.ToBoolean(r["AttendanceRequired"]);
-        bool preRequired = Convert.ToBoolean(r["InitialAssessmentRequired"]);
-        bool postRequired = Convert.ToBoolean(r["FinalAssessmentRequired"]);
-        bool feedbackRequired = Convert.ToBoolean(r["FeedbackRequired"]);
-        bool feedbackSkipped = Convert.ToBoolean(r["FeedbackSkipped"]);
-        bool certificateRequired = Convert.ToBoolean(r["CertificateRequired"]);
-        bool certificateSkipped = Convert.ToBoolean(r["CertificateSkipped"]);
-
-        bool feedbackSubmitted = Convert.ToBoolean(r["FeedbackSubmitted"]);
-        bool attendanceDone = true;
-        bool preDone = true;
-        bool postDone = true;
-
-        if (attendanceRequired)
-        {
-            attendanceDone = Convert.ToInt32(objDB.ExecuteScalar(@"SELECT CASE WHEN NOT EXISTS (
-SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0
-AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID AND SA.AttendanceStatus IN ('Present','Completed'))
-) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) })) == 1;
-        }
-
-        if (preRequired)
-        {
-            preDone = Convert.ToInt32(objDB.ExecuteScalar(@"SELECT CASE WHEN NOT EXISTS (
-SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.PreAssessmentSkipped,0)=0
-AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1)
-OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1))
-) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) })) == 1;
-        }
-
-        if (postRequired)
-        {
-            postDone = Convert.ToInt32(objDB.ExecuteScalar(@"SELECT CASE WHEN NOT EXISTS (
-SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.PostAssessmentSkipped,0)=0
-AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1)
-OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1))
-) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) })) == 1;
-        }
-
-        if (feedback != null)
-        {
-            if (!feedbackRequired || feedbackSkipped) { feedback.Visible=false; }
-            else if (feedbackSubmitted) { feedback.Text="Feedback Submitted"; feedback.Enabled=false; feedback.CssClass="btn btn-success btn-sm disabled"; feedback.ToolTip="Feedback has already been submitted."; }
-            else if (!attendanceDone) { feedback.Enabled=false; feedback.ToolTip="Complete your required attendance first."; }
-            else if (!preDone) { feedback.Enabled=false; feedback.ToolTip="Complete all required Pre-Training Tests first. Required tests must be published."; }
-            else if (!postDone) { feedback.Enabled=false; feedback.ToolTip="Complete all required Post-Training Tests first. Required tests must be published."; }
-            else { feedback.Enabled=true; feedback.ToolTip="You can submit feedback now."; }
-        }
-
-        if (certificate != null)
-        {
-            if (!certificateRequired || certificateSkipped) { certificate.Visible=false; continue; }
-
-            bool certificateAllowed;
-            if (feedbackRequired && !feedbackSkipped)
-                certificateAllowed = feedbackSubmitted;
-            else if (postRequired && Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(PostAssessmentSkipped,0)=0) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) })) == 1)
-                certificateAllowed = postDone;
-            else if (preRequired && Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(PreAssessmentSkipped,0)=0) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) })) == 1)
-                certificateAllowed = preDone;
-            else if (attendanceRequired && Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(AttendanceSkipped,0)=0) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) })) == 1)
-                certificateAllowed = attendanceDone;
-            else
-                certificateAllowed = true;
-
-            certificate.Enabled = certificateAllowed;
-            if (!certificateAllowed)
-            {
-                certificate.CssClass="btn btn-info btn-sm disabled";
-                certificate.ToolTip="Complete the required training workflow before downloading the certificate.";
-            }
-            else certificate.ToolTip="Download Certificate";
-        }
+        System.Data.DataRow r = dt.Rows[0];
+        bool attendanceRequired=System.Convert.ToBoolean(r["AttendanceRequired"]), preRequired=System.Convert.ToBoolean(r["InitialAssessmentRequired"]), postRequired=System.Convert.ToBoolean(r["FinalAssessmentRequired"]), feedbackRequired=System.Convert.ToBoolean(r["FeedbackRequired"]), feedbackSkipped=System.Convert.ToBoolean(r["FeedbackSkipped"]), certificateRequired=System.Convert.ToBoolean(r["CertificateRequired"]), certificateSkipped=System.Convert.ToBoolean(r["CertificateSkipped"]);
+        bool attendanceDone=true, preDone=true, postDone=true, feedbackDone=false;
+        if(attendanceRequired) attendanceDone=System.Convert.ToInt32(objDB.ExecuteScalar(@"SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SM.AttendanceStatus,'')<>'Completed') THEN 1 ELSE 0 END",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@TrainingID",trainingID)}))==1;
+        if(preRequired) preDone=System.Convert.ToInt32(objDB.ExecuteScalar(@"SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.PreAssessmentSkipped,0)=0 AND (NOT EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) OR NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=@EmpID AND AT.Submitted=1))) THEN 1 ELSE 0 END",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@TrainingID",trainingID),new System.Data.SqlClient.SqlParameter("@EmpID",empID)}))==1;
+        if(postRequired) postDone=System.Convert.ToInt32(objDB.ExecuteScalar(@"SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.PostAssessmentSkipped,0)=0 AND (NOT EXISTS(SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) OR NOT EXISTS(SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=@EmpID AND AT.Submitted=1))) THEN 1 ELSE 0 END",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@TrainingID",trainingID),new System.Data.SqlClient.SqlParameter("@EmpID",empID)}))==1;
+        if(feedbackRequired&&!feedbackSkipped) feedbackDone=System.Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN EXISTS(SELECT 1 FROM BatchFeedback BF WHERE BF.TrainingID=@TrainingID AND BF.EmpID=@EmpID AND ISNULL(BF.Submitted,0)=1) THEN 1 ELSE 0 END",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@TrainingID",trainingID),new System.Data.SqlClient.SqlParameter("@EmpID",empID)}))==1;
+        if(feedback!=null){if(!feedbackRequired||feedbackSkipped)feedback.Visible=false;else if(feedbackDone){feedback.Text="Feedback Submitted";feedback.Enabled=false;feedback.CssClass="btn btn-success btn-sm disabled";feedback.ToolTip="Batch feedback has already been submitted.";}else if(!attendanceDone){feedback.Enabled=false;feedback.ToolTip="Complete required attendance first.";}else if(!preDone){feedback.Enabled=false;feedback.ToolTip="Complete all required Pre-Training Tests first. Required tests must be published.";}else if(!postDone){feedback.Enabled=false;feedback.ToolTip="Complete all required Post-Training Tests first. Required tests must be published.";}else{feedback.Enabled=true;feedback.ToolTip="You can submit Batch Feedback now.";}}
+        if(certificate!=null){if(!certificateRequired||certificateSkipped){certificate.Visible=false;continue;}bool allowed;if(feedbackRequired&&!feedbackSkipped)allowed=feedbackDone;else if(postRequired)allowed=postDone;else if(preRequired)allowed=preDone;else if(attendanceRequired)allowed=attendanceDone;else allowed=true;certificate.Enabled=allowed;certificate.ToolTip=allowed?"Download Certificate":"Complete the required training workflow before downloading the certificate.";if(!allowed)certificate.CssClass="btn btn-info btn-sm disabled";}
     }
 }
 </script>
-</asp:content>
+</asp:Content>
