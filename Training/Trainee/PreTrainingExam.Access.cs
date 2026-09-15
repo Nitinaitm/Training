@@ -41,7 +41,7 @@ namespace Training.Trainee
 
             if (dt.Rows.Count == 0)
             {
-                ShowAccessMessage("Session is not available for this training.");
+                DenyAccess("Session is not available for this training.");
                 return;
             }
 
@@ -49,19 +49,19 @@ namespace Training.Trainee
 
             if (!Convert.ToBoolean(row["InitialAssessmentRequired"]))
             {
-                ShowAccessMessage("Pre-Training Test is not required for this training.");
+                DenyAccess("Pre-Training Test is not required for this training.");
                 return;
             }
 
             if (Convert.ToBoolean(row["PreAssessmentSkipped"]))
             {
-                ShowAccessMessage("Pre-Training Test has been skipped for this session.");
+                DenyAccess("Pre-Training Test has been skipped for this session.");
                 return;
             }
 
             if (!IsPublishedTestAvailable(sessionID))
             {
-                ShowAccessMessage("Pre-Training Test has not been published by the trainer yet.");
+                DenyAccess("Pre-Training Test has not been published by the trainer yet.");
                 return;
             }
 
@@ -72,7 +72,7 @@ namespace Training.Trainee
             if (attendanceRequired && !attendanceSkipped &&
                 attendanceStatus != "Present" && attendanceStatus != "Completed")
             {
-                ShowAccessMessage("Your attendance has not been marked for this session. Please contact the trainer to mark your attendance before starting the Pre-Training Test.");
+                DenyAccess("Your attendance has not been marked for this session. Please contact the trainer to mark your attendance before starting the Pre-Training Test.");
                 return;
             }
         }
@@ -89,17 +89,11 @@ namespace Training.Trainee
             return result != null && result != DBNull.Value && Convert.ToInt32(result) == 1;
         }
 
-        private void ShowAccessMessage(string message)
+        private void DenyAccess(string message)
         {
-            string safeMessage = message.Replace("\\", "\\\\").Replace("'", "\\'");
-            ScriptManager.RegisterStartupScript(
-                this,
-                GetType(),
-                "PreTrainingAccess",
-                "alert('" + safeMessage + "');window.location='MySessions.aspx';",
-                true);
-
-            Context.Items["PreTrainingAccessDenied"] = true;
+            Session["PreTrainingAccessMessage"] = message;
+            Response.Redirect("~/Trainee/MySessions.aspx", false);
+            Context.ApplicationInstance.CompleteRequest();
         }
     }
 }
