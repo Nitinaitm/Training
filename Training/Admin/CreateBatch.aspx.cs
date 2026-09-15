@@ -34,6 +34,7 @@ namespace Training.Admin
                 ddlTrainingOrganizer.Items.Insert(0, new ListItem("Select Organizer", ""));
                 ddlTrainingLocation.Items.Insert(0, new ListItem("Select Location", ""));
                 BindCourse();
+                ddlCourse.Items.Insert(0, new ListItem("Select Course", ""));
                 if (Request.QueryString["mode"] == "edit" && Session["TrainingID"] != null)
                     LoadTrainingForEdit(Session["TrainingID"].ToString());
                 else SetButtonStatus();
