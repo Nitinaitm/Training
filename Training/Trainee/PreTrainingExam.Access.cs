@@ -92,8 +92,7 @@ namespace Training.Trainee
         private void DenyAccess(string message)
         {
             Session["PreTrainingAccessMessage"] = message;
-            Response.Redirect("~/Trainee/MySessions.aspx", false);
-            Context.ApplicationInstance.CompleteRequest();
+            Response.Redirect("~/Trainee/MySessions.aspx");
         }
     }
 }
