@@ -57,14 +57,14 @@ TRY_CONVERT(date,SM.SessionDate,105) AS SessionDate,SM.StartTime,SM.EndTime,
 CASE WHEN TD.AttendanceRequired=0 THEN '-' WHEN ISNULL(SM.AttendanceSkipped,0)=1 THEN 'Skipped' ELSE ISNULL(SA.AttendanceStatus,'Pending') END AS AttendanceStatus,
 CASE WHEN TD.InitialAssessmentRequired=0 THEN '-'
      WHEN ISNULL(SM.PreAssessmentSkipped,0)=1 THEN 'Skipped'
-     WHEN TD.AttendanceRequired=1 AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SA.AttendanceStatus,'Pending')<>'Present' THEN 'Locked'
-     WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1) THEN '-'
+     WHEN TD.AttendanceRequired=1 AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SA.AttendanceStatus,'Pending') NOT IN ('Present','Completed') THEN 'Locked'
+     WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1) THEN 'Not Published'
      WHEN EXISTS (SELECT 1 FROM TestMaster TT INNER JOIN TestAttempt TA ON TT.TestID=TA.TestID WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1) THEN 'Completed'
      ELSE 'Available' END AS PreStatus,
 CASE WHEN TD.FinalAssessmentRequired=0 THEN '-'
      WHEN ISNULL(SM.PostAssessmentSkipped,0)=1 THEN 'Skipped'
-     WHEN TD.AttendanceRequired=1 AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SA.AttendanceStatus,'Pending')<>'Present' THEN 'Locked'
-     WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Post' AND TT.IsPublished=1) THEN '-'
+     WHEN TD.AttendanceRequired=1 AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SA.AttendanceStatus,'Pending') NOT IN ('Present','Completed') THEN 'Locked'
+     WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Post' AND TT.IsPublished=1) THEN 'Not Published'
      WHEN EXISTS (SELECT 1 FROM TestMaster TT INNER JOIN TestAttempt TA ON TT.TestID=TA.TestID WHERE TT.SessionID=SM.SessionID AND TT.TestType='Post' AND TT.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1) THEN 'Completed'
      ELSE 'Available' END AS PostStatus
 FROM SessionMaster SM
@@ -105,7 +105,7 @@ ORDER BY TRY_CONVERT(INT,SM.SessionNo),SM.SessionNo";
         private void LoadProgress()
         {
             string sql = @"SELECT COUNT(*) TotalSession,
-SUM(CASE WHEN ISNULL(SM.AttendanceSkipped,0)=1 OR ISNULL(SA.AttendanceStatus,'Pending')='Completed' THEN 1 ELSE 0 END) AttendanceCompleted
+SUM(CASE WHEN ISNULL(SM.AttendanceSkipped,0)=1 OR ISNULL(SA.AttendanceStatus,'Pending') IN ('Present','Completed') THEN 1 ELSE 0 END) AttendanceCompleted
 FROM SessionMaster SM
 LEFT JOIN SessionAttendance SA ON SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID
 WHERE SM.TrainingID=@TrainingID";
@@ -130,9 +130,8 @@ FROM SessionMaster SM
 INNER JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID
 WHERE SM.TrainingID=@TrainingID
   AND ISNULL(SM." + skipColumn + @",0)=0
-  AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1)
-  AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(SM.AttendanceSkipped,0)=1 OR EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID AND SA.AttendanceStatus='Present'))
-  AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1)
+  AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1)
+       OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1))
 ) THEN 1 ELSE 0 END";
             return Convert.ToInt32(objDB.ExecuteScalar(q, new SqlParameter[]
             {
@@ -142,24 +141,53 @@ WHERE SM.TrainingID=@TrainingID
             })) == 1;
         }
 
+        private bool HasRequiredSessions(string skipColumn)
+        {
+            object v = objDB.ExecuteScalar("SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(" + skipColumn + ",0)=0) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID) });
+            return v != null && Convert.ToInt32(v) == 1;
+        }
+
+        private bool AreAllAttendanceDone()
+        {
+            object v = objDB.ExecuteScalar(@"SELECT CASE WHEN NOT EXISTS (
+SELECT 1 FROM SessionMaster SM
+WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0
+AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID AND SA.AttendanceStatus IN ('Present','Completed'))
+) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", EmpID) });
+            return v != null && Convert.ToInt32(v) == 1;
+        }
+
+        private bool IsFeedbackSubmitted()
+        {
+            object v = objDB.ExecuteScalar("SELECT COUNT(*) FROM Feedback WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND ISNULL(Submitted,0)=1", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", EmpID) });
+            return v != null && Convert.ToInt32(v) > 0;
+        }
+
+        private bool CanReachFeedback(bool attendanceRequired, bool preRequired, bool postRequired)
+        {
+            if (postRequired && HasRequiredSessions("PostAssessmentSkipped")) return AreTestsDoneForTrainee("Post");
+            if (preRequired && HasRequiredSessions("PreAssessmentSkipped")) return AreTestsDoneForTrainee("Pre");
+            if (attendanceRequired && HasRequiredSessions("AttendanceSkipped")) return AreAllAttendanceDone();
+            return true;
+        }
+
+        private bool CanDownloadCertificate(bool attendanceRequired, bool preRequired, bool postRequired, bool feedbackRequired, bool feedbackSkipped)
+        {
+            if (feedbackRequired && !feedbackSkipped) return IsFeedbackSubmitted();
+            if (postRequired && HasRequiredSessions("PostAssessmentSkipped")) return AreTestsDoneForTrainee("Post");
+            if (preRequired && HasRequiredSessions("PreAssessmentSkipped")) return AreTestsDoneForTrainee("Pre");
+            if (attendanceRequired && HasRequiredSessions("AttendanceSkipped")) return AreAllAttendanceDone();
+            return true;
+        }
+
         private void LoadWorkflow()
         {
-            string sql = @"SELECT TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,
-TD.FeedbackRequired,ISNULL(TD.FeedbackSkipped,0) FeedbackSkipped,
-TD.CertificateRequired,ISNULL(TD.CertificateSkipped,0) CertificateSkipped,
-ISNULL(TP.BatchFeedbackCompleted,0) AS BatchFeedbackCompleted,
-CASE WHEN NOT EXISTS (
-    SELECT 1 FROM SessionMaster SM
-    WHERE SM.TrainingID=@TrainingID
-      AND ISNULL(SM.AttendanceSkipped,0)=0
-      AND ISNULL((SELECT TOP 1 SA.AttendanceStatus FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID),'Pending')<>'Completed'
-) THEN 1 ELSE 0 END AS AttendanceDone,
-CASE WHEN EXISTS (SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') THEN 1 ELSE 0 END AS CertificateReady
-FROM TrainingDetails TD
-LEFT JOIN TrainingProgress TP ON TP.TrainingID=TD.TrainingID AND TP.EmpID=@EmpID
-WHERE TD.TrainingID=@TrainingID";
+            string sql = @"SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,
+FeedbackRequired,ISNULL(FeedbackSkipped,0) FeedbackSkipped,
+CertificateRequired,ISNULL(CertificateSkipped,0) CertificateSkipped
+FROM TrainingDetails WHERE TrainingID=@TrainingID";
 
-            SqlParameter[] param = { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", EmpID) };
+            SqlParameter[] param = { new SqlParameter("@TrainingID", TrainingID) };
             DataTable dt = objDB.GetDataTable(sql, param);
             if (dt.Rows.Count == 0)
             {
@@ -178,34 +206,24 @@ WHERE TD.TrainingID=@TrainingID";
             bool feedbackSkipped = Convert.ToBoolean(dr["FeedbackSkipped"]);
             bool certificateRequired = Convert.ToBoolean(dr["CertificateRequired"]);
             bool certificateSkipped = Convert.ToBoolean(dr["CertificateSkipped"]);
-            bool attendanceDone = Convert.ToBoolean(dr["AttendanceDone"]);
-            bool batchFeedbackDone = Convert.ToBoolean(dr["BatchFeedbackCompleted"]);
-            bool certificateReady = Convert.ToBoolean(dr["CertificateReady"]);
 
             bool questionnaireAvailable = Convert.ToInt32(objDB.ExecuteScalar(
                 "SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingFeedbackCategory TFC INNER JOIN FeedbackQuestionMaster FQM ON FQM.CategoryID=TFC.CategoryID WHERE TFC.TrainingID=@TrainingID AND FQM.Active=1) THEN 1 ELSE 0 END",
                 new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID) })) == 1;
 
-            bool preDone = !preRequired || AreTestsDoneForTrainee("Pre");
-            bool postDone = !postRequired || AreTestsDoneForTrainee("Post");
-            bool attendanceGate = !attendanceRequired || attendanceDone;
-            bool requiredTestsDone = preDone && postDone;
-            bool feedbackGate = !feedbackRequired || feedbackSkipped || batchFeedbackDone;
-            bool workflowComplete = attendanceGate && requiredTestsDone && feedbackGate && (!certificateRequired || certificateSkipped || certificateReady);
+            bool feedbackDone = IsFeedbackSubmitted();
+            bool canReachFeedback = CanReachFeedback(attendanceRequired, preRequired, postRequired);
+            bool certificateReady = Convert.ToInt32(objDB.ExecuteScalar(
+                "SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') THEN 1 ELSE 0 END",
+                new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", EmpID) })) == 1;
 
-            if (workflowComplete && certificateRequired && !certificateSkipped && !certificateReady)
-            {
-                Training.Business.Certificate.CertificateGenerator generator = new Training.Business.Certificate.CertificateGenerator();
-                generator.GenerateCertificate(TrainingID, EmpID);
-                certificateReady = Convert.ToInt32(objDB.ExecuteScalar(
-                    "SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A') THEN 1 ELSE 0 END",
-                    param)) == 1;
-            }
+            bool canDownloadCertificate = CanDownloadCertificate(attendanceRequired, preRequired, postRequired, feedbackRequired, feedbackSkipped);
 
             btnBatchFeedback.Visible = feedbackRequired && !feedbackSkipped;
+            btnBatchFeedback.Enabled = feedbackRequired && !feedbackSkipped && questionnaireAvailable && canReachFeedback && !feedbackDone;
+
             btnCertificate.Visible = certificateRequired && !certificateSkipped;
-            btnBatchFeedback.Enabled = feedbackRequired && !feedbackSkipped && questionnaireAvailable && attendanceGate && requiredTestsDone && !batchFeedbackDone;
-            btnCertificate.Enabled = certificateRequired && !certificateSkipped && attendanceGate && requiredTestsDone && feedbackGate && !certificateReady;
+            btnCertificate.Enabled = certificateRequired && !certificateSkipped && canDownloadCertificate;
 
             if (gvSession.Columns.Count >= 10)
             {
