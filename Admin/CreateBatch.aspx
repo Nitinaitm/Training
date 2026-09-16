@@ -95,7 +95,7 @@
                 </div>
 
                 <div class="col-lg-4 mb-3">
-                    <label class="form-label">Batch Strength</label>
+                    <label class="form-label">Batch Strength (Trainee)</label>
                     <asp:TextBox ID="txtStrength" runat="server" CssClass="form-control" MaxLength="3" onkeypress="return isNumber(event);"></asp:TextBox>
                     <asp:RegularExpressionValidator ID="revStrength" runat="server" ControlToValidate="txtStrength" ValidationGroup="SaveGroup" ValidationExpression="^\d+$" ErrorMessage="Enter valid Batch Strength" CssClass="validation"></asp:RegularExpressionValidator>
                 </div>
