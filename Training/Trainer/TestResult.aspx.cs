@@ -13,7 +13,7 @@ namespace Training.Trainer
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["TrainerID"] == null)
+            if (Session["TrainerID"] == null || string.IsNullOrWhiteSpace(Session["TrainerID"].ToString()))
             {
                 Response.Redirect("~/Default.aspx");
                 return;
@@ -39,6 +39,7 @@ namespace Training.Trainer
             }
         }
 
+        private string TrainerID => Session["TrainerID"].ToString();
         private string TrainingID => Session["TrainingID"].ToString();
         private string SessionID => Session["SessionID"].ToString();
 
@@ -49,12 +50,15 @@ namespace Training.Trainer
                                     TD.TrainingType
                              FROM SessionMaster SM
                              LEFT JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID
-                             WHERE SM.SessionID=@SessionID AND SM.TrainingID=@TrainingID";
+                             WHERE SM.SessionID=@SessionID
+                               AND SM.TrainingID=@TrainingID
+                               AND SM.TrainerID=@TrainerID";
 
             DataTable dt = obj.GetDataTable(query, new SqlParameter[]
             {
                 new SqlParameter("@SessionID", SessionID),
-                new SqlParameter("@TrainingID", TrainingID)
+                new SqlParameter("@TrainingID", TrainingID),
+                new SqlParameter("@TrainerID", TrainerID)
             });
 
             if (dt.Rows.Count == 0)
@@ -81,12 +85,16 @@ namespace Training.Trainer
                 FROM TestResult R
                 INNER JOIN TestMaster TM ON TM.TestID=R.TestID
                 INNER JOIN SessionMaster SM ON SM.SessionID=TM.SessionID
-                WHERE SM.TrainingID=@TrainingID AND SM.SessionID=@SessionID";
+                WHERE SM.TrainingID=@TrainingID
+                  AND SM.SessionID=@SessionID
+                  AND SM.TrainerID=@TrainerID
+                  AND TM.TrainerID=@TrainerID";
 
             DataTable dt = obj.GetDataTable(query, new SqlParameter[]
             {
                 new SqlParameter("@TrainingID", TrainingID),
-                new SqlParameter("@SessionID", SessionID)
+                new SqlParameter("@SessionID", SessionID),
+                new SqlParameter("@TrainerID", TrainerID)
             });
 
             if (dt.Rows.Count > 0)
@@ -113,11 +121,33 @@ namespace Training.Trainer
                 FROM TrainingAssignment TA
                 INNER JOIN EmpBasicMaster E ON E.EmpID=TA.EmpID
                 LEFT JOIN TestResult R ON R.EmpID=TA.EmpID
-                LEFT JOIN TestMaster TM ON TM.TestID=R.TestID AND TM.SessionID=@SessionID
+                LEFT JOIN TestMaster TM ON TM.TestID=R.TestID
+                    AND TM.SessionID=@SessionID
+                    AND TM.TrainerID=@TrainerID
                 WHERE TA.TrainingID=@TrainingID
                   AND TA.AssignmentStatus='Assigned'
-                  AND EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=@SessionID AND SA.EmpID=TA.EmpID)
-                  AND (TM.TestID IS NOT NULL OR EXISTS (SELECT 1 FROM SessionAttendance SA2 WHERE SA2.SessionID=@SessionID AND SA2.EmpID=TA.EmpID))";
+                  AND EXISTS
+                  (
+                      SELECT 1
+                      FROM SessionAttendance SA
+                      WHERE SA.SessionID=@SessionID
+                        AND SA.EmpID=TA.EmpID
+                  )
+                  AND EXISTS
+                  (
+                      SELECT 1
+                      FROM SessionMaster SM
+                      WHERE SM.SessionID=@SessionID
+                        AND SM.TrainingID=@TrainingID
+                        AND SM.TrainerID=@TrainerID
+                  )
+                  AND (TM.TestID IS NOT NULL OR EXISTS
+                  (
+                      SELECT 1
+                      FROM SessionAttendance SA2
+                      WHERE SA2.SessionID=@SessionID
+                        AND SA2.EmpID=TA.EmpID
+                  ))";
 
             if (!string.IsNullOrEmpty(txtSearch.Text.Trim()))
                 query += " AND (E.EmpID LIKE @Search OR E.EmpName LIKE @Search)";
@@ -125,8 +155,19 @@ namespace Training.Trainer
             query += " GROUP BY TA.EmpID, E.EmpName, E.EmpDesignation ORDER BY E.EmpName";
 
             SqlParameter[] parameters = string.IsNullOrEmpty(txtSearch.Text.Trim())
-                ? new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@SessionID", SessionID) }
-                : new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@SessionID", SessionID), new SqlParameter("@Search", "%" + txtSearch.Text.Trim() + "%") };
+                ? new SqlParameter[]
+                {
+                    new SqlParameter("@TrainingID", TrainingID),
+                    new SqlParameter("@SessionID", SessionID),
+                    new SqlParameter("@TrainerID", TrainerID)
+                }
+                : new SqlParameter[]
+                {
+                    new SqlParameter("@TrainingID", TrainingID),
+                    new SqlParameter("@SessionID", SessionID),
+                    new SqlParameter("@TrainerID", TrainerID),
+                    new SqlParameter("@Search", "%" + txtSearch.Text.Trim() + "%")
+                };
 
             DataTable dt = obj.GetDataTable(query, parameters);
             gvResults.DataSource = dt;
@@ -156,7 +197,33 @@ namespace Training.Trainer
         {
             if (e.CommandName == "View")
             {
-                Session["ResultID"] = e.CommandArgument.ToString();
+                string resultID = e.CommandArgument.ToString();
+
+                string query = @"SELECT R.ResultID
+                                 FROM TestResult R
+                                 INNER JOIN TestMaster TM ON TM.TestID=R.TestID
+                                 INNER JOIN SessionMaster SM ON SM.SessionID=TM.SessionID
+                                 WHERE R.ResultID=@ResultID
+                                   AND TM.SessionID=@SessionID
+                                   AND TM.TrainerID=@TrainerID
+                                   AND SM.TrainingID=@TrainingID
+                                   AND SM.TrainerID=@TrainerID";
+
+                DataTable dt = obj.GetDataTable(query, new SqlParameter[]
+                {
+                    new SqlParameter("@ResultID", resultID),
+                    new SqlParameter("@SessionID", SessionID),
+                    new SqlParameter("@TrainingID", TrainingID),
+                    new SqlParameter("@TrainerID", TrainerID)
+                });
+
+                if (dt.Rows.Count == 0)
+                {
+                    Session.Remove("ResultID");
+                    return;
+                }
+
+                Session["ResultID"] = resultID;
                 Response.Redirect("~/Trainer/AnswerDetails.aspx");
             }
         }
@@ -171,16 +238,35 @@ namespace Training.Trainer
                 FROM TrainingAssignment TA
                 INNER JOIN EmpBasicMaster E ON E.EmpID=TA.EmpID
                 LEFT JOIN TestResult R ON R.EmpID=TA.EmpID
-                LEFT JOIN TestMaster TM ON TM.TestID=R.TestID AND TM.SessionID=@SessionID
-                WHERE TA.TrainingID=@TrainingID AND TA.AssignmentStatus='Assigned'
-                AND EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=@SessionID AND SA.EmpID=TA.EmpID)
+                LEFT JOIN TestMaster TM ON TM.TestID=R.TestID
+                    AND TM.SessionID=@SessionID
+                    AND TM.TrainerID=@TrainerID
+                WHERE TA.TrainingID=@TrainingID
+                  AND TA.AssignmentStatus='Assigned'
+                  AND EXISTS
+                  (
+                      SELECT 1
+                      FROM SessionAttendance SA
+                      WHERE SA.SessionID=@SessionID
+                        AND SA.EmpID=TA.EmpID
+                  )
+                  AND EXISTS
+                  (
+                      SELECT 1
+                      FROM SessionMaster SM
+                      WHERE SM.SessionID=@SessionID
+                        AND SM.TrainingID=@TrainingID
+                        AND SM.TrainerID=@TrainerID
+                  )
                 GROUP BY TA.EmpID,E.EmpName,E.EmpDesignation ORDER BY E.EmpName";
 
             DataTable dt = obj.GetDataTable(query, new SqlParameter[]
             {
                 new SqlParameter("@TrainingID", TrainingID),
-                new SqlParameter("@SessionID", SessionID)
+                new SqlParameter("@SessionID", SessionID),
+                new SqlParameter("@TrainerID", TrainerID)
             });
+
             if (dt.Rows.Count == 0) return;
 
             Response.Clear();
