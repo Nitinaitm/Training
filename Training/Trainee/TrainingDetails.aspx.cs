@@ -65,6 +65,9 @@ CASE WHEN TD.FinalAssessmentRequired=0 THEN '-'
      WHEN ISNULL(SM.PostAssessmentSkipped,0)=1 THEN 'Skipped'
      WHEN TD.AttendanceRequired=1 AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SA.AttendanceStatus,'Pending') NOT IN ('Present','Completed') THEN 'Locked'
      WHEN NOT EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Post' AND TT.IsPublished=1) THEN 'Not Published'
+     WHEN TD.InitialAssessmentRequired=1 AND ISNULL(SM.PreAssessmentSkipped,0)=0
+          AND EXISTS (SELECT 1 FROM TestMaster TT WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1)
+          AND NOT EXISTS (SELECT 1 FROM TestMaster TT INNER JOIN TestAttempt TA ON TT.TestID=TA.TestID WHERE TT.SessionID=SM.SessionID AND TT.TestType='Pre' AND TT.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1) THEN 'Locked'
      WHEN EXISTS (SELECT 1 FROM TestMaster TT INNER JOIN TestAttempt TA ON TT.TestID=TA.TestID WHERE TT.SessionID=SM.SessionID AND TT.TestType='Post' AND TT.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1) THEN 'Completed'
      ELSE 'Available' END AS PostStatus
 FROM SessionMaster SM
@@ -172,10 +175,22 @@ AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.Session
 
         private bool CanDownloadCertificate(bool attendanceRequired, bool preRequired, bool postRequired, bool feedbackRequired, bool feedbackSkipped)
         {
-            if (feedbackRequired && !feedbackSkipped) return IsFeedbackSubmitted();
-            if (postRequired && HasRequiredSessions("PostAssessmentSkipped")) return AreTestsDoneForTrainee("Post");
-            if (preRequired && HasRequiredSessions("PreAssessmentSkipped")) return AreTestsDoneForTrainee("Pre");
-            if (attendanceRequired && HasRequiredSessions("AttendanceSkipped")) return AreAllAttendanceDone();
+            if (feedbackRequired && !feedbackSkipped)
+            {
+                return CanReachFeedback(attendanceRequired, preRequired, postRequired) && IsFeedbackSubmitted();
+            }
+            if (postRequired && HasRequiredSessions("PostAssessmentSkipped"))
+            {
+                return (!preRequired || !HasRequiredSessions("PreAssessmentSkipped") || AreTestsDoneForTrainee("Pre")) && AreTestsDoneForTrainee("Post");
+            }
+            if (preRequired && HasRequiredSessions("PreAssessmentSkipped"))
+            {
+                return AreTestsDoneForTrainee("Pre");
+            }
+            if (attendanceRequired && HasRequiredSessions("AttendanceSkipped"))
+            {
+                return AreAllAttendanceDone();
+            }
             return true;
         }
 
