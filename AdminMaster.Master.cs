@@ -18,6 +18,7 @@ namespace Training
             }
 
             Page.ClientScript.RegisterClientScriptInclude("EmployeeGridEdit", ResolveUrl("~/Scripts/employee-edit-grid.js"));
+            Page.ClientScript.RegisterStartupScript(GetType(), "Dashboard2Menu", "(function(){var s=document.getElementById('adminSidebar');if(!s||document.getElementById('dashboard2Menu'))return;var a=document.createElement('a');a.id='dashboard2Menu';a.href='Dashboard.aspx';a.className='menu-item';a.innerHTML='<i class=\"fas fa-tachometer-alt mr-2\"></i>Dashboard 2';s.insertBefore(a,s.firstElementChild);})();", true);
         }
     }
 }
