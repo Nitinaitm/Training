@@ -10,10 +10,7 @@
         .info-label { color:#6c757d; font-size:12px; font-weight:600; }
         .info-value { color:#212529; font-size:14px; font-weight:700; }
         .table th { white-space:nowrap; }
-        .history-empty { padding:20px; color:#6c757d; text-align:center; }
         .question-table td { vertical-align:top; }
-        .answer-selected { font-weight:700; }
-        .certificate-box { display:flex; align-items:center; justify-content:space-between; gap:15px; flex-wrap:wrap; }
         @media(max-width:767px) { .history-page{padding:15px 8px 30px;} .history-body{padding:14px;} }
     </style>
 </asp:Content>
@@ -21,9 +18,7 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     <div class="container-fluid history-page">
         <div class="history-card">
-            <div class="history-header">
-                <div class="history-title"><i class="fa fa-history"></i>&nbsp; Closed Training History</div>
-            </div>
+            <div class="history-header"><div class="history-title"><i class="fa fa-history"></i>&nbsp; Closed Training History</div></div>
             <div class="history-body">
                 <div class="row">
                     <div class="col-md-2 col-sm-6 mb-3"><div class="info-label">Training ID</div><div class="info-value"><asp:Label ID="lblTrainingID" runat="server" /></div></div>
@@ -48,7 +43,6 @@
                     <asp:BoundField DataField="SessionName" HeaderText="Session Name" />
                     <asp:BoundField DataField="SessionDate" HeaderText="Date" />
                     <asp:BoundField DataField="AttendanceStatus" HeaderText="Attendance" />
-                    <asp:BoundField DataField="AttendanceCompletedOn" HeaderText="Completed On" />
                     <asp:BoundField DataField="TrainerName" HeaderText="Trainer" />
                 </Columns>
             </asp:GridView></div>
@@ -77,7 +71,8 @@
             <div class="history-body"><asp:GridView ID="gvQuestions" runat="server" AutoGenerateColumns="False" CssClass="table table-bordered table-striped question-table" EmptyDataText="No attempted questions available.">
                 <Columns>
                     <asp:BoundField DataField="TestType" HeaderText="Test" />
-                    <asp:BoundField DataField="TestTitle" HeaderText="Test" />
+                    <asp:BoundField DataField="TestTitle" HeaderText="Test Title" />
+                    <asp:BoundField DataField="EmpID" HeaderText="Trainee ID" />
                     <asp:BoundField DataField="AttemptNo" HeaderText="Attempt" />
                     <asp:BoundField DataField="QuestionNo" HeaderText="#" />
                     <asp:BoundField DataField="Question" HeaderText="Question" />
@@ -100,6 +95,7 @@
                     <asp:BoundField DataField="Answer" HeaderText="Answer" />
                     <asp:BoundField DataField="SessionName" HeaderText="Session" />
                     <asp:BoundField DataField="TrainerName" HeaderText="Trainer" />
+                    <asp:BoundField DataField="EmpID" HeaderText="Trainee ID" />
                 </Columns>
             </asp:GridView></div>
         </div>
