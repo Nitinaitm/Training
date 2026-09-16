@@ -34,6 +34,15 @@
       <DependentUpon>EditEmployee.aspx</DependentUpon>
     </Compile>
 
+    <Content Include="Admin\Dashboard.aspx" Condition="Exists('Admin\Dashboard.aspx')" />
+    <Compile Include="Admin\Dashboard.aspx.cs" Condition="Exists('Admin\Dashboard.aspx.cs')">
+      <DependentUpon>Dashboard.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\Dashboard.aspx.designer.cs" Condition="Exists('Admin\Dashboard.aspx.designer.cs')">
+      <DependentUpon>Dashboard.aspx</DependentUpon>
+    </Compile>
+
     <Content Include="Scripts\employee-edit-grid.js" Condition="Exists('Scripts\employee-edit-grid.js')" />
   </ItemGroup>
 </Project>
