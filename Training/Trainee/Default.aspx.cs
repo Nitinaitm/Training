@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
@@ -10,7 +10,8 @@ namespace Training.Trainee
         clsDataAccess objDB =
             new clsDataAccess();
 
-        string EmpID =            "";
+        string EmpID =
+            "";
 
         protected void Page_Load(
             object sender,
@@ -19,8 +20,16 @@ namespace Training.Trainee
             if
             (
                 Session["EmpID"] == null
-                &&
-                Session["UserID"] == null
+                ||
+                string.IsNullOrWhiteSpace(
+                    Session["EmpID"].ToString())
+                ||
+                Session["Role"] == null
+                ||
+                !string.Equals(
+                    Session["Role"].ToString(),
+                    "Emp",
+                    StringComparison.OrdinalIgnoreCase)
             )
             {
                 Response.Redirect(
@@ -29,24 +38,11 @@ namespace Training.Trainee
                 return;
             }
 
-            if
-            (
-                Session["EmpID"] != null
-            )
-            {
-                EmpID =
-                    Session["EmpID"]
-                    .ToString();
-            }
-            else
-            {
-                EmpID =
-                    Session["UserID"]
-                    .ToString();
-
-                Session["EmpID"] =
-                    EmpID;
-            }
+            EmpID =
+                Session["EmpID"]
+                .ToString()
+                .Trim()
+                .ToUpperInvariant();
 
             if
             (
@@ -57,23 +53,12 @@ namespace Training.Trainee
             }
         }
 
-
         private void LoadDashboard()
         {
             LoadTraineeDetails();
-
             LoadDashboardSummary();
-
             LoadProgress();
         }
-
-
-        /*
-         * =====================================================
-         * TRAINEE DETAILS
-         * Internal + External
-         * =====================================================
-         */
 
         private void LoadTraineeDetails()
         {
@@ -86,9 +71,7 @@ namespace Training.Trainee
                 "'Internal' AS TraineeType " +
                 "FROM EmpBasicMaster " +
                 "WHERE EmpID=@EmpID " +
-
                 "UNION ALL " +
-
                 "SELECT " +
                 "TraineeName AS EmpName," +
                 "'External' AS TraineeType " +
@@ -109,9 +92,9 @@ namespace Training.Trainee
 
             if
             (
-                dt.Rows.Count
-                ==
-                0
+                dt == null
+                ||
+                dt.Rows.Count == 0
             )
             {
                 lblTraineeName.Text =
@@ -132,30 +115,39 @@ namespace Training.Trainee
                 .ToString();
         }
 
-
-        /*
-         * =====================================================
-         * MAIN DASHBOARD COUNTS
-         * =====================================================
-         */
-
         private void LoadDashboardSummary()
         {
             string sql =
                 "SELECT " +
 
                 "(" +
-                "SELECT COUNT(*) " +
+                "SELECT COUNT(DISTINCT TA.TrainingID) " +
                 "FROM TrainingAssignment TA " +
                 "WHERE TA.EmpID=@EmpID " +
                 "AND TA.AssignmentStatus='Assigned'" +
                 ") AS TotalTraining," +
 
                 "(" +
-                "SELECT COUNT(*) " +
-                "FROM TrainingProgress TP " +
-                "WHERE TP.EmpID=@EmpID " +
-                "AND TP.AttendanceCompleted=1" +
+                "SELECT COUNT(DISTINCT TA.TrainingID) " +
+                "FROM TrainingAssignment TA " +
+                "INNER JOIN TrainingDetails TD " +
+                "ON TD.TrainingID=TA.TrainingID " +
+                "WHERE TA.EmpID=@EmpID " +
+                "AND TA.AssignmentStatus='Assigned' " +
+                "AND TD.AttendanceRequired=1 " +
+                "AND EXISTS " +
+                "(" +
+                "SELECT 1 FROM SessionMaster SM " +
+                "WHERE SM.TrainingID=TA.TrainingID " +
+                "AND ISNULL(SM.AttendanceSkipped,0)=0" +
+                ") " +
+                "AND NOT EXISTS " +
+                "(" +
+                "SELECT 1 FROM SessionMaster SM " +
+                "WHERE SM.TrainingID=TA.TrainingID " +
+                "AND ISNULL(SM.AttendanceSkipped,0)=0 " +
+                "AND ISNULL(SM.AttendanceStatus,'')<>'Completed'" +
+                ")" +
                 ") AS AttendanceCompleted," +
 
                 "(" +
@@ -163,11 +155,19 @@ namespace Training.Trainee
                 "FROM TestMaster TM " +
                 "INNER JOIN SessionMaster SM " +
                 "ON SM.SessionID=TM.SessionID " +
+                "INNER JOIN TrainingDetails TD " +
+                "ON TD.TrainingID=SM.TrainingID " +
                 "INNER JOIN TrainingAssignment TA " +
                 "ON TA.TrainingID=SM.TrainingID " +
                 "WHERE TA.EmpID=@EmpID " +
                 "AND TA.AssignmentStatus='Assigned' " +
-                "AND TM.IsPublished=1" +
+                "AND TM.IsPublished=1 " +
+                "AND ((TM.TestType='Pre' " +
+                "AND TD.InitialAssessmentRequired=1 " +
+                "AND ISNULL(SM.PreAssessmentSkipped,0)=0) " +
+                "OR (TM.TestType='Post' " +
+                "AND TD.FinalAssessmentRequired=1 " +
+                "AND ISNULL(SM.PostAssessmentSkipped,0)=0))" +
                 ") AS PublishedTests," +
 
                 "(" +
@@ -175,15 +175,22 @@ namespace Training.Trainee
                 "FROM TestMaster TM " +
                 "INNER JOIN SessionMaster SM " +
                 "ON SM.SessionID=TM.SessionID " +
+                "INNER JOIN TrainingDetails TD " +
+                "ON TD.TrainingID=SM.TrainingID " +
                 "INNER JOIN TrainingAssignment TA " +
                 "ON TA.TrainingID=SM.TrainingID " +
                 "WHERE TA.EmpID=@EmpID " +
                 "AND TA.AssignmentStatus='Assigned' " +
                 "AND TM.IsPublished=1 " +
+                "AND ((TM.TestType='Pre' " +
+                "AND TD.InitialAssessmentRequired=1 " +
+                "AND ISNULL(SM.PreAssessmentSkipped,0)=0) " +
+                "OR (TM.TestType='Post' " +
+                "AND TD.FinalAssessmentRequired=1 " +
+                "AND ISNULL(SM.PostAssessmentSkipped,0)=0)) " +
                 "AND EXISTS " +
                 "(" +
-                "SELECT 1 " +
-                "FROM TestAttempt TAT " +
+                "SELECT 1 FROM TestAttempt TAT " +
                 "WHERE TAT.TestID=TM.TestID " +
                 "AND TAT.EmpID=@EmpID " +
                 "AND TAT.Submitted=1" +
@@ -191,18 +198,48 @@ namespace Training.Trainee
                 ") AS CompletedTests," +
 
                 "(" +
-                "SELECT COUNT(*) " +
-                "FROM TrainingProgress TP " +
-                "WHERE TP.EmpID=@EmpID " +
-                "AND TP.BatchFeedbackCompleted=1" +
+                "SELECT COUNT(DISTINCT TA.TrainingID) " +
+                "FROM TrainingAssignment TA " +
+                "INNER JOIN TrainingDetails TD " +
+                "ON TD.TrainingID=TA.TrainingID " +
+                "WHERE TA.EmpID=@EmpID " +
+                "AND TA.AssignmentStatus='Assigned' " +
+                "AND TD.FeedbackRequired=1 " +
+                "AND ISNULL(TD.FeedbackSkipped,0)=0" +
+                ") AS RequiredFeedback," +
+
+                "(" +
+                "SELECT COUNT(DISTINCT BF.TrainingID) " +
+                "FROM BatchFeedback BF " +
+                "INNER JOIN TrainingAssignment TA " +
+                "ON TA.TrainingID=BF.TrainingID " +
+                "WHERE BF.EmpID=@EmpID " +
+                "AND ISNULL(BF.Submitted,0)=1 " +
+                "AND TA.EmpID=@EmpID " +
+                "AND TA.AssignmentStatus='Assigned'" +
                 ") AS FeedbackCompleted," +
 
                 "(" +
                 "SELECT COUNT(DISTINCT TC.TrainingID) " +
                 "FROM TrainingCertificate TC " +
+                "INNER JOIN TrainingAssignment TA " +
+                "ON TA.TrainingID=TC.TrainingID " +
                 "WHERE TC.EmpID=@EmpID " +
-                "AND TC.CertificateStatus='A'" +
-                ") AS CertificateGenerated";
+                "AND TC.CertificateStatus='A' " +
+                "AND TA.EmpID=@EmpID " +
+                "AND TA.AssignmentStatus='Assigned'" +
+                ") AS CertificateGenerated," +
+
+                "(" +
+                "SELECT COUNT(DISTINCT TA.TrainingID) " +
+                "FROM TrainingAssignment TA " +
+                "INNER JOIN TrainingDetails TD " +
+                "ON TD.TrainingID=TA.TrainingID " +
+                "WHERE TA.EmpID=@EmpID " +
+                "AND TA.AssignmentStatus='Assigned' " +
+                "AND TD.CertificateRequired=1 " +
+                "AND ISNULL(TD.CertificateSkipped,0)=0" +
+                ") AS RequiredCertificate";
 
             SqlParameter[] param =
             {
@@ -218,13 +255,12 @@ namespace Training.Trainee
 
             if
             (
-                dt.Rows.Count
-                ==
-                0
+                dt == null
+                ||
+                dt.Rows.Count == 0
             )
             {
                 SetDashboardZero();
-
                 return;
             }
 
@@ -244,6 +280,10 @@ namespace Training.Trainee
                 GetIntValue(
                     dt.Rows[0]["CompletedTests"]);
 
+            int requiredFeedback =
+                GetIntValue(
+                    dt.Rows[0]["RequiredFeedback"]);
+
             int feedbackCompleted =
                 GetIntValue(
                     dt.Rows[0]["FeedbackCompleted"]);
@@ -252,6 +292,10 @@ namespace Training.Trainee
                 GetIntValue(
                     dt.Rows[0]["CertificateGenerated"]);
 
+            int requiredCertificate =
+                GetIntValue(
+                    dt.Rows[0]["RequiredCertificate"]);
+
             int pendingTests =
                 publishedTests
                 -
@@ -259,35 +303,24 @@ namespace Training.Trainee
 
             if
             (
-                pendingTests
-                <
-                0
+                pendingTests < 0
             )
             {
-                pendingTests =
-                    0;
+                pendingTests = 0;
             }
 
             int feedbackPending =
-                totalTraining
+                requiredFeedback
                 -
                 feedbackCompleted;
 
             if
             (
-                feedbackPending
-                <
-                0
+                feedbackPending < 0
             )
             {
-                feedbackPending =
-                    0;
+                feedbackPending = 0;
             }
-
-
-            /*
-             * SUMMARY CARDS
-             */
 
             lblTrainingCount.Text =
                 totalTraining.ToString();
@@ -310,11 +343,6 @@ namespace Training.Trainee
             lblCertificate.Text =
                 certificateGenerated.ToString();
 
-
-            /*
-             * CURRENT STATUS
-             */
-
             lblStatusTraining.Text =
                 totalTraining.ToString();
 
@@ -329,21 +357,60 @@ namespace Training.Trainee
 
             lblStatusCertificate.Text =
                 certificateGenerated.ToString();
+
+            Session["DashboardRequiredFeedback"] =
+                requiredFeedback;
+
+            Session["DashboardRequiredCertificate"] =
+                requiredCertificate;
+
+            Session["DashboardRequiredAttendance"] =
+                GetRequiredAttendanceCount();
         }
 
+        private int GetRequiredAttendanceCount()
+        {
+            string sql =
+                "SELECT COUNT(DISTINCT TA.TrainingID) " +
+                "FROM TrainingAssignment TA " +
+                "INNER JOIN TrainingDetails TD " +
+                "ON TD.TrainingID=TA.TrainingID " +
+                "WHERE TA.EmpID=@EmpID " +
+                "AND TA.AssignmentStatus='Assigned' " +
+                "AND TD.AttendanceRequired=1 " +
+                "AND EXISTS " +
+                "(" +
+                "SELECT 1 FROM SessionMaster SM " +
+                "WHERE SM.TrainingID=TA.TrainingID " +
+                "AND ISNULL(SM.AttendanceSkipped,0)=0" +
+                ")";
 
-        /*
-         * =====================================================
-         * PROGRESS
-         * =====================================================
-         */
+            DataTable dt =
+                objDB.GetDataTable(
+                    sql,
+                    new SqlParameter[]
+                    {
+                        new SqlParameter(
+                            "@EmpID",
+                            EmpID)
+                    });
+
+            if
+            (
+                dt == null
+                ||
+                dt.Rows.Count == 0
+            )
+            {
+                return 0;
+            }
+
+            return GetIntValue(
+                dt.Rows[0][0]);
+        }
 
         private void LoadProgress()
         {
-            int totalTraining =
-                GetLabelValue(
-                    lblTrainingCount.Text);
-
             int attendanceCompleted =
                 GetLabelValue(
                     lblAttendance.Text);
@@ -364,27 +431,56 @@ namespace Training.Trainee
                 GetLabelValue(
                     lblCertificate.Text);
 
+            int requiredAttendance =
+                0;
 
-            /*
-             * ATTENDANCE
-             */
+            int requiredFeedback =
+                0;
+
+            int requiredCertificate =
+                0;
+
+            if
+            (
+                Session["DashboardRequiredAttendance"] != null
+            )
+            {
+                requiredAttendance =
+                    GetIntValue(
+                        Session["DashboardRequiredAttendance"]);
+            }
+
+            if
+            (
+                Session["DashboardRequiredFeedback"] != null
+            )
+            {
+                requiredFeedback =
+                    GetIntValue(
+                        Session["DashboardRequiredFeedback"]);
+            }
+
+            if
+            (
+                Session["DashboardRequiredCertificate"] != null
+            )
+            {
+                requiredCertificate =
+                    GetIntValue(
+                        Session["DashboardRequiredCertificate"]);
+            }
 
             lblProgressAttendance.Text =
                 attendanceCompleted
                 +
                 "/"
                 +
-                totalTraining;
+                requiredAttendance;
 
             SetProgressBar(
                 barAttendance,
                 attendanceCompleted,
-                totalTraining);
-
-
-            /*
-             * TESTS
-             */
+                requiredAttendance);
 
             lblProgressTests.Text =
                 completedTests
@@ -398,47 +494,30 @@ namespace Training.Trainee
                 completedTests,
                 publishedTests);
 
-
-            /*
-             * FEEDBACK
-             */
-
             lblProgressFeedback.Text =
                 feedbackCompleted
                 +
                 "/"
                 +
-                totalTraining;
+                requiredFeedback;
 
             SetProgressBar(
                 barFeedback,
                 feedbackCompleted,
-                totalTraining);
-
-
-            /*
-             * CERTIFICATE
-             */
+                requiredFeedback);
 
             lblProgressCertificate.Text =
                 certificateGenerated
                 +
                 "/"
                 +
-                totalTraining;
+                requiredCertificate;
 
             SetProgressBar(
                 barCertificate,
                 certificateGenerated,
-                totalTraining);
+                requiredCertificate);
         }
-
-
-        /*
-         * =====================================================
-         * PROGRESS BAR
-         * =====================================================
-         */
 
         private void SetProgressBar(
             System.Web.UI.WebControls.Panel panel,
@@ -450,9 +529,7 @@ namespace Training.Trainee
 
             if
             (
-                total
-                >
-                0
+                total > 0
             )
             {
                 percentage =
@@ -468,24 +545,18 @@ namespace Training.Trainee
 
             if
             (
-                percentage
-                >
-                100
+                percentage > 100
             )
             {
-                percentage =
-                    100;
+                percentage = 100;
             }
 
             if
             (
-                percentage
-                <
-                0
+                percentage < 0
             )
             {
-                percentage =
-                    0;
+                percentage = 0;
             }
 
             panel.Style["width"] =
@@ -503,29 +574,17 @@ namespace Training.Trainee
                 "100";
         }
 
-
-        /*
-         * =====================================================
-         * HELPERS
-         * =====================================================
-         */
-
         private int GetIntValue(
             object value)
         {
             if
             (
-                value
-                ==
-                null
+                value == null
                 ||
-                value
-                ==
-                DBNull.Value
+                value == DBNull.Value
                 ||
-                value.ToString()
-                ==
-                ""
+                string.IsNullOrWhiteSpace(
+                    value.ToString())
             )
             {
                 return 0;
@@ -541,7 +600,6 @@ namespace Training.Trainee
             return result;
         }
 
-
         private int GetLabelValue(
             string value)
         {
@@ -555,52 +613,24 @@ namespace Training.Trainee
             return result;
         }
 
-
         private void SetDashboardZero()
         {
-            lblTrainingCount.Text =
-                "0";
-
-            lblAttendance.Text =
-                "0";
-
-            lblPublishedTests.Text =
-                "0";
-
-            lblCompletedTests.Text =
-                "0";
-
-            lblPendingTests.Text =
-                "0";
-
-            lblBatchFeedback.Text =
-                "0";
-
-            lblCertificate.Text =
-                "0";
-
-            lblStatusTraining.Text =
-                "0";
-
-            lblStatusTests.Text =
-                "0";
-
-            lblStatusPendingTests.Text =
-                "0";
-
-            lblStatusFeedback.Text =
-                "0";
-
-            lblStatusCertificate.Text =
-                "0";
+            lblTrainingCount.Text = "0";
+            lblAttendance.Text = "0";
+            lblPublishedTests.Text = "0";
+            lblCompletedTests.Text = "0";
+            lblPendingTests.Text = "0";
+            lblBatchFeedback.Text = "0";
+            lblCertificate.Text = "0";
+            lblStatusTraining.Text = "0";
+            lblStatusTests.Text = "0";
+            lblStatusPendingTests.Text = "0";
+            lblStatusFeedback.Text = "0";
+            lblStatusCertificate.Text = "0";
+            Session["DashboardRequiredAttendance"] = 0;
+            Session["DashboardRequiredFeedback"] = 0;
+            Session["DashboardRequiredCertificate"] = 0;
         }
-
-
-        /*
-         * =====================================================
-         * NAVIGATION
-         * =====================================================
-         */
 
         protected void lnkMyTraining_Click(
             object sender,
@@ -610,7 +640,6 @@ namespace Training.Trainee
                 "MyTrainings.aspx");
         }
 
-
         protected void lnkAttendance_Click(
             object sender,
             EventArgs e)
@@ -619,44 +648,26 @@ namespace Training.Trainee
                 "Attendance.aspx");
         }
 
-
         protected void lnkPendingTests_Click(
             object sender,
             EventArgs e)
         {
-            /*
-             * Tests session-wise available hote hain.
-             * MyTrainings se session open hoga.
-             */
-
             Response.Redirect(
                 "MyTrainings.aspx");
         }
-
 
         protected void lnkBatchFeedback_Click(
             object sender,
             EventArgs e)
         {
-            /*
-             * Training select kiye bina direct feedback page
-             * nahi kholenge.
-             */
-
             Response.Redirect(
                 "MyTrainings.aspx");
         }
-
 
         protected void lnkCertificate_Click(
             object sender,
             EventArgs e)
         {
-            /*
-             * Dashboard se ALL generated certificates.
-             * Isliye training-specific filter remove kar rahe hain.
-             */
-
             Session.Remove(
                 "CertificateFromTraining");
 
