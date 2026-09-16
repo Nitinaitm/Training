@@ -56,7 +56,7 @@ WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assign
 AND NOT EXISTS (
  SELECT 1 FROM SessionMaster S
  WHERE S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0
- AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Completed')
+ AND ISNULL(S.AttendanceStatus,'')<>'Completed'
 )";
             return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID)));
         }
@@ -102,7 +102,7 @@ AND EXISTS (SELECT 1 FROM SessionMaster S WHERE S.TrainingID=@TrainingID)
 AND NOT EXISTS (
  SELECT 1 FROM TrainingAssignment A CROSS JOIN SessionMaster S
  WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned' AND S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0
- AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Completed')
+ AND ISNULL(S.AttendanceStatus,'')<>'Completed'
 ) THEN 1 ELSE 0 END";
             return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID))) == 1;
         }
@@ -117,7 +117,7 @@ AND NOT EXISTS (
  INNER JOIN TrainingDetails TD ON TD.TrainingID=A.TrainingID
  WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned' AND S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + @",0)=0
  AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1)
- AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(S.AttendanceSkipped,0)=1 OR EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Present'))
+ AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(S.AttendanceSkipped,0)=1 OR ISNULL(S.AttendanceStatus,'')='Completed')
  AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TA.EmpID=A.EmpID AND TA.Submitted=1)
 ) THEN 1 ELSE 0 END";
             return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@TestType", testType) })) == 1;
