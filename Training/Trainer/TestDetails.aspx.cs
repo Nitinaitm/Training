@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
@@ -12,7 +12,11 @@ namespace Training.Trainer
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["TrainerID"] == null) Response.Redirect("~/Default.aspx");
+            if (Session["TrainerID"] == null)
+            {
+                Response.Redirect("~/Default.aspx");
+                return;
+            }
 
             if (Session["TestID"] == null)
             {
@@ -31,12 +35,17 @@ namespace Training.Trainer
 
         private void LoadTestDetails()
         {
-            string query = @"SELECT TestID, Title, TrainingID, Duration, TotalQuestions, PassingPercent, Status, CreatedOn FROM TestMaster WHERE TestID=@TestID AND IsActive=1";
-            SqlParameter[] param = new SqlParameter[] { new SqlParameter("@TestID", TestID) };
+            string query = @"SELECT TM.TestID, TM.Title, TM.TrainingID, TM.Duration, TM.TotalQuestions, TM.PassingPercent, TM.Status, TM.CreatedOn FROM TestMaster TM WHERE TM.TestID=@TestID AND TM.TrainerID=@TrainerID AND TM.IsActive=1";
+            SqlParameter[] param = new SqlParameter[]
+            {
+                new SqlParameter("@TestID", TestID),
+                new SqlParameter("@TrainerID", Session["TrainerID"].ToString())
+            };
             DataTable dt = obj.GetDataTable(query, param);
 
             if (dt.Rows.Count == 0)
             {
+                Session.Remove("TestID");
                 Response.Redirect("~/Trainer/PreTrainingTest.aspx");
                 return;
             }
@@ -69,7 +78,6 @@ namespace Training.Trainer
 
         protected void btnBack_Click(object sender, EventArgs e)
         {
-            // Check which page called (Pre or Post)
             string referrer = Request.UrlReferrer?.ToString() ?? "";
             if (referrer.Contains("PostTrainingTest"))
                 Response.Redirect("~/Trainer/PostTrainingTest.aspx");
