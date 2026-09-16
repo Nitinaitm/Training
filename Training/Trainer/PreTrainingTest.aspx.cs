@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
@@ -10,16 +9,18 @@ namespace Training.Trainer
     public partial class PreTrainingTest : System.Web.UI.Page
     {
         private clsDataAccess objDB = new clsDataAccess();
-        private DataTable dtSelectedQuestion = new DataTable();
+
+        protected void Page_PreInit(object sender, EventArgs e)
+        {
+            if (Session["TrainerID"] == null) { Response.Redirect("~/Default.aspx"); return; }
+            if (Session["TrainingID"] == null) { Response.Redirect("~/Trainer/Default.aspx"); return; }
+            if (Session["SessionID"] == null) { Response.Redirect("~/Trainer/Default.aspx"); return; }
+        }
 
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {
-                if (Session["TrainerID"] == null) { Response.Redirect("~/Default.aspx"); return; }
-                if (Session["TrainingID"] == null) { Response.Redirect("~/Trainer/Default.aspx"); return; }
-                if (Session["SessionID"] == null) { Response.Redirect("~/Trainer/Default.aspx"); return; }
-
                 ViewState["SessionID"] = Session["SessionID"]?.ToString();
                 SessionSummary1.LoadSession(Session["SessionID"].ToString());
                 LoadSessionDetails();
@@ -33,10 +34,11 @@ namespace Training.Trainer
 
         private void LoadSessionDetails()
         {
-            string sql = "SELECT SM.SessionID,SM.SessionName,SM.SessionDate,SM.TopicID,TM.TopicName,SM.TrainerID,ISNULL(EBM.EmpName,TMR.NameExternal) AS TrainerName,TD.TrainingID,TD.TrainingType,TD.BatchStrength FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID INNER JOIN TopicMaster TM ON SM.TopicID=TM.TopicID LEFT JOIN EmpBasicMaster EBM ON SM.TrainerID=EBM.EmpID LEFT JOIN TrainerMaster TMR ON SM.TrainerID=TMR.TrainerID WHERE SM.SessionID=@SessionID";
-            DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@SessionID", ViewState["SessionID"]) });
+            string sql = "SELECT SM.SessionID,SM.SessionName,SM.SessionDate,SM.TopicID,TM.TopicName,SM.TrainerID,ISNULL(EBM.EmpName,TMR.NameExternal) AS TrainerName,TD.TrainingID,TD.TrainingType,TD.BatchStrength FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID INNER JOIN TopicMaster TM ON SM.TopicID=TM.TopicID LEFT JOIN EmpBasicMaster EBM ON SM.TrainerID=EBM.EmpID LEFT JOIN TrainerMaster TMR ON SM.TrainerID=TMR.TrainerID WHERE SM.SessionID=@SessionID AND SM.TrainerID=@TrainerID";
+            DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@SessionID", ViewState["SessionID"]), new SqlParameter("@TrainerID", Session["TrainerID"]) });
             if (dt.Rows.Count == 0) { Response.Redirect("Default.aspx"); return; }
 
+            lblSession.Text = dt.Rows[0]["SessionName"].ToString();
             ViewState["TopicID"] = dt.Rows[0]["TopicID"].ToString();
             ViewState["TrainerID"] = dt.Rows[0]["TrainerID"].ToString();
             ViewState["TrainingID"] = dt.Rows[0]["TrainingID"].ToString();
@@ -69,13 +71,6 @@ namespace Training.Trainer
             return true;
         }
 
-        private void CheckAttendance()
-        {
-            // Attendance is intentionally NOT required for a trainer to create,
-            // save or publish the Pre-Training Test. Attendance is a trainee-side
-            // prerequisite for actually attempting the test.
-        }
-
         private void CheckExistingTest()
         {
             DataTable dt = objDB.GetDataTable("SELECT * FROM TestMaster WHERE SessionID=@SessionID AND TestType=@TestType",
@@ -105,8 +100,8 @@ namespace Training.Trainer
 
         private void LoadTest()
         {
-            DataTable dt = objDB.GetDataTable("SELECT * FROM TestMaster WHERE TestID=@TestID",
-                new SqlParameter[] { new SqlParameter("@TestID", ViewState["TestID"]) });
+            DataTable dt = objDB.GetDataTable("SELECT * FROM TestMaster WHERE TestID=@TestID AND TrainerID=@TrainerID",
+                new SqlParameter[] { new SqlParameter("@TestID", ViewState["TestID"]), new SqlParameter("@TrainerID", Session["TrainerID"]) });
             if (dt.Rows.Count == 0) return;
 
             txtTestTitle.Text = dt.Rows[0]["TestTitle"].ToString();
@@ -232,10 +227,20 @@ namespace Training.Trainer
 
         private bool ValidateQuestionDistribution()
         {
-            int totalQuestions = Convert.ToInt32(txtTotalQuestions.Text);
-            int easy = Convert.ToInt32(txtEasy.Text);
-            int medium = Convert.ToInt32(txtMedium.Text);
-            int hard = Convert.ToInt32(txtHard.Text);
+            int totalQuestions;
+            int easy;
+            int medium;
+            int hard;
+
+            if (!int.TryParse(txtTotalQuestions.Text.Trim(), out totalQuestions) ||
+                !int.TryParse(txtEasy.Text.Trim(), out easy) ||
+                !int.TryParse(txtMedium.Text.Trim(), out medium) ||
+                !int.TryParse(txtHard.Text.Trim(), out hard) ||
+                totalQuestions < 0 || easy < 0 || medium < 0 || hard < 0)
+            {
+                ScriptManager.RegisterStartupScript(this, GetType(), "msg", "alert('Please enter valid non-negative numbers for question distribution.');", true);
+                return false;
+            }
 
             if (easy + medium + hard != totalQuestions)
             {
@@ -331,7 +336,7 @@ namespace Training.Trainer
 
             if (ViewState["TestID"] == null)
             {
-                ViewState["TestID"] = "TST" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + new Random().Next(100, 999);
+                ViewState["TestID"] = "TST" + Guid.NewGuid().ToString("N").Substring(0, 16);
                 InsertTestMaster();
             }
             else
@@ -365,7 +370,7 @@ namespace Training.Trainer
 
                 foreach (DataRow row in dt.Rows)
                 {
-                    string questionID = "TQ" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + new Random().Next(100, 999);
+                    string questionID = "TQ" + Guid.NewGuid().ToString("N").Substring(0, 16);
                     string sql = "INSERT INTO TestQuestion (TestQuestionID,TestID,QuestionID,QuestionOrder,Marks,CreatedOn) VALUES (@TestQuestionID,@TestID,@QuestionID,@QuestionOrder,@Marks,GETDATE())";
                     objDB.ExecuteSql(sql, new SqlParameter[] {
                         new SqlParameter("@TestQuestionID", questionID),
@@ -398,7 +403,14 @@ namespace Training.Trainer
                 return false;
             }
 
-            if (dt.Rows.Count != Convert.ToInt32(txtTotalQuestions.Text))
+            int totalQuestions;
+            if (!int.TryParse(txtTotalQuestions.Text.Trim(), out totalQuestions) || totalQuestions < 0)
+            {
+                ScriptManager.RegisterStartupScript(this, GetType(), "msg", "alert('Please enter a valid Total Questions value.');", true);
+                return false;
+            }
+
+            if (dt.Rows.Count != totalQuestions)
             {
                 ScriptManager.RegisterStartupScript(this, GetType(), "msg", "alert('Question Count Mismatch.');", true);
                 return false;
@@ -438,7 +450,7 @@ namespace Training.Trainer
         private void UpdateTestMaster()
         {
             decimal totalMarks = Convert.ToDecimal(txtMarks.Text) * Convert.ToInt32(txtTotalQuestions.Text);
-            string sql = "UPDATE TestMaster SET TestTitle=@TestTitle,Duration=@Duration,TotalQuestions=@TotalQuestions,TotalMarks=@TotalMarks,PassingPercentage=@PassingPercentage,RandomQuestion=@RandomQuestion,ShuffleOption=@ShuffleOption,AllowRetest=@AllowRetest,MaxAttempt=@MaxAttempt,ModifiedOn=GETDATE() WHERE TestID=@TestID";
+            string sql = "UPDATE TestMaster SET TestTitle=@TestTitle,Duration=@Duration,TotalQuestions=@TotalQuestions,TotalMarks=@TotalMarks,PassingPercentage=@PassingPercentage,RandomQuestion=@RandomQuestion,ShuffleOption=@ShuffleOption,AllowRetest=@AllowRetest,MaxAttempt=@MaxAttempt,ModifiedOn=GETDATE() WHERE TestID=@TestID AND TrainerID=@TrainerID";
             objDB.ExecuteSql(sql, new SqlParameter[] {
                 new SqlParameter("@TestTitle",txtTestTitle.Text),
                 new SqlParameter("@Duration",txtDuration.Text),
@@ -449,7 +461,8 @@ namespace Training.Trainer
                 new SqlParameter("@ShuffleOption",chkShuffle.Checked),
                 new SqlParameter("@AllowRetest",chkAllowRetest.Checked),
                 new SqlParameter("@MaxAttempt",txtAttempt.Text),
-                new SqlParameter("@TestID",ViewState["TestID"])
+                new SqlParameter("@TestID",ViewState["TestID"]),
+                new SqlParameter("@TrainerID",Session["TrainerID"])
             });
         }
 
@@ -475,8 +488,8 @@ namespace Training.Trainer
 
         private void PublishTest()
         {
-            string sql = "UPDATE TestMaster SET IsPublished=1,TestStatus='Published',ModifiedOn=GETDATE() WHERE TestID=@TestID";
-            objDB.ExecuteSql(sql, new SqlParameter[] { new SqlParameter("@TestID", ViewState["TestID"]) });
+            string sql = "UPDATE TestMaster SET IsPublished=1,TestStatus='Published',ModifiedOn=GETDATE() WHERE TestID=@TestID AND TrainerID=@TrainerID";
+            objDB.ExecuteSql(sql, new SqlParameter[] { new SqlParameter("@TestID", ViewState["TestID"]), new SqlParameter("@TrainerID", Session["TrainerID"]) });
             btnPublish.Enabled = false;
             btnPublish.Text = "Published";
             btnGenerateQuestions.Enabled = false;
@@ -502,7 +515,7 @@ namespace Training.Trainer
 
         private void InsertCandidateQuestion(string empID, DataRow row)
         {
-            string candidateQuestionID = "TCQ" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + new Random().Next(100, 999);
+            string candidateQuestionID = "TCQ" + Guid.NewGuid().ToString("N").Substring(0, 16);
             string sql = "INSERT INTO TestCandidateQuestion (TestCandidateQuestionID,TestID,EmpID,QuestionID,QuestionOrder,Marks,SelectedOption,CorrectOption,IsCorrect,CreatedOn) VALUES (@TestCandidateQuestionID,@TestID,@EmpID,@QuestionID,@QuestionOrder,@Marks,NULL,@CorrectOption,NULL,GETDATE())";
             objDB.ExecuteSql(sql, new SqlParameter[] {
                 new SqlParameter("@TestCandidateQuestionID",candidateQuestionID),
