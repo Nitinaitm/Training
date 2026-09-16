@@ -32,7 +32,7 @@ namespace Training.Trainer
         {
             string query = @"SELECT SM.SessionID,SM.TrainingID,TD.Batch,SM.SessionNo,SM.SessionName,TM.TopicName,SM.SessionDate,SM.StartTime+' - '+SM.EndTime AS SessionTime,
 TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,
-CASE WHEN TD.AttendanceRequired=0 THEN '-' ELSE ISNULL((SELECT TOP 1 SA.AttendanceStatus FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID),'Pending') END AS AttendanceStatus
+CASE WHEN TD.AttendanceRequired=0 THEN '-' ELSE ISNULL(SM.AttendanceStatus,'Pending') END AS AttendanceStatus
 FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID LEFT JOIN TopicMaster TM ON TM.TopicID=SM.TopicID
 WHERE SM.TrainerID=@TrainerID ORDER BY TRY_CONVERT(date,SM.SessionDate,105),TRY_CONVERT(INT,SM.SessionNo),SM.SessionNo";
             DataTable dt = obj.GetDataTable(query, new SqlParameter[] { new SqlParameter("@TrainerID", TrainerID) });
@@ -59,10 +59,12 @@ WHERE SM.TrainerID=@TrainerID ORDER BY TRY_CONVERT(date,SM.SessionDate,105),TRY_
             Button btn = (Button)e.Row.FindControl("btnAction");
             Label lbl = (Label)e.Row.FindControl("lblAttendance");
             bool attendanceRequired = Convert.ToBoolean(DataBinder.Eval(e.Row.DataItem, "AttendanceRequired"));
+            string attendanceStatus = Convert.ToString(DataBinder.Eval(e.Row.DataItem, "AttendanceStatus"));
+
             if (btn != null)
             {
-                btn.Visible = attendanceRequired;
-                btn.Text = lbl != null && lbl.Text == "Completed" ? "View" : "Take Attendance";
+                btn.Visible = true;
+                btn.Text = attendanceRequired && attendanceStatus != "Completed" ? "Take Attendance" : "View";
             }
             if (lbl != null)
             {
