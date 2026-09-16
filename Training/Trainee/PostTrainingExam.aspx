@@ -312,73 +312,73 @@
     <script>
 
         var timer = null;
+        var examEndTime = 0;
+        var examTimerExpired = false;
 
         function StartExamTimer() {
-            if (timer != null) {
+            if (timer !== null) {
                 clearInterval(timer);
+                timer = null;
             }
 
-            var second =
-                parseInt(
-                    document.getElementById(
-                        "hfRemainingSecond").value);
+            var remaining = parseInt(
+                document.getElementById("hfRemainingSecond").value, 10);
 
-            timer =
-                setInterval(function () {
-                    second--;
+            if (isNaN(remaining) || remaining < 0) {
+                remaining = 0;
+            }
 
-                    if (second < 0) {
-                        clearInterval(timer);
+            examEndTime = Date.now() + (remaining * 1000);
+            examTimerExpired = false;
+            UpdateExamTimer();
 
-                        alert(
-                            "Time is over. Test will be submitted automatically.");
-
-                        document
-                            .getElementById(
-                                "btnSubmit")
-                            .click();
-
-                        return;
-                    }
-
-                    document
-                        .getElementById(
-                            "hfRemainingSecond")
-                        .value =
-                        second;
-
-                    var minute =
-                        Math.floor(
-                            second / 60);
-
-                    var sec =
-                        second % 60;
-
-                    document
-                        .getElementById(
-                            "lblTimer")
-                        .innerHTML =
-                        ("0" + minute)
-                            .slice(-2)
-                        +
-                        ":"
-                        +
-                        ("0" + sec)
-                            .slice(-2);
-
-                }, 1000);
+            timer = setInterval(UpdateExamTimer, 250);
         }
 
+        function UpdateExamTimer() {
+            var remaining = Math.ceil((examEndTime - Date.now()) / 1000);
+
+            if (remaining <= 0) {
+                remaining = 0;
+                document.getElementById("hfRemainingSecond").value = "0";
+                document.getElementById("lblTimer").innerHTML = "00:00";
+
+                if (timer !== null) {
+                    clearInterval(timer);
+                    timer = null;
+                }
+
+                if (!examTimerExpired) {
+                    examTimerExpired = true;
+                    alert("Time is over. Test will be submitted automatically.");
+                    document.getElementById("btnSubmit").click();
+                }
+
+                return;
+            }
+
+            document.getElementById("hfRemainingSecond").value = remaining;
+
+            var minute = Math.floor(remaining / 60);
+            var sec = remaining % 60;
+
+            document.getElementById("lblTimer").innerHTML =
+                ("0" + minute).slice(-2) + ":" + ("0" + sec).slice(-2);
+        }
+
+        document.addEventListener("visibilitychange", function () {
+            if (!document.hidden && examEndTime > 0) {
+                UpdateExamTimer();
+            }
+        });
+
         function FinishExam() {
-            if
-            (
-                confirm(
-                    "Are you sure you want to submit the examination?")
-            ) {
-                document
-                    .getElementById(
-                        "btnSubmit")
-                    .click();
+            if (confirm("Are you sure you want to submit the examination?")) {
+                if (timer !== null) {
+                    clearInterval(timer);
+                    timer = null;
+                }
+                document.getElementById("btnSubmit").click();
             }
 
             return false;
