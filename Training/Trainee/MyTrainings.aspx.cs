@@ -97,6 +97,94 @@ namespace Training.Trainee
             LoadTraining();
         }
 
+        protected void gvTraining_DataBound(object sender, EventArgs e)
+        {
+            foreach (GridViewRow row in gvTraining.Rows)
+            {
+                LinkButton feedback = row.FindControl("lnkFeedback") as LinkButton;
+                LinkButton certificate = row.FindControl("lnkCertificate") as LinkButton;
+
+                if (feedback == null && certificate == null) continue;
+
+                DataKey key = gvTraining.DataKeys[row.RowIndex];
+                if (key == null || key.Value == null) continue;
+
+                DataRowView data = row.DataItem as DataRowView;
+                if (data == null) continue;
+
+                bool attendanceRequired = Convert.ToBoolean(data["AttendanceRequired"]);
+                bool preRequired = Convert.ToBoolean(data["InitialAssessmentRequired"]);
+                bool postRequired = Convert.ToBoolean(data["FinalAssessmentRequired"]);
+                bool feedbackRequired = Convert.ToBoolean(data["FeedbackRequired"]);
+                bool feedbackSkipped = Convert.ToBoolean(data["FeedbackSkipped"]);
+                bool certificateRequired = Convert.ToBoolean(data["CertificateRequired"]);
+                bool certificateSkipped = Convert.ToBoolean(data["CertificateSkipped"]);
+                bool attendanceDone = Convert.ToBoolean(data["AttendanceDone"]);
+                bool preDone = Convert.ToBoolean(data["PreDone"]);
+                bool postDone = Convert.ToBoolean(data["PostDone"]);
+                bool feedbackDone = Convert.ToBoolean(data["FeedbackDone"]);
+
+                if (feedback != null)
+                {
+                    if (!feedbackRequired || feedbackSkipped)
+                    {
+                        feedback.Visible = false;
+                    }
+                    else if (feedbackDone)
+                    {
+                        feedback.Text = "Feedback Submitted";
+                        feedback.Enabled = false;
+                        feedback.CssClass = "btn btn-success btn-sm disabled";
+                        feedback.ToolTip = "Batch feedback has already been submitted.";
+                    }
+                    else if (attendanceRequired && !attendanceDone)
+                    {
+                        feedback.Enabled = false;
+                        feedback.CssClass = "btn btn-warning btn-sm disabled";
+                        feedback.ToolTip = "Complete required attendance first.";
+                    }
+                    else if (preRequired && !preDone)
+                    {
+                        feedback.Enabled = false;
+                        feedback.CssClass = "btn btn-warning btn-sm disabled";
+                        feedback.ToolTip = "Complete all required Pre-Training Tests first. Required tests must be published.";
+                    }
+                    else if (postRequired && !postDone)
+                    {
+                        feedback.Enabled = false;
+                        feedback.CssClass = "btn btn-warning btn-sm disabled";
+                        feedback.ToolTip = "Complete all required Post-Training Tests first. Required tests must be published.";
+                    }
+                    else
+                    {
+                        feedback.Enabled = true;
+                        feedback.CssClass = "btn btn-warning btn-sm";
+                        feedback.ToolTip = "You can submit Batch Feedback now.";
+                    }
+                }
+
+                if (certificate != null)
+                {
+                    if (!certificateRequired || certificateSkipped)
+                    {
+                        certificate.Visible = false;
+                    }
+                    else
+                    {
+                        bool allowed = true;
+                        if (attendanceRequired) allowed = allowed && attendanceDone;
+                        if (preRequired) allowed = allowed && preDone;
+                        if (postRequired) allowed = allowed && postDone;
+                        if (feedbackRequired && !feedbackSkipped) allowed = allowed && feedbackDone;
+
+                        certificate.Enabled = allowed;
+                        certificate.CssClass = allowed ? "btn btn-info btn-sm" : "btn btn-info btn-sm disabled";
+                        certificate.ToolTip = allowed ? "Download Certificate" : "Complete the required training workflow before downloading the certificate.";
+                    }
+                }
+            }
+        }
+
         protected void gvTraining_RowDataBound(object sender, GridViewRowEventArgs e)
         {
             if (e.Row.RowType != DataControlRowType.DataRow) return;
