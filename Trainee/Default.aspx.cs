@@ -9,8 +9,15 @@ namespace Training.Trainee
     public partial class Default : System.Web.UI.Page
     {
         clsDataAccess objDB = new clsDataAccess();
-
         string EmpID = "";
+
+        protected void Page_Init(object sender, EventArgs e)
+        {
+            if (Session["EmpID"] == null || string.IsNullOrWhiteSpace(Session["EmpID"].ToString())) return;
+            if (Session["Role"] == null || !string.Equals(Session["Role"].ToString(), "Emp", StringComparison.OrdinalIgnoreCase)) return;
+            EmpID = Session["EmpID"].ToString().Trim().ToUpperInvariant();
+            BindClosedTraining();
+        }
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -19,14 +26,8 @@ namespace Training.Trainee
                 Response.Redirect("~/Default.aspx");
                 return;
             }
-
             EmpID = Session["EmpID"].ToString().Trim().ToUpperInvariant();
-
-            if (!IsPostBack)
-            {
-                LoadDashboard();
-                BindClosedTraining();
-            }
+            if (!IsPostBack) LoadDashboard();
         }
 
         private void LoadDashboard()
@@ -56,11 +57,7 @@ namespace Training.Trainee
         {
             string sql = "SELECT (SELECT COUNT(DISTINCT TA.TrainingID) FROM TrainingAssignment TA WHERE TA.EmpID=@EmpID AND TA.AssignmentStatus='Assigned') AS TotalTraining,(SELECT COUNT(DISTINCT TA.TrainingID) FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TD.TrainingID=TA.TrainingID WHERE TA.EmpID=@EmpID AND TA.AssignmentStatus='Assigned' AND TD.AttendanceRequired=1 AND EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0) AND NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SM.AttendanceStatus,'')<>'Completed')) AS AttendanceCompleted,(SELECT COUNT(*) FROM TestMaster TM INNER JOIN SessionMaster SM ON SM.SessionID=TM.SessionID INNER JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID INNER JOIN TrainingAssignment TA ON TA.TrainingID=SM.TrainingID WHERE TA.EmpID=@EmpID AND TA.AssignmentStatus='Assigned' AND TM.IsPublished=1 AND ((TM.TestType='Pre' AND TD.InitialAssessmentRequired=1 AND ISNULL(SM.PreAssessmentSkipped,0)=0) OR (TM.TestType='Post' AND TD.FinalAssessmentRequired=1 AND ISNULL(SM.PostAssessmentSkipped,0)=0))) AS PublishedTests,(SELECT COUNT(*) FROM TestMaster TM INNER JOIN SessionMaster SM ON SM.SessionID=TM.SessionID INNER JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID INNER JOIN TrainingAssignment TA ON TA.TrainingID=SM.TrainingID WHERE TA.EmpID=@EmpID AND TA.AssignmentStatus='Assigned' AND TM.IsPublished=1 AND ((TM.TestType='Pre' AND TD.InitialAssessmentRequired=1 AND ISNULL(SM.PreAssessmentSkipped,0)=0) OR (TM.TestType='Post' AND TD.FinalAssessmentRequired=1 AND ISNULL(SM.PostAssessmentSkipped,0)=0)) AND EXISTS (SELECT 1 FROM TestAttempt TAT WHERE TAT.TestID=TM.TestID AND TAT.EmpID=@EmpID AND TAT.Submitted=1)) AS CompletedTests,(SELECT COUNT(DISTINCT TA.TrainingID) FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TD.TrainingID=TA.TrainingID WHERE TA.EmpID=@EmpID AND TA.AssignmentStatus='Assigned' AND TD.FeedbackRequired=1 AND ISNULL(TD.FeedbackSkipped,0)=0) AS RequiredFeedback,(SELECT COUNT(DISTINCT BF.TrainingID) FROM BatchFeedback BF INNER JOIN TrainingAssignment TA ON TA.TrainingID=BF.TrainingID WHERE BF.EmpID=@EmpID AND ISNULL(BF.Submitted,0)=1 AND TA.EmpID=@EmpID AND TA.AssignmentStatus='Assigned') AS FeedbackCompleted,(SELECT COUNT(DISTINCT TC.TrainingID) FROM TrainingCertificate TC INNER JOIN TrainingAssignment TA ON TA.TrainingID=TC.TrainingID WHERE TC.EmpID=@EmpID AND TC.CertificateStatus='A' AND TA.EmpID=@EmpID AND TA.AssignmentStatus='Assigned') AS CertificateGenerated,(SELECT COUNT(DISTINCT TA.TrainingID) FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TD.TrainingID=TA.TrainingID WHERE TA.EmpID=@EmpID AND TA.AssignmentStatus='Assigned' AND TD.CertificateRequired=1 AND ISNULL(TD.CertificateSkipped,0)=0) AS RequiredCertificate";
             DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@EmpID", EmpID) });
-            if (dt == null || dt.Rows.Count == 0)
-            {
-                SetDashboardZero();
-                return;
-            }
+            if (dt == null || dt.Rows.Count == 0) { SetDashboardZero(); return; }
             int totalTraining = GetIntValue(dt.Rows[0]["TotalTraining"]);
             int attendanceCompleted = GetIntValue(dt.Rows[0]["AttendanceCompleted"]);
             int publishedTests = GetIntValue(dt.Rows[0]["PublishedTests"]);
@@ -92,15 +89,14 @@ namespace Training.Trainee
 
         private void BindClosedTraining()
         {
+            if (string.IsNullOrWhiteSpace(EmpID)) return;
             string sql = "SELECT DISTINCT TD.TrainingID,TD.TrainingType,TD.TrainingOrganizer,TD.Batch,CONVERT(varchar(10),TRY_CONVERT(date,TD.DateFrom,105),105) AS DateFrom,CONVERT(varchar(10),TRY_CONVERT(date,TD.DateTo,105),105) AS DateTo FROM TrainingDetails TD INNER JOIN TrainingAssignment TA ON TA.TrainingID=TD.TrainingID WHERE TA.EmpID=@EmpID AND TA.AssignmentStatus='Assigned' AND TD.TrainingStatus='Closed' ORDER BY TRY_CONVERT(date,TD.DateFrom,105) DESC";
             DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@EmpID", EmpID) });
             ContentPlaceHolder content = Master.FindControl("ContentPlaceHolder1") as ContentPlaceHolder;
             if (content == null) return;
-
             Literal heading = new Literal();
             heading.Text = "<div class='dashboard-section' style='margin-top:22px;'><div class='section-heading'><i class='fa fa-history'></i> Closed Trainings</div>";
             content.Controls.Add(heading);
-
             GridView gv = new GridView();
             gv.ID = "gvClosedTraining";
             gv.AutoGenerateColumns = false;
@@ -110,27 +106,23 @@ namespace Training.Trainee
             gv.ShowHeaderWhenEmpty = true;
             gv.DataKeyNames = new[] { "TrainingID" };
             gv.RowCommand += gvClosedTraining_RowCommand;
-            gv.HeaderStyle.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            gv.HeaderStyle.BackColor = System.Drawing.Color.FromArgb(108,117,125);
             gv.HeaderStyle.ForeColor = System.Drawing.Color.White;
             gv.HeaderStyle.Font.Bold = true;
-
             gv.Columns.Add(new BoundField { DataField = "TrainingID", HeaderText = "Training ID" });
             gv.Columns.Add(new BoundField { DataField = "TrainingType", HeaderText = "Training Type" });
             gv.Columns.Add(new BoundField { DataField = "TrainingOrganizer", HeaderText = "Organizer" });
             gv.Columns.Add(new BoundField { DataField = "Batch", HeaderText = "Batch" });
             gv.Columns.Add(new BoundField { DataField = "DateFrom", HeaderText = "From" });
             gv.Columns.Add(new BoundField { DataField = "DateTo", HeaderText = "To" });
-
             TemplateField status = new TemplateField();
             status.HeaderText = "Status";
             status.ItemTemplate = new ClosedStatusTemplate();
             gv.Columns.Add(status);
-
             TemplateField history = new TemplateField();
             history.HeaderText = "History";
             history.ItemTemplate = new ClosedHistoryTemplate();
             gv.Columns.Add(history);
-
             gv.DataSource = dt;
             gv.DataBind();
             content.Controls.Add(gv);
@@ -141,9 +133,7 @@ namespace Training.Trainee
         {
             public void InstantiateIn(Control container)
             {
-                Label label = new Label();
-                label.Text = "Closed";
-                label.CssClass = "badge bg-secondary";
+                Label label = new Label { Text = "Closed", CssClass = "badge bg-secondary" };
                 container.Controls.Add(label);
             }
         }
@@ -152,11 +142,7 @@ namespace Training.Trainee
         {
             public void InstantiateIn(Control container)
             {
-                Button button = new Button();
-                button.Text = "View History";
-                button.CommandName = "History";
-                button.CssClass = "btn btn-secondary btn-sm";
-                button.CausesValidation = false;
+                Button button = new Button { Text = "View History", CommandName = "History", CssClass = "btn btn-secondary btn-sm", CausesValidation = false };
                 container.Controls.Add(button);
             }
         }
@@ -246,29 +232,10 @@ namespace Training.Trainee
             Session["DashboardRequiredCertificate"] = 0;
         }
 
-        protected void lnkMyTraining_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("~/Trainee/MyTrainings.aspx");
-        }
-
-        protected void lnkAttendance_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("~/Trainee/MyTrainings.aspx");
-        }
-
-        protected void lnkBatchFeedback_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("~/Trainee/MyTrainings.aspx");
-        }
-
-        protected void lnkCertificate_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("~/Trainee/MyCertificate.aspx");
-        }
-
-        protected void lnkPendingTests_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("~/Trainee/MyTrainings.aspx");
-        }
+        protected void lnkMyTraining_Click(object sender, EventArgs e) { Response.Redirect("~/Trainee/MyTrainings.aspx"); }
+        protected void lnkAttendance_Click(object sender, EventArgs e) { Response.Redirect("~/Trainee/Attendance.aspx"); }
+        protected void lnkBatchFeedback_Click(object sender, EventArgs e) { Response.Redirect("~/Trainee/MyTrainings.aspx"); }
+        protected void lnkCertificate_Click(object sender, EventArgs e) { Response.Redirect("~/Trainee/MyCertificate.aspx"); }
+        protected void lnkPendingTests_Click(object sender, EventArgs e) { Response.Redirect("~/Trainee/MyTrainings.aspx"); }
     }
 }
