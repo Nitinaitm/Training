@@ -8,6 +8,32 @@
     <Compile Include="TrainingHistory.aspx.designer.cs" Condition="Exists('TrainingHistory.aspx.designer.cs')">
       <DependentUpon>TrainingHistory.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Training/Admin/ManageTraining.RequirementsVisibility.cs" Condition="Exists('Training/Admin/ManageTraining.RequirementsVisibility.cs')" />
+
+    <Content Include="BatchLifecycle.ascx" Condition="Exists('BatchLifecycle.ascx')" />
+    <Compile Include="BatchLifecycle.ascx.cs" Condition="Exists('BatchLifecycle.ascx.cs')">
+      <DependentUpon>BatchLifecycle.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="BatchLifecycle.ascx.designer.cs" Condition="Exists('BatchLifecycle.ascx.designer.cs')">
+      <DependentUpon>BatchLifecycle.ascx</DependentUpon>
+    </Compile>
+
+    <Compile Include="Admin\CreateBatch.Lifecycle.cs" Condition="Exists('Admin\CreateBatch.Lifecycle.cs')" />
+    <Compile Include="Admin\AssignSession.Lifecycle.cs" Condition="Exists('Admin\AssignSession.Lifecycle.cs')" />
+    <Compile Include="Admin\AssignTrainee.Lifecycle.cs" Condition="Exists('Admin\AssignTrainee.Lifecycle.cs')" />
+    <Compile Include="Admin\TrainingRequirements.Lifecycle.cs" Condition="Exists('Admin\TrainingRequirements.Lifecycle.cs')" />
+    <Compile Include="Admin\ManageTraining.Lifecycle.cs" Condition="Exists('Admin\ManageTraining.Lifecycle.cs')" />
+    <Compile Include="Trainer\SessionAttendance.Lifecycle.cs" Condition="Exists('Trainer\SessionAttendance.Lifecycle.cs')" />
+
+    <Content Include="Admin\EditEmployee.aspx" Condition="Exists('Admin\EditEmployee.aspx')" />
+    <Compile Include="Admin\EditEmployee.aspx.cs" Condition="Exists('Admin\EditEmployee.aspx.cs')">
+      <DependentUpon>EditEmployee.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\EditEmployee.aspx.designer.cs" Condition="Exists('Admin\EditEmployee.aspx.designer.cs')">
+      <DependentUpon>EditEmployee.aspx</DependentUpon>
+    </Compile>
+
+    <Content Include="Scripts\employee-edit-grid.js" Condition="Exists('Scripts\employee-edit-grid.js')" />
   </ItemGroup>
 </Project>
