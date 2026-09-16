@@ -25,8 +25,10 @@ namespace Training.Trainee
         {
             if
             (
-                  Session["EmpID"] == null
-               
+                Session["EmpID"] == null
+                ||
+                string.IsNullOrWhiteSpace(
+                    Session["EmpID"].ToString())
             )
             {
                 Response.Redirect(
@@ -37,9 +39,10 @@ namespace Training.Trainee
 
             if
             (
-                Session["TrainingID"]
-                ==
-                null
+                Session["TrainingID"] == null
+                ||
+                string.IsNullOrWhiteSpace(
+                    Session["TrainingID"].ToString())
             )
             {
                 Response.Redirect(
@@ -49,159 +52,61 @@ namespace Training.Trainee
             }
 
             EmpID =
-                Session["UserID"]
-                .ToString().ToUpperInvariant();
+                Session["EmpID"]
+                .ToString()
+                .ToUpperInvariant();
 
             TrainingID =
                 Session["TrainingID"]
                 .ToString();
+
+            string accessSql =
+                @"SELECT TA.EmpID
+                  FROM TrainingAssignment TA
+                  WHERE TA.TrainingID=@TrainingID
+                    AND TA.EmpID=@EmpID
+                    AND TA.AssignmentStatus='Assigned'";
+
+            DataTable accessDt =
+                objDB.GetDataTable(
+                    accessSql,
+                    new SqlParameter[]
+                    {
+                        new SqlParameter(
+                            "@TrainingID",
+                            TrainingID),
+                        new SqlParameter(
+                            "@EmpID",
+                            EmpID)
+                    });
+
+            if
+            (
+                accessDt == null
+                ||
+                accessDt.Rows.Count == 0
+            )
+            {
+                Response.Redirect(
+                    "MyTrainings.aspx");
+
+                return;
+            }
 
             if
             (
                 !IsPostBack
             )
             {
-                string trainingID =
-        Session["TrainingID"].ToString();
-
-                string empID =
-                    Session["EmpID"].ToString().ToUpperInvariant();
-
                 TraineeTrainingSummary1.LoadTraining(
-                    trainingID,
-                    empID);
+                    TrainingID,
+                    EmpID);
 
                 BindAttendanceGrid();
                 LoadAttendanceMessage();
                 BindPendingSessions();
-
             }
         }
-
-//        private void LoadTrainingDetails()
-//        {
-//            string sql =
-//            @"
-//SELECT
-//TD.TrainingID,
-//CM.CourseName,
-//TD.TrainingType,
-//TOM.TrainingOrganizer,
-//TD.TrainingLocation,
-//TD.Batch,
-//TD.DateFrom,
-//TD.DateTo,
-//CASE
-//WHEN TM.TrainerType='Internal'
-//THEN ISNULL(
-//EBM.EmpName,
-//'')
-//ELSE ISNULL(
-//TM.NameExternal,
-//'')
-//END
-//AS TrainerName
-//FROM
-//TrainingDetails TD
-//LEFT JOIN
-//CourseMaster CM
-//ON
-//TD.CourseID=
-//CM.CourseID
-//LEFT JOIN
-//TrainingOrganizerMaster TOM
-//ON
-//TD.TrainingOrganizer=
-//TOM.TrainingOrganizerID
-//LEFT JOIN
-//SessionMaster SM
-//ON
-//TD.TrainingID=
-//SM.TrainingID
-//LEFT JOIN
-//TrainerMaster TM
-//ON
-//SM.TrainerID=
-//TM.TrainerID
-//LEFT JOIN
-//EmpBasicMaster EBM
-//ON
-//TM.EmpID=
-//EBM.EmpID
-//WHERE
-//TD.TrainingID=
-//@TrainingID
-//";
-
-//            SqlParameter[] param =
-//            {
-//                new SqlParameter(
-//                    "@TrainingID",
-//                    TrainingID)
-//            };
-
-//            DataTable dt =
-//                objDB.GetDataTable(
-//                    sql,
-//                    param);
-
-//            if
-//            (
-//                dt.Rows.Count
-//                ==
-//                0
-//            )
-//            {
-//                Response.Redirect(
-//                    "MyTrainings.aspx");
-
-//                return;
-//            }
-
-//            DataRow dr =
-//                dt.Rows[0];
-
-//            lblTrainingID.Text =
-//                dr["TrainingID"]
-//                .ToString();
-
-//            lblCourse.Text =
-//                dr["CourseName"]
-//                .ToString();
-
-//            lblTrainingType.Text =
-//                dr["TrainingType"]
-//                .ToString();
-
-//            lblOrganizer.Text =
-//                dr["TrainingOrganizer"]
-//                .ToString();
-
-//            lblLocation.Text =
-//                dr["TrainingLocation"]
-//                .ToString();
-
-//            lblBatch.Text =
-//                dr["Batch"]
-//                .ToString();
-
-//            lblTrainer.Text =
-//                dr["TrainerName"]
-//                .ToString();
-
-//            lblDuration.Text =
-//                Convert.ToDateTime(
-//                dr["DateFrom"])
-//                .ToString(
-//                "dd-MMM-yyyy")
-//                +
-//                " To "
-//                +
-//                Convert.ToDateTime(
-//                dr["DateTo"])
-//                .ToString(
-//                "dd-MMM-yyyy");
-//        }
 
         private void BindAttendanceGrid()
         {
@@ -229,7 +134,6 @@ AND SA.EmpID = @EmpID
 LEFT JOIN TrainerMaster TM
 ON TM.TrainerID =
 ISNULL(SA.ModifiedBy,SA.CreatedBy)
-
 LEFT JOIN EmpBasicMaster EBM
 ON TM.EmpID = EBM.EmpID
 WHERE SM.TrainingID = @TrainingID
@@ -252,13 +156,12 @@ ORDER BY SM.SessionDate, SM.SessionNo";
                     param);
 
             gvAttendance.DataBind();
-
         }
 
         private void LoadAttendanceMessage()
         {
             string sql =
-        @"SELECT
+            @"SELECT
 COUNT(*) AS TotalSession,
 SUM(
 CASE
@@ -275,32 +178,32 @@ WHERE SM.TrainingID=@TrainingID";
 
             SqlParameter[] param =
             {
-        new SqlParameter("@TrainingID",TrainingID),
-        new SqlParameter("@EmpID",EmpID)
-    };
+                new SqlParameter(
+                    "@TrainingID",
+                    TrainingID),
 
-            //DataTable dt =
-            //    objDB.GetDataTable(
-            //        sql,
-            //        param);
+                new SqlParameter(
+                    "@EmpID",
+                    EmpID)
+            };
+
             DataTable dt =
-    objDB.GetDataTable(
-        sql,
-        param);
+                objDB.GetDataTable(
+                    sql,
+                    param);
 
-            if (dt == null)
-            {
-                lblMessage.Text = "DataTable is null.";
-                return;
-            }
-
-            if (dt.Rows.Count == 0)
+            if
+            (
+                dt == null
+                ||
+                dt.Rows.Count == 0
+            )
             {
                 lblMessage.Text =
-                    "Rows = 0<br/>TrainingID = "
-                    + TrainingID
-                    + "<br/>EmpID = "
-                    + EmpID;
+                    "No attendance data available.";
+
+                lblMessage.CssClass =
+                    "text-danger fw-bold";
 
                 return;
             }
@@ -319,9 +222,9 @@ WHERE SM.TrainingID=@TrainingID";
 
             if
             (
-                completed
-                ==
-                total
+                total > 0
+                &&
+                completed == total
             )
             {
                 lblMessage.Text =
@@ -349,7 +252,7 @@ WHERE SM.TrainingID=@TrainingID";
         private void BindPendingSessions()
         {
             string sql =
-        @"SELECT
+            @"SELECT
 SM.SessionNo,
 SM.SessionName,
 SM.SessionDate
@@ -359,14 +262,18 @@ ON SM.SessionID=SA.SessionID
 AND SA.EmpID=@EmpID
 WHERE SM.TrainingID=@TrainingID
 AND SA.AttendanceID IS NULL
-ORDER BY
-SM.SessionNo";
+ORDER BY SM.SessionNo";
 
             SqlParameter[] param =
             {
-        new SqlParameter("@TrainingID",TrainingID),
-        new SqlParameter("@EmpID",EmpID)
-    };
+                new SqlParameter(
+                    "@TrainingID",
+                    TrainingID),
+
+                new SqlParameter(
+                    "@EmpID",
+                    EmpID)
+            };
 
             DataTable dt =
                 objDB.GetDataTable(
@@ -382,6 +289,20 @@ SM.SessionNo";
                 dt.Rows
             )
             {
+                if
+                (
+                    dr["SessionDate"] == DBNull.Value
+                )
+                {
+                    blPending.Items.Add(
+                        "Session "
+                        + dr["SessionNo"]
+                        + " - "
+                        + dr["SessionName"]);
+
+                    continue;
+                }
+
                 blPending.Items.Add(
                     "Session "
                     +
@@ -400,7 +321,5 @@ SM.SessionNo";
                     ")");
             }
         }
-
-
     }
 }
