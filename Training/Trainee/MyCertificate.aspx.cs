@@ -16,13 +16,13 @@ namespace Training.Trainee
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["EmpID"] == null)
+            if (Session["EmpID"] == null || String.IsNullOrWhiteSpace(Session["EmpID"].ToString()))
             {
                 Response.Redirect("~/Default.aspx");
                 return;
             }
 
-            if (Session["TrainingID"] == null)
+            if (Session["TrainingID"] == null || String.IsNullOrWhiteSpace(Session["TrainingID"].ToString()))
             {
                 Response.Redirect("MyTrainings.aspx");
                 return;
@@ -107,37 +107,37 @@ namespace Training.Trainee
             bool preRequired = Convert.ToBoolean(r["InitialAssessmentRequired"]);
             bool attendanceRequired = Convert.ToBoolean(r["AttendanceRequired"]);
 
-            // Certificate follows the last applicable workflow stage:
-            // Feedback -> Post Test -> Pre Test -> Attendance -> Direct.
-            if (feedbackRequired && !feedbackSkipped)
-                return IsFeedbackSubmitted(trainingID, empID);
+            object assignment = objDB.ExecuteScalar("SELECT COUNT(*) FROM TrainingAssignment WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND AssignmentStatus='Assigned'", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) });
+            if (assignment == null || Convert.ToInt32(assignment) == 0) return false;
 
-            if (postRequired && HasRequiredSessions(trainingID, "PostAssessmentSkipped"))
-                return AreAllRequiredSessionTestsCompleted(trainingID, empID, "Post", "PostAssessmentSkipped");
+            if (attendanceRequired && !AreAllRequiredSessionAttendanceCompleted(trainingID))
+                return false;
 
-            if (preRequired && HasRequiredSessions(trainingID, "PreAssessmentSkipped"))
-                return AreAllRequiredSessionTestsCompleted(trainingID, empID, "Pre", "PreAssessmentSkipped");
+            if (preRequired && !AreAllRequiredSessionTestsCompleted(trainingID, empID, "Pre", "PreAssessmentSkipped"))
+                return false;
 
-            if (attendanceRequired && HasRequiredSessions(trainingID, "AttendanceSkipped"))
-                return AreAllRequiredSessionAttendanceCompleted(trainingID, empID);
+            if (postRequired)
+            {
+                if (preRequired && !AreAllRequiredSessionTestsCompleted(trainingID, empID, "Pre", "PreAssessmentSkipped"))
+                    return false;
+                if (!AreAllRequiredSessionTestsCompleted(trainingID, empID, "Post", "PostAssessmentSkipped"))
+                    return false;
+            }
+
+            if (feedbackRequired && !feedbackSkipped && !IsFeedbackSubmitted(trainingID, empID))
+                return false;
 
             return true;
         }
 
-        private bool HasRequiredSessions(string trainingID, string skipColumn)
-        {
-            object v = objDB.ExecuteScalar("SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(" + skipColumn + ",0)=0) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
-            return v != null && Convert.ToInt32(v) == 1;
-        }
-
-        private bool AreAllRequiredSessionAttendanceCompleted(string trainingID, string empID)
+        private bool AreAllRequiredSessionAttendanceCompleted(string trainingID)
         {
             object v = objDB.ExecuteScalar(@"SELECT CASE WHEN NOT EXISTS (
                 SELECT 1 FROM SessionMaster SM
                 WHERE SM.TrainingID=@TrainingID
                   AND ISNULL(SM.AttendanceSkipped,0)=0
-                  AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID AND SA.AttendanceStatus IN ('Present','Completed'))
-            ) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) });
+                  AND ISNULL(SM.AttendanceStatus,'')<>'Completed'
+            ) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
             return v != null && Convert.ToInt32(v) == 1;
         }
 
@@ -149,7 +149,16 @@ namespace Training.Trainee
                   AND ISNULL(SM." + skipColumn + @",0)=0
                   AND (
                       NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1)
-                      OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1)
+                      OR NOT EXISTS (
+                          SELECT 1
+                          FROM TestMaster TM
+                          INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID
+                          WHERE TM.SessionID=SM.SessionID
+                            AND TM.TestType=@TestType
+                            AND TM.IsPublished=1
+                            AND TA.EmpID=@EmpID
+                            AND TA.Submitted=1
+                      )
                   )
             ) THEN 1 ELSE 0 END";
             object v = objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID), new SqlParameter("@TestType", testType) });
