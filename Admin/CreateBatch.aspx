@@ -69,6 +69,14 @@
                     <asp:RequiredFieldValidator ID="rfvBatch" runat="server" ControlToValidate="txtBatch" ValidationGroup="SaveGroup" CssClass="validation" ErrorMessage="Batch required"></asp:RequiredFieldValidator>
                 </div>
                 <div class="col-lg-4 mb-3">
+                    <label class="form-label">Office Order No.</label>
+                    <asp:TextBox ID="txtOfficeOrderNo" runat="server" CssClass="form-control" MaxLength="100"></asp:TextBox>
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <label class="form-label">Office Order Date</label>
+                    <asp:TextBox ID="txtOfficeOrderDate" runat="server" CssClass="form-control flatpickr" placeholder="dd-mm-yyyy" autocomplete="off" onkeydown="return false;"></asp:TextBox>
+                </div>
+                <div class="col-lg-4 mb-3">
                     <label class="form-label">Date From *</label>
                     <asp:TextBox ID="txtDateFrom" runat="server" CssClass="form-control flatpickr" placeholder="dd-mm-yyyy" autocomplete="off" onkeydown="return false;"></asp:TextBox>
                 </div>
