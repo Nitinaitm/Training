@@ -17,7 +17,9 @@ namespace Training.Trainee
     object sender,
     EventArgs e)
         {
-            if (Session["EmpID"] == null)
+            if (Session["EmpID"] == null
+                || string.IsNullOrWhiteSpace(
+                    Session["EmpID"].ToString()))
             {
                 Response.Redirect(
                     "~/Default.aspx");
@@ -25,7 +27,9 @@ namespace Training.Trainee
                 return;
             }
 
-            if (Session["TrainingID"] == null)
+            if (Session["TrainingID"] == null
+                || string.IsNullOrWhiteSpace(
+                    Session["TrainingID"].ToString()))
             {
                 Response.Redirect(
                     "MyTrainings.aspx");
@@ -41,12 +45,8 @@ namespace Training.Trainee
                 ViewState["TrainingID"] =
                     Session["TrainingID"].ToString();
 
-                TraineeTrainingSummary1.LoadTraining(
-                    Session["TrainingID"].ToString(),
-                    Session["EmpID"].ToString());
-
                 string trainingID =
-        Session["TrainingID"].ToString();
+                    Session["TrainingID"].ToString();
 
                 string empID =
                     Session["EmpID"].ToString().ToUpperInvariant();
@@ -101,30 +101,16 @@ namespace Training.Trainee
                 "TD.InitialAssessmentRequired," +
                 "TD.FinalAssessmentRequired," +
                 "TD.FeedbackRequired," +
-                "ISNULL(TP.PreExamCompleted,0) AS PreExamCompleted," +
-                "ISNULL(TP.PostExamCompleted,0) AS PostExamCompleted," +
-                "CASE WHEN NOT EXISTS (" +
-                "SELECT 1 FROM SessionMaster SM " +
-                "WHERE SM.TrainingID=@TrainingID " +
-                "AND ISNULL((SELECT TOP 1 SA.AttendanceStatus FROM SessionAttendance SA " +
-                "WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID),'Pending')<>'Completed'" +
-                ") THEN 1 ELSE 0 END AS AttendanceDone " +
+                "ISNULL(TD.FeedbackSkipped,0) AS FeedbackSkipped " +
                 "FROM TrainingDetails TD " +
-                "LEFT JOIN TrainingProgress TP " +
-                "ON TP.TrainingID=TD.TrainingID " +
-                "AND TP.EmpID=@EmpID " +
                 "WHERE TD.TrainingID=@TrainingID";
 
             SqlParameter[] param =
             {
-        new SqlParameter(
-            "@TrainingID",
-            Session["TrainingID"].ToString()),
-
-        new SqlParameter(
-            "@EmpID",
-            Session["EmpID"].ToString().ToUpperInvariant())
-    };
+                new SqlParameter(
+                    "@TrainingID",
+                    Session["TrainingID"].ToString())
+            };
 
             DataTable dt =
                 objDB.GetDataTable(
@@ -154,36 +140,188 @@ namespace Training.Trainee
                 Convert.ToBoolean(
                     row["FeedbackRequired"]);
 
-            bool attendanceDone =
+            bool feedbackSkipped =
                 Convert.ToBoolean(
-                    row["AttendanceDone"]);
+                    row["FeedbackSkipped"]);
 
-            bool preCompleted =
-                Convert.ToBoolean(
-                    row["PreExamCompleted"]);
-
-            bool postCompleted =
-                Convert.ToBoolean(
-                    row["PostExamCompleted"]);
-
-            if (!feedbackRequired)
+            if (!feedbackRequired || feedbackSkipped)
             {
                 return false;
             }
 
-            if (attendanceRequired && !attendanceDone)
+            query =
+                "SELECT COUNT(*) " +
+                "FROM TrainingAssignment " +
+                "WHERE TrainingID=@TrainingID " +
+                "AND EmpID=@EmpID " +
+                "AND AssignmentStatus='Assigned'";
+
+            param =
+            new SqlParameter[]
+            {
+                new SqlParameter(
+                    "@TrainingID",
+                    Session["TrainingID"].ToString()),
+
+                new SqlParameter(
+                    "@EmpID",
+                    Session["EmpID"].ToString().ToUpperInvariant())
+            };
+
+            if (Convert.ToInt32(
+                objDB.ExecuteScalar(
+                    query,
+                    param)) == 0)
             {
                 return false;
             }
 
-            if (preRequired && !preCompleted)
+            if (attendanceRequired)
             {
-                return false;
+                query =
+                    "SELECT COUNT(*) " +
+                    "FROM SessionMaster " +
+                    "WHERE TrainingID=@TrainingID " +
+                    "AND ISNULL(AttendanceSkipped,0)=0 " +
+                    "AND ISNULL(AttendanceStatus,'')<>'Completed'";
+
+                param =
+                new SqlParameter[]
+                {
+                    new SqlParameter(
+                        "@TrainingID",
+                        Session["TrainingID"].ToString())
+                };
+
+                if (Convert.ToInt32(
+                    objDB.ExecuteScalar(
+                        query,
+                        param)) > 0)
+                {
+                    return false;
+                }
             }
 
-            if (postRequired && !postCompleted)
+            if (preRequired)
             {
-                return false;
+                query =
+                    "SELECT COUNT(*) " +
+                    "FROM SessionMaster SM " +
+                    "WHERE SM.TrainingID=@TrainingID " +
+                    "AND ISNULL(SM.PreAssessmentSkipped,0)=0 " +
+                    "AND (" +
+                    "NOT EXISTS (" +
+                    "SELECT 1 FROM TestMaster TM " +
+                    "WHERE TM.SessionID=SM.SessionID " +
+                    "AND TM.TestType='Pre' " +
+                    "AND TM.IsPublished=1" +
+                    ") " +
+                    "OR NOT EXISTS (" +
+                    "SELECT 1 FROM TestMaster TM " +
+                    "INNER JOIN TestResult TR " +
+                    "ON TR.TestID=TM.TestID " +
+                    "AND TR.EmpID=@EmpID " +
+                    "WHERE TM.SessionID=SM.SessionID " +
+                    "AND TM.TestType='Pre' " +
+                    "AND TM.IsPublished=1 " +
+                    "AND TR.IsFinalAttempt=1" +
+                    ")" +
+                    ")";
+
+                param =
+                new SqlParameter[]
+                {
+                    new SqlParameter(
+                        "@TrainingID",
+                        Session["TrainingID"].ToString()),
+
+                    new SqlParameter(
+                        "@EmpID",
+                        Session["EmpID"].ToString().ToUpperInvariant())
+                };
+
+                if (Convert.ToInt32(
+                    objDB.ExecuteScalar(
+                        query,
+                        param)) > 0)
+                {
+                    return false;
+                }
+            }
+
+            if (postRequired)
+            {
+                query =
+                    "SELECT COUNT(*) " +
+                    "FROM SessionMaster SM " +
+                    "WHERE SM.TrainingID=@TrainingID " +
+                    "AND ISNULL(SM.PostAssessmentSkipped,0)=0 " +
+                    "AND (" +
+                    "NOT EXISTS (" +
+                    "SELECT 1 FROM TestMaster TM " +
+                    "WHERE TM.SessionID=SM.SessionID " +
+                    "AND TM.TestType='Post' " +
+                    "AND TM.IsPublished=1" +
+                    ") " +
+                    "OR NOT EXISTS (" +
+                    "SELECT 1 FROM TestMaster TM " +
+                    "INNER JOIN TestResult TR " +
+                    "ON TR.TestID=TM.TestID " +
+                    "AND TR.EmpID=@EmpID " +
+                    "WHERE TM.SessionID=SM.SessionID " +
+                    "AND TM.TestType='Post' " +
+                    "AND TM.IsPublished=1 " +
+                    "AND TR.IsFinalAttempt=1" +
+                    ")";
+
+                if (preRequired)
+                {
+                    query +=
+                        " OR (" +
+                        "ISNULL(SM.PreAssessmentSkipped,0)=0 " +
+                        "AND (" +
+                        "NOT EXISTS (" +
+                        "SELECT 1 FROM TestMaster TP " +
+                        "WHERE TP.SessionID=SM.SessionID " +
+                        "AND TP.TestType='Pre' " +
+                        "AND TP.IsPublished=1" +
+                        ") " +
+                        "OR NOT EXISTS (" +
+                        "SELECT 1 FROM TestMaster TP " +
+                        "INNER JOIN TestResult RP " +
+                        "ON RP.TestID=TP.TestID " +
+                        "AND RP.EmpID=@EmpID " +
+                        "WHERE TP.SessionID=SM.SessionID " +
+                        "AND TP.TestType='Pre' " +
+                        "AND TP.IsPublished=1 " +
+                        "AND RP.IsFinalAttempt=1" +
+                        ")" +
+                        ")" +
+                        ")";
+                }
+
+                query +=
+                    ")";
+
+                param =
+                new SqlParameter[]
+                {
+                    new SqlParameter(
+                        "@TrainingID",
+                        Session["TrainingID"].ToString()),
+
+                    new SqlParameter(
+                        "@EmpID",
+                        Session["EmpID"].ToString().ToUpperInvariant())
+                };
+
+                if (Convert.ToInt32(
+                    objDB.ExecuteScalar(
+                        query,
+                        param)) > 0)
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -811,8 +949,8 @@ question +
         }
 
         protected void btnSubmit_Click(
-       object sender,
-       EventArgs e)
+   object sender,
+   EventArgs e)
         {
             try
             {
@@ -978,7 +1116,7 @@ GETDATE()
         private bool IsFeedbackSubmitted()
         {
             string query =
-        @"
+@"
 SELECT
 COUNT(*)
 FROM
@@ -987,18 +1125,20 @@ WHERE
 TrainingID=@TrainingID
 AND
 EmpID=@EmpID
+AND
+Submitted=1
 ";
 
             SqlParameter[] param =
             {
-        new SqlParameter(
-            "@TrainingID",
-            Session["TrainingID"]),
+                new SqlParameter(
+                    "@TrainingID",
+                    Session["TrainingID"]),
 
-        new SqlParameter(
-            "@EmpID",
-            Session["EmpID"])
-    };
+                new SqlParameter(
+                    "@EmpID",
+                    Session["EmpID"])
+            };
 
             return
                 Convert.ToInt32(
@@ -1007,6 +1147,7 @@ EmpID=@EmpID
                 param))
                 > 0;
         }
+
         private void SaveFeedback(
     string feedbackID)
         {
