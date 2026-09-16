@@ -12,7 +12,12 @@ namespace Training.Trainee
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["EmpID"] == null) { Response.Redirect("~/Default.aspx"); return; }
+            if (Session["EmpID"] == null || string.IsNullOrWhiteSpace(Session["EmpID"].ToString()))
+            {
+                Response.Redirect("~/Default.aspx");
+                return;
+            }
+
             if (!IsPostBack)
             {
                 LoadCourse();
@@ -28,12 +33,23 @@ namespace Training.Trainee
             string s = Convert.ToString(ViewState["SortExpression"]);
             switch (s)
             {
-                case "TrainingID": case "CourseName": case "TrainingType": case "TrainingOrganizer": case "Batch": case "DateFrom": case "DateTo": return s;
-                default: return "TrainingID";
+                case "TrainingID":
+                case "CourseName":
+                case "TrainingType":
+                case "TrainingOrganizer":
+                case "Batch":
+                case "DateFrom":
+                case "DateTo":
+                    return s;
+                default:
+                    return "TrainingID";
             }
         }
 
-        private string SortDirection() { return Convert.ToString(ViewState["SortDirection"]) == "ASC" ? "ASC" : "DESC"; }
+        private string SortDirection()
+        {
+            return Convert.ToString(ViewState["SortDirection"]) == "ASC" ? "ASC" : "DESC";
+        }
 
         private void LoadCourse()
         {
@@ -46,7 +62,11 @@ namespace Training.Trainee
             ddlCourse.Items.Insert(0, new ListItem("All", ""));
         }
 
-        protected void btnSearch_Click(object sender, EventArgs e) { gvTraining.PageIndex = 0; LoadTraining(); }
+        protected void btnSearch_Click(object sender, EventArgs e)
+        {
+            gvTraining.PageIndex = 0;
+            LoadTraining();
+        }
 
         protected void btnReset_Click(object sender, EventArgs e)
         {
@@ -59,7 +79,11 @@ namespace Training.Trainee
             LoadTraining();
         }
 
-        protected void gvTraining_PageIndexChanging(object sender, GridViewPageEventArgs e) { gvTraining.PageIndex = e.NewPageIndex; LoadTraining(); }
+        protected void gvTraining_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            gvTraining.PageIndex = e.NewPageIndex;
+            LoadTraining();
+        }
 
         protected void gvTraining_Sorting(object sender, GridViewSortEventArgs e)
         {
@@ -86,7 +110,9 @@ namespace Training.Trainee
 
         protected void gvTraining_RowCommand(object sender, GridViewCommandEventArgs e)
         {
-            string trainingID = e.CommandArgument.ToString();
+            string trainingID = Convert.ToString(e.CommandArgument);
+            if (string.IsNullOrWhiteSpace(trainingID)) return;
+
             Session["TrainingID"] = trainingID;
             if (e.CommandName == "ViewTraining") { Response.Redirect("TrainingDetails.aspx", false); return; }
             if (e.CommandName == "Attendance") { Response.Redirect("Attendance.aspx", false); return; }
@@ -105,34 +131,23 @@ TRY_CONVERT(date,TD.DateFrom,105) DateFrom,TRY_CONVERT(date,TD.DateTo,105) DateT
 TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,
 TD.FeedbackRequired,ISNULL(TD.FeedbackSkipped,0) FeedbackSkipped,
 TD.CertificateRequired,ISNULL(TD.CertificateSkipped,0) CertificateSkipped,
-CASE WHEN TD.AttendanceRequired=0 THEN 1
-     WHEN NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0
-         AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Completed')) THEN 1 ELSE 0 END AS AttendanceDone,
-CASE WHEN TD.InitialAssessmentRequired=0 THEN 1
+CASE WHEN ISNULL(TD.AttendanceRequired,0)=0 THEN 1
+     WHEN NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SM.AttendanceStatus,'')<>'Completed') THEN 1 ELSE 0 END AS AttendanceDone,
+CASE WHEN ISNULL(TD.InitialAssessmentRequired,0)=0 THEN 1
      WHEN NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.PreAssessmentSkipped,0)=0
-         AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1)
-         AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(SM.AttendanceSkipped,0)=1 OR EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Present'))
-         AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 1 ELSE 0 END AS PreDone,
-CASE WHEN TD.FinalAssessmentRequired=0 THEN 1
+         AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1)
+              OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)
+              OR (ISNULL(TD.AttendanceRequired,0)=1 AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SM.AttendanceStatus,'')<>'Completed'))) THEN 1 ELSE 0 END AS PreDone,
+CASE WHEN ISNULL(TD.FinalAssessmentRequired,0)=0 THEN 1
      WHEN NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.PostAssessmentSkipped,0)=0
-         AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1)
-         AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(SM.AttendanceSkipped,0)=1 OR EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Present'))
-         AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 1 ELSE 0 END AS PostDone,
-CASE WHEN TD.FeedbackRequired=0 OR ISNULL(TD.FeedbackSkipped,0)=1 THEN 1
-     WHEN EXISTS (SELECT 1 FROM Feedback F WHERE F.TrainingID=TA.TrainingID AND F.EmpID=TA.EmpID AND F.Submitted=1) THEN 1 ELSE 0 END AS FeedbackDone,
-CASE WHEN TD.CertificateRequired=0 OR ISNULL(TD.CertificateSkipped,0)=1 THEN 1
-     WHEN EXISTS (SELECT 1 FROM TrainingCertificate TC WHERE TC.TrainingID=TA.TrainingID AND TC.EmpID=TA.EmpID AND TC.CertificateStatus='A') THEN 1 ELSE 0 END AS CertificateDone,
-CASE WHEN TD.AttendanceRequired=1 AND EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0
-         AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Completed')) THEN 0 ELSE 1 END AS CanAttendance,
-CASE WHEN TD.FeedbackRequired=1 AND ISNULL(TD.FeedbackSkipped,0)=0
-         AND (CASE WHEN TD.AttendanceRequired=1 AND EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Completed')) THEN 0 ELSE 1 END)=1
-         AND (CASE WHEN TD.InitialAssessmentRequired=1 AND NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.PreAssessmentSkipped,0)=0 AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(SM.AttendanceSkipped,0)=1 OR EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Present')) AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 1 ELSE 0 END)=1
-         AND (CASE WHEN TD.FinalAssessmentRequired=1 AND NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.PostAssessmentSkipped,0)=0 AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(SM.AttendanceSkipped,0)=1 OR EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Present')) AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 1 ELSE 0 END)=1 THEN 1 ELSE 0 END AS CanBatchFeedback,
-CASE WHEN TD.CertificateRequired=1 AND ISNULL(TD.CertificateSkipped,0)=0
-         AND (CASE WHEN TD.AttendanceRequired=1 AND EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Completed')) THEN 0 ELSE 1 END)=1
-         AND (CASE WHEN TD.InitialAssessmentRequired=1 AND NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.PreAssessmentSkipped,0)=0 AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(SM.AttendanceSkipped,0)=1 OR EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Present')) AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 1 ELSE 0 END)=1
-         AND (CASE WHEN TD.FinalAssessmentRequired=1 AND NOT EXISTS (SELECT 1 FROM SessionMaster SM WHERE SM.TrainingID=TA.TrainingID AND ISNULL(SM.PostAssessmentSkipped,0)=0 AND EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) AND (ISNULL(TD.AttendanceRequired,0)=0 OR ISNULL(SM.AttendanceSkipped,0)=1 OR EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=TA.EmpID AND SA.AttendanceStatus='Present')) AND NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)) THEN 1 ELSE 0 END)=1
-         AND (TD.FeedbackRequired=0 OR ISNULL(TD.FeedbackSkipped,0)=1 OR EXISTS (SELECT 1 FROM Feedback F WHERE F.TrainingID=TA.TrainingID AND F.EmpID=TA.EmpID AND F.Submitted=1)) THEN 1 ELSE 0 END AS CanCertificate
+         AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1)
+              OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)
+              OR (ISNULL(TD.AttendanceRequired,0)=1 AND ISNULL(SM.AttendanceSkipped,0)=0 AND ISNULL(SM.AttendanceStatus,'')<>'Completed')
+              OR (ISNULL(TD.InitialAssessmentRequired,0)=1 AND ISNULL(SM.PreAssessmentSkipped,0)=0 AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=TA.EmpID AND AT.Submitted=1)))) THEN 1 ELSE 0 END AS PostDone,
+CASE WHEN ISNULL(TD.FeedbackRequired,0)=0 OR ISNULL(TD.FeedbackSkipped,0)=1 THEN 1
+     WHEN EXISTS (SELECT 1 FROM BatchFeedback BF WHERE BF.TrainingID=TA.TrainingID AND BF.EmpID=TA.EmpID AND ISNULL(BF.Submitted,0)=1) THEN 1 ELSE 0 END AS FeedbackDone,
+CASE WHEN ISNULL(TD.CertificateRequired,0)=0 OR ISNULL(TD.CertificateSkipped,0)=1 THEN 1
+     WHEN EXISTS (SELECT 1 FROM TrainingCertificate TC WHERE TC.TrainingID=TA.TrainingID AND TC.EmpID=TA.EmpID AND TC.CertificateStatus='A') THEN 1 ELSE 0 END AS CertificateDone
 FROM TrainingAssignment TA
 INNER JOIN TrainingDetails TD ON TD.TrainingID=TA.TrainingID
 INNER JOIN CourseMaster CM ON CM.CourseID=TD.CourseID
