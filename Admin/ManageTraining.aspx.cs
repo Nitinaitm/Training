@@ -14,12 +14,6 @@ namespace Training.Admin
         private SqlParameter[] P(string name, object value) { return new SqlParameter[] { new SqlParameter(name, value) }; }
         private string TrainingID { get { return Session["TrainingID"] == null ? "" : Session["TrainingID"].ToString(); } }
 
-        private bool IsTrainingClosed()
-        {
-            object value = new clsDataAccess().ExecuteScalar("SELECT TrainingStatus FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
-            return value != null && value != DBNull.Value && string.Equals(Convert.ToString(value), "Closed", StringComparison.OrdinalIgnoreCase);
-        }
-
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
@@ -137,26 +131,6 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID))) == 1;
         }
 
-        private bool AreAllRequiredStagesCompletedForClosure()
-        {
-            if (!IsTraineeAssigned()) return false;
-            if (IsAttendanceRequired() && !AreAllAttendanceCompleted()) return false;
-            if (IsPreTestRequired() && !AreAllTestsCompleted("Pre")) return false;
-            if (IsPostTestRequired())
-            {
-                if (IsPreTestRequired() && !AreAllTestsCompleted("Pre")) return false;
-                if (!AreAllTestsCompleted("Post")) return false;
-            }
-            if (IsFeedbackRequired() && !IsFeedbackSubmitted()) return false;
-            return true;
-        }
-
-        private bool IsTrainingDateReached()
-        {
-            object value = new clsDataAccess().ExecuteScalar("SELECT CASE WHEN TRY_CONVERT(date,DateTo,105) IS NOT NULL AND TRY_CONVERT(date,DateTo,105)<=CAST(GETDATE() AS date) THEN 1 ELSE 0 END FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
-            return value != null && Convert.ToInt32(value) == 1;
-        }
-
         private string Stage(string label, bool required, bool complete, bool skipped, int completed, int total, ref int number)
         {
             string css;
@@ -235,7 +209,6 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
                 bool legacy = string.Equals(dr["HostelRequiredTrainee"].ToString(), "Yes", StringComparison.OrdinalIgnoreCase);
                 hostelRequired = th || trh || legacy; dr.Close();
             }
-            bool trainingClosed = string.Equals(lblStatus.Text, "Closed", StringComparison.OrdinalIgnoreCase);
             bool ta = IsTraineeAssigned(); bool sa = HasSessionsAndTrainers(); bool fr = IsFeedbackRequired();
             bool feedbackSkipped = GetRequirement("FeedbackSkipped"); bool certificateSkipped = GetRequirement("CertificateSkipped");
             bool fa = !fr || IsFeedbackAssigned(); bool ct = !IsCertificateRequired() || IsCertificateTemplateConfigured(); bool ac = !IsAttendanceRequired() || AreAllAttendanceCompleted();
@@ -257,30 +230,7 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             btnAssignTrainee.Text = ta ? "Assign Trainee ✓" : "Assign Trainee";
             if (certificateRequired && ta && !certificateSkipped) btnCertificateTemplate.Text = ct ? "Certificate Template ✓" : "Certificate Template";
 
-            if (trainingClosed)
-            {
-                btnUpdateTraining.Visible = true;
-                btnUpdateTraining.Enabled = false;
-                btnAssignSession.Visible = true;
-                btnAssignSession.Enabled = false;
-                btnAssignTrainee.Visible = true;
-                btnAssignTrainee.Enabled = false;
-                btnRequirements.Visible = true;
-                btnRequirements.Enabled = false;
-                btnAssignFeedback.Visible = fr;
-                btnAssignFeedback.Enabled = false;
-                btnCertificateTemplate.Visible = certificateRequired && !certificateSkipped;
-                btnCertificateTemplate.Enabled = false;
-                btnAssignHostel.Visible = false;
-                btnStartTraining.Visible = false;
-                btnAttendance.Visible = false;
-                btnCompleteTraining.Visible = true;
-                btnCompleteTraining.Enabled = false;
-                btnCompleteTraining.Text = "Training Closed";
-                lblMessage.ForeColor = System.Drawing.Color.Green;
-                lblMessage.Text = "Training is closed. Training data is read-only.";
-            }
-            else if (workflow.Contains("E"))
+            if (workflow.Contains("E"))
             {
                 btnUpdateTraining.Visible = false;
                 btnAssignSession.Visible = true;
@@ -309,7 +259,6 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
         protected void btnStartTraining_Click(object sender, EventArgs e)
         {
             if (Session["TrainingID"] == null) { Response.Redirect("TrainingList.aspx"); return; }
-            if (IsTrainingClosed()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is already closed."; return; }
             List<string> missing = new List<string>();
             if (!HasSessionsAndTrainers()) missing.Add("1. Assign Sessions & Trainers");
             if (!IsTraineeAssigned()) missing.Add("2. Assign Trainees");
@@ -319,73 +268,35 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             StartTraining();
         }
 
-        protected void btnCompleteTraining_Click(object sender, EventArgs e)
-        {
-            lblMessage.Text = "";
-            if (IsTrainingClosed())
-            {
-                lblMessage.ForeColor = System.Drawing.Color.Green;
-                lblMessage.Text = "Training is already closed.";
-                LoadWorkflow();
-                return;
-            }
-            if (!IsTrainingDateReached())
-            {
-                lblMessage.ForeColor = System.Drawing.Color.Red;
-                lblMessage.Text = "Training can be closed only on or after the Training To Date.";
-                return;
-            }
-            if (!AreAllRequiredStagesCompletedForClosure())
-            {
-                lblMessage.ForeColor = System.Drawing.Color.Red;
-                lblMessage.Text = "Training cannot be closed. Please complete all required and non-skipped stages up to Feedback.";
-                return;
-            }
-            int rows = new clsDataAccess().ExecuteSql("UPDATE TrainingDetails SET TrainingStatus='Closed',UpdatedOn=GETDATE(),UpdatedBy=@UpdatedBy WHERE TrainingID=@TrainingID AND ISNULL(TrainingStatus,'')<>'Closed'", new SqlParameter[] { new SqlParameter("@UpdatedBy", Session["UserID"] == null ? "Admin" : Session["UserID"].ToString()), new SqlParameter("@TrainingID", TrainingID) });
-            if (rows > 0)
-            {
-                lblMessage.ForeColor = System.Drawing.Color.Green;
-                lblMessage.Text = "Training has been marked as Closed successfully.";
-            }
-            else
-            {
-                lblMessage.ForeColor = System.Drawing.Color.Red;
-                lblMessage.Text = "Training could not be closed.";
-            }
-            LoadWorkflow();
-        }
-
-        protected void btnRequirements_Click(object sender, EventArgs e) { if (IsTrainingClosed()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is closed and requirements cannot be changed."; return; } Response.Redirect("TrainingRequirements.aspx"); }
+        protected void btnRequirements_Click(object sender, EventArgs e) { Response.Redirect("TrainingRequirements.aspx"); }
         protected void btnAssignFeedback_Click(object sender, EventArgs e)
         {
-            if (IsTrainingClosed()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is closed and feedback template cannot be changed."; return; }
             if (!IsFeedbackRequired()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Feedback is not required for this training."; return; }
             Response.Redirect("AssignFeedback.aspx");
         }
         protected void btnCertificateTemplate_Click(object sender, EventArgs e)
         {
-            if (IsTrainingClosed()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is closed and certificate template cannot be changed."; return; }
             if (!IsCertificateRequired()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Certificate is not required for this training."; return; }
             if (!IsTraineeAssigned()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Please assign trainee before configuring certificate template."; return; }
             Response.Redirect("CertificateTemplate.aspx");
         }
-        protected void btnHostelNo_Click(object sender, EventArgs e) { if (IsTrainingClosed()) return; UpdateHostelRequirement("No"); StartTraining(); }
-        protected void btnHostelYes_Click(object sender, EventArgs e) { if (IsTrainingClosed()) return; UpdateHostelRequirement("Yes"); pnlHostelConfirmation.Visible = false; Response.Redirect("AssignHostel.aspx"); }
+        protected void btnHostelNo_Click(object sender, EventArgs e) { UpdateHostelRequirement("No"); StartTraining(); }
+        protected void btnHostelYes_Click(object sender, EventArgs e) { UpdateHostelRequirement("Yes"); pnlHostelConfirmation.Visible = false; Response.Redirect("AssignHostel.aspx"); }
         private void UpdateHostelRequirement(string hostelRequired)
         {
-            new clsDataAccess().ExecuteSql("UPDATE TrainingDetails SET HostelRequiredTrainee=@HostelRequiredTrainee,UpdatedOn=GETDATE(),UpdatedBy=@UpdatedBy WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@HostelRequiredTrainee", hostelRequired), new SqlParameter("@UpdatedBy", Session["UserID"] == null ? "Admin" : Session["UserID"].ToString()), new SqlParameter("@TrainingID", TrainingID) });
+            new clsDataAccess().ExecuteSql("UPDATE TrainingDetails SET HostelRequiredTrainee=@HostelRequiredTrainee,UpdatedOn=GETDATE(),UpdatedBy=@UpdatedBy WHERE TrainingID=@TrainingID", new SqlParameter[]
+            { new SqlParameter("@HostelRequiredTrainee", hostelRequired), new SqlParameter("@UpdatedBy", Session["UserID"] == null ? "Admin" : Session["UserID"].ToString()), new SqlParameter("@TrainingID", TrainingID) });
         }
         private void StartTraining()
         {
-            if (IsTrainingClosed()) { pnlHostelConfirmation.Visible = false; lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is already closed."; return; }
             if (IsFeedbackRequired() && !IsFeedbackAssigned()) { pnlHostelConfirmation.Visible = false; lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Feedback is required. Please assign Feedback before starting training."; return; }
             if (IsCertificateRequired() && !IsCertificateTemplateConfigured()) { pnlHostelConfirmation.Visible = false; lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Certificate is required. Please configure Certificate Template before starting training."; return; }
             clsWorkflow.UpdateWorkflow(TrainingID, "InProgress", "E"); pnlHostelConfirmation.Visible = false; lblMessage.ForeColor = System.Drawing.Color.Green; lblMessage.Text = "Training has started successfully."; LoadWorkflow();
         }
-        protected void btnAttendance_Click(object sender, EventArgs e) { if (IsTrainingClosed()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is closed and attendance cannot be changed."; return; } Response.Redirect("TrainingAttendance.aspx"); }
-        protected void btnUpdateTraining_Click(object sender, EventArgs e) { if (IsTrainingClosed()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is closed and cannot be edited."; return; } Response.Redirect("CreateBatch.aspx?mode=edit"); }
-        protected void btnAssignSession_Click(object sender, EventArgs e) { if (IsTrainingClosed()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is closed and sessions/trainers cannot be edited."; return; } Response.Redirect("AssignSession.aspx"); }
-        protected void btnAssignHostel_Click(object sender, EventArgs e) { if (IsTrainingClosed()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is closed and hostel details cannot be edited."; return; } Response.Redirect("AssignHostel.aspx"); }
-        protected void btnAssignTrainee_Click(object sender, EventArgs e) { if (IsTrainingClosed()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Training is closed and trainees cannot be edited."; return; } Response.Redirect("AssignTrainee.aspx"); }
+        protected void btnAttendance_Click(object sender, EventArgs e) { Response.Redirect("TrainingAttendance.aspx"); }
+        protected void btnUpdateTraining_Click(object sender, EventArgs e) { Response.Redirect("CreateBatch.aspx?mode=edit"); }
+        protected void btnAssignSession_Click(object sender, EventArgs e) { Response.Redirect("AssignSession.aspx"); }
+        protected void btnAssignHostel_Click(object sender, EventArgs e) { Response.Redirect("AssignHostel.aspx"); }
+        protected void btnAssignTrainee_Click(object sender, EventArgs e) { Response.Redirect("AssignTrainee.aspx"); }
     }
 }
