@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Web.UI;
@@ -10,12 +10,49 @@ namespace Training.Trainer
     {
         private clsDataAccess objDB = new clsDataAccess();
 
+        protected void Page_PreInit(object sender, EventArgs e)
+        {
+            if (Session["TrainerID"] == null)
+            {
+                Response.Redirect("~/Default.aspx", true);
+                return;
+            }
+
+            if (Session["TrainingID"] == null || Session["SessionID"] == null)
+            {
+                Response.Redirect("~/Trainer/Default.aspx", true);
+                return;
+            }
+
+            object required = objDB.ExecuteScalar(
+                "SELECT TD.FinalAssessmentRequired FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID WHERE SM.SessionID=@SessionID AND SM.TrainerID=@TrainerID AND SM.TrainingID=@TrainingID",
+                new SqlParameter[]
+                {
+                    new SqlParameter("@SessionID", Session["SessionID"].ToString()),
+                    new SqlParameter("@TrainerID", Session["TrainerID"].ToString()),
+                    new SqlParameter("@TrainingID", Session["TrainingID"].ToString())
+                });
+
+            object skipped = objDB.ExecuteScalar(
+                "SELECT ISNULL(PostAssessmentSkipped,0) FROM SessionMaster WHERE SessionID=@SessionID AND TrainerID=@TrainerID AND TrainingID=@TrainingID",
+                new SqlParameter[]
+                {
+                    new SqlParameter("@SessionID", Session["SessionID"].ToString()),
+                    new SqlParameter("@TrainerID", Session["TrainerID"].ToString()),
+                    new SqlParameter("@TrainingID", Session["TrainingID"].ToString())
+                });
+
+            if (required == null || required == DBNull.Value || !Convert.ToBoolean(required) ||
+                (skipped != null && skipped != DBNull.Value && Convert.ToBoolean(skipped)))
+            {
+                Response.Redirect("SessionDetails.aspx?SessionID=" + Server.UrlEncode(Session["SessionID"].ToString()), true);
+            }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {
-                if (Session["TrainerID"] == null) { Response.Redirect("~/Default.aspx"); return; }
-                if (Session["TrainingID"] == null || Session["SessionID"] == null) { Response.Redirect("~/Trainer/Default.aspx"); return; }
                 ViewState["SessionID"] = Session["SessionID"].ToString();
                 SessionSummary1.LoadSession(Session["SessionID"].ToString());
                 LoadSessionDetails();
@@ -27,9 +64,13 @@ namespace Training.Trainer
 
         private void LoadSessionDetails()
         {
-            string sql = "SELECT SM.SessionID,SM.SessionName,SM.SessionDate,SM.TopicID,TM.TopicName,SM.TrainerID,ISNULL(EBM.EmpName,TMR.NameExternal) AS TrainerName,TD.TrainingID,TD.TrainingType,TD.BatchStrength FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID INNER JOIN TopicMaster TM ON SM.TopicID=TM.TopicID LEFT JOIN EmpBasicMaster EBM ON SM.TrainerID=EBM.EmpID LEFT JOIN TrainerMaster TMR ON SM.TrainerID=TMR.TrainerID WHERE SM.SessionID=@SessionID";
-            DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@SessionID", ViewState["SessionID"]) });
-            if (dt.Rows.Count == 0) { Response.Redirect("Default.aspx"); return; }
+            string sql = "SELECT SM.SessionID,SM.SessionName,SM.SessionDate,SM.TopicID,TM.TopicName,SM.TrainerID,ISNULL(EBM.EmpName,TMR.NameExternal) AS TrainerName,TD.TrainingID,TD.TrainingType,TD.BatchStrength FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID INNER JOIN TopicMaster TM ON SM.TopicID=TM.TopicID LEFT JOIN EmpBasicMaster EBM ON SM.TrainerID=EBM.EmpID LEFT JOIN TrainerMaster TMR ON SM.TrainerID=TMR.TrainerID WHERE SM.SessionID=@SessionID AND SM.TrainerID=@TrainerID";
+            DataTable dt = objDB.GetDataTable(sql, new SqlParameter[]
+            {
+                new SqlParameter("@SessionID", ViewState["SessionID"]),
+                new SqlParameter("@TrainerID", Session["TrainerID"].ToString())
+            });
+            if (dt.Rows.Count == 0) { Response.Redirect("~/Trainer/Default.aspx", true); return; }
             ViewState["TopicID"] = dt.Rows[0]["TopicID"].ToString();
             ViewState["TrainerID"] = dt.Rows[0]["TrainerID"].ToString();
             ViewState["TrainingID"] = dt.Rows[0]["TrainingID"].ToString();
@@ -44,12 +85,12 @@ namespace Training.Trainer
             object skipped = objDB.ExecuteScalar("SELECT ISNULL(PostAssessmentSkipped,0) FROM SessionMaster WHERE SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@SessionID", ViewState["SessionID"]) });
             if (!required)
             {
-                ScriptManager.RegisterStartupScript(this, GetType(), "PostTrainingRequired", "alert('Post-Training Assessment is not required for this training.');window.location='SessionDetails.aspx?SessionID=" + ViewState["SessionID"] + "';", true);
+                ScriptManager.RegisterStartupScript(this, GetType(), "PostTrainingRequired", "alert('Post-Training Assessment is not required for this training.');window.location='SessionDetails.aspx?SessionID=" + Server.UrlEncode(ViewState["SessionID"].ToString()) + "';", true);
                 return false;
             }
             if (skipped != null && skipped != DBNull.Value && Convert.ToBoolean(skipped))
             {
-                ScriptManager.RegisterStartupScript(this, GetType(), "PostTrainingSkipped", "alert('Post-Training Assessment has been skipped for this session.');window.location='SessionDetails.aspx?SessionID=" + ViewState["SessionID"] + "';", true);
+                ScriptManager.RegisterStartupScript(this, GetType(), "PostTrainingSkipped", "alert('Post-Training Assessment has been skipped for this session.');window.location='SessionDetails.aspx?SessionID=" + Server.UrlEncode(ViewState["SessionID"].ToString()) + "';", true);
                 return false;
             }
             return true;
@@ -61,7 +102,7 @@ namespace Training.Trainer
             if (skipped != null && skipped != DBNull.Value && Convert.ToBoolean(skipped)) return;
             object status = objDB.ExecuteScalar("SELECT AttendanceStatus FROM SessionMaster WHERE SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@SessionID", ViewState["SessionID"]) });
             if (status != null && status.ToString() != "Completed")
-                ScriptManager.RegisterStartupScript(this, GetType(), "Attendance", "alert('Attendance is not completed for this session.');window.location='SessionDetails.aspx?SessionID=" + ViewState["SessionID"] + "';", true);
+                ScriptManager.RegisterStartupScript(this, GetType(), "Attendance", "alert('Attendance is not completed for this session.');window.location='SessionDetails.aspx?SessionID=" + Server.UrlEncode(ViewState["SessionID"].ToString()) + "';", true);
         }
 
         private void CheckExistingTest()
@@ -122,9 +163,32 @@ namespace Training.Trainer
             foreach(GridViewRow row in gvQuestion.Rows){CheckBox chk=(CheckBox)row.FindControl("chkSelect");if(chk!=null)chk.Checked=false;}
         }
 
-        private bool ValidateQuestionDistribution(){int total=Convert.ToInt32(txtTotalQuestions.Text);int easy=Convert.ToInt32(txtEasy.Text);int medium=Convert.ToInt32(txtMedium.Text);int hard=Convert.ToInt32(txtHard.Text);if(easy+medium+hard!=total){ScriptManager.RegisterStartupScript(this,GetType(),"msg","alert('Easy + Medium + Hard should be equal to Total Questions.');",true);return false;}return true;}
+        private bool ValidateQuestionDistribution()
+        {
+            int total;
+            int easy;
+            int medium;
+            int hard;
+            if (!int.TryParse(txtTotalQuestions.Text.Trim(), out total) || total <= 0 ||
+                !int.TryParse(txtEasy.Text.Trim(), out easy) || easy < 0 ||
+                !int.TryParse(txtMedium.Text.Trim(), out medium) || medium < 0 ||
+                !int.TryParse(txtHard.Text.Trim(), out hard) || hard < 0)
+            {
+                ScriptManager.RegisterStartupScript(this, GetType(), "msg", "alert('Please enter valid question counts.');", true);
+                return false;
+            }
+            if(easy+medium+hard!=total){ScriptManager.RegisterStartupScript(this,GetType(),"msg","alert('Easy + Medium + Hard should be equal to Total Questions.');",true);return false;}
+            return true;
+        }
 
-        private bool ValidateQuestionPool(){return CheckDifficultyCount("Easy",Convert.ToInt32(txtEasy.Text))&&CheckDifficultyCount("Medium",Convert.ToInt32(txtMedium.Text))&&CheckDifficultyCount("Hard",Convert.ToInt32(txtHard.Text));}
+        private bool ValidateQuestionPool()
+        {
+            int easy;
+            int medium;
+            int hard;
+            if (!int.TryParse(txtEasy.Text.Trim(), out easy) || !int.TryParse(txtMedium.Text.Trim(), out medium) || !int.TryParse(txtHard.Text.Trim(), out hard)) return false;
+            return CheckDifficultyCount("Easy",easy)&&CheckDifficultyCount("Medium",medium)&&CheckDifficultyCount("Hard",hard);
+        }
 
         private bool CheckDifficultyCount(string difficulty,int requiredCount)
         {
@@ -151,7 +215,7 @@ namespace Training.Trainer
         {
             if(!chkRandom.Checked && !CreateManualQuestionTable())return;
             DataTable dt=ViewState["SelectedQuestions"] as DataTable;if(dt==null||dt.Rows.Count==0){ScriptManager.RegisterStartupScript(this,GetType(),"msg","alert('Please Generate Questions First.');",true);return;}
-            if(ViewState["TestID"]==null){ViewState["TestID"]="TST"+DateTime.Now.ToString("yyyyMMddHHmmssfff")+new Random().Next(100,999);InsertTestMaster();}else UpdateTestMaster();
+            if(ViewState["TestID"]==null){ViewState["TestID"]="TST"+Guid.NewGuid().ToString("N");InsertTestMaster();}else UpdateTestMaster();
             SaveTestQuestions();ScriptManager.RegisterStartupScript(this,GetType(),"msg","alert('Draft Saved Successfully.');",true);
         }
 
@@ -159,7 +223,9 @@ namespace Training.Trainer
         {
             DataTable dt=CreateQuestionTable();int easy=0,medium=0,hard=0;
             foreach(GridViewRow row in gvQuestion.Rows){CheckBox chk=(CheckBox)row.FindControl("chkSelect");if(chk==null||!chk.Checked)continue;DataKey key=gvQuestion.DataKeys[row.RowIndex];string difficulty=key.Values["DifficultyLevel"].ToString();dt.Rows.Add(key.Values["QuestionID"],key.Values["Question"],difficulty,Convert.ToDecimal(key.Values["Marks"]),key.Values["QuestionOwnerType"]);if(difficulty=="Easy")easy++;else if(difficulty=="Medium")medium++;else if(difficulty=="Hard")hard++;}
-            if(easy!=Convert.ToInt32(txtEasy.Text)||medium!=Convert.ToInt32(txtMedium.Text)||hard!=Convert.ToInt32(txtHard.Text)){ScriptManager.RegisterStartupScript(this,GetType(),"msg","alert('Please select the required Easy, Medium and Hard questions.');",true);return false;}ViewState["SelectedQuestions"]=dt;return true;
+            int requiredEasy,requiredMedium,requiredHard;
+            if(!int.TryParse(txtEasy.Text.Trim(),out requiredEasy)||!int.TryParse(txtMedium.Text.Trim(),out requiredMedium)||!int.TryParse(txtHard.Text.Trim(),out requiredHard)){ScriptManager.RegisterStartupScript(this,GetType(),"msg","alert('Please enter valid question counts.');",true);return false;}
+            if(easy!=requiredEasy||medium!=requiredMedium||hard!=requiredHard){ScriptManager.RegisterStartupScript(this,GetType(),"msg","alert('Please select the required Easy, Medium and Hard questions.');",true);return false;}ViewState["SelectedQuestions"]=dt;return true;
         }
 
         protected void chkAll_CheckedChanged(object sender, EventArgs e){CheckBox all=(CheckBox)sender;foreach(GridViewRow row in gvQuestion.Rows){CheckBox chk=(CheckBox)row.FindControl("chkSelect");if(chk!=null)chk.Checked=all.Checked;}}
@@ -167,7 +233,7 @@ namespace Training.Trainer
         private void SaveTestQuestions()
         {
             objDB.ExecuteSql("DELETE FROM TestQuestion WHERE TestID=@TestID",new SqlParameter[]{new SqlParameter("@TestID",ViewState["TestID"])});
-            DataTable dt=ViewState["SelectedQuestions"] as DataTable;if(dt==null)return;int order=1;foreach(DataRow r in dt.Rows){string id="TQ"+DateTime.Now.ToString("yyyyMMddHHmmssfff")+new Random().Next(100,999);objDB.ExecuteSql("INSERT INTO TestQuestion (TestQuestionID,TestID,QuestionID,QuestionOrder,Marks,CreatedOn) VALUES (@TestQuestionID,@TestID,@QuestionID,@QuestionOrder,@Marks,GETDATE())",new SqlParameter[]{new SqlParameter("@TestQuestionID",id),new SqlParameter("@TestID",ViewState["TestID"]),new SqlParameter("@QuestionID",r["QuestionID"]),new SqlParameter("@QuestionOrder",order++),new SqlParameter("@Marks",r["Marks"])});}
+            DataTable dt=ViewState["SelectedQuestions"] as DataTable;if(dt==null)return;int order=1;foreach(DataRow r in dt.Rows){string id="TQ"+Guid.NewGuid().ToString("N");objDB.ExecuteSql("INSERT INTO TestQuestion (TestQuestionID,TestID,QuestionID,QuestionOrder,Marks,CreatedOn) VALUES (@TestQuestionID,@TestID,@QuestionID,@QuestionOrder,@Marks,GETDATE())",new SqlParameter[]{new SqlParameter("@TestQuestionID",id),new SqlParameter("@TestID",ViewState["TestID"]),new SqlParameter("@QuestionID",r["QuestionID"]),new SqlParameter("@QuestionOrder",order++),new SqlParameter("@Marks",r["Marks"])});}
         }
 
         private bool ValidatePublish(){DataTable dt=ViewState["SelectedQuestions"] as DataTable;if(ViewState["TestID"]==null){ScriptManager.RegisterStartupScript(this,GetType(),"msg","alert('Please Save Draft First.');",true);return false;}if(dt==null||dt.Rows.Count!=Convert.ToInt32(txtTotalQuestions.Text)){ScriptManager.RegisterStartupScript(this,GetType(),"msg","alert('Question Count Mismatch.');",true);return false;}return true;}
@@ -189,7 +255,7 @@ namespace Training.Trainer
         {
             DataTable employees=objDB.GetDataTable("SELECT EmpID FROM TrainingAssignment WHERE TrainingID=@TrainingID AND ISNULL(AssignmentStatus,'Assigned')='Assigned'",new SqlParameter[]{new SqlParameter("@TrainingID",ViewState["TrainingID"])});
             DataTable questions=objDB.GetDataTable("SELECT TQ.QuestionID,TQ.QuestionOrder,TQ.Marks,QB.CorrectOption FROM TestQuestion TQ INNER JOIN QuestionBank QB ON TQ.QuestionID=QB.QuestionID WHERE TQ.TestID=@TestID ORDER BY TQ.QuestionOrder",new SqlParameter[]{new SqlParameter("@TestID",ViewState["TestID"])});
-            foreach(DataRow emp in employees.Rows)foreach(DataRow q in questions.Rows){string id="TCQ"+DateTime.Now.ToString("yyyyMMddHHmmssfff")+new Random().Next(100,999);objDB.ExecuteSql("INSERT INTO TestCandidateQuestion (TestCandidateQuestionID,TestID,EmpID,QuestionID,QuestionOrder,Marks,SelectedOption,CorrectOption,IsCorrect,CreatedOn) VALUES (@ID,@TestID,@EmpID,@QuestionID,@QuestionOrder,@Marks,NULL,@CorrectOption,NULL,GETDATE())",new SqlParameter[]{new SqlParameter("@ID",id),new SqlParameter("@TestID",ViewState["TestID"]),new SqlParameter("@EmpID",emp["EmpID"]),new SqlParameter("@QuestionID",q["QuestionID"]),new SqlParameter("@QuestionOrder",q["QuestionOrder"]),new SqlParameter("@Marks",q["Marks"]),new SqlParameter("@CorrectOption",q["CorrectOption"])});}
+            foreach(DataRow emp in employees.Rows)foreach(DataRow q in questions.Rows){string id="TCQ"+Guid.NewGuid().ToString("N");objDB.ExecuteSql("INSERT INTO TestCandidateQuestion (TestCandidateQuestionID,TestID,EmpID,QuestionID,QuestionOrder,Marks,SelectedOption,CorrectOption,IsCorrect,CreatedOn) VALUES (@ID,@TestID,@EmpID,@QuestionID,@QuestionOrder,@Marks,NULL,@CorrectOption,NULL,GETDATE())",new SqlParameter[]{new SqlParameter("@ID",id),new SqlParameter("@TestID",ViewState["TestID"]),new SqlParameter("@EmpID",emp["EmpID"]),new SqlParameter("@QuestionID",q["QuestionID"]),new SqlParameter("@QuestionOrder",q["QuestionOrder"]),new SqlParameter("@Marks",q["Marks"]),new SqlParameter("@CorrectOption",q["CorrectOption"])});}
         }
 
         protected void btnBack_Click(object sender, EventArgs e){Response.Redirect("SessionDetails.aspx?SessionID="+Server.UrlEncode(Convert.ToString(ViewState["SessionID"])));}
