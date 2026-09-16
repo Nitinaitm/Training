@@ -40,7 +40,7 @@
                 </div>
                 <div class="col-lg-4 mb-3">
                     <label class="form-label">Select Course *</label>
-                    <asp:DropDownList ID="ddlCourse" runat="server" CssClass="form-select"></asp:DropDownList>
+                    <asp:DropDownList ID="ddlCourse" runat="server" CssClass="form-select" AutoPostBack="true" OnSelectedIndexChanged="ddlCourse_SelectedIndexChanged"></asp:DropDownList>
                     <asp:RequiredFieldValidator ID="rfvCourse" runat="server" ControlToValidate="ddlCourse" InitialValue="" ValidationGroup="SaveGroup" CssClass="validation" ErrorMessage="Select Course"></asp:RequiredFieldValidator>
                 </div>
                 <div class="col-lg-4 mb-3">
@@ -64,8 +64,8 @@
                     <asp:RequiredFieldValidator ID="rfvLocation" runat="server" ControlToValidate="ddlTrainingLocation" InitialValue="" ValidationGroup="SaveGroup" CssClass="validation" ErrorMessage="Select Location"></asp:RequiredFieldValidator>
                 </div>
                 <div class="col-lg-4 mb-3">
-                    <label class="form-label">Batch No*</label>
-                    <asp:TextBox ID="txtBatch" runat="server" CssClass="form-control"></asp:TextBox>
+                    <label class="form-label">Batch No *</label>
+                    <asp:TextBox ID="txtBatch" runat="server" CssClass="form-control" ReadOnly="true"></asp:TextBox>
                     <asp:RequiredFieldValidator ID="rfvBatch" runat="server" ControlToValidate="txtBatch" ValidationGroup="SaveGroup" CssClass="validation" ErrorMessage="Batch required"></asp:RequiredFieldValidator>
                 </div>
                 <div class="col-lg-4 mb-3">
