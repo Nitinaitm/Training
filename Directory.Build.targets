@@ -8,5 +8,6 @@
     <Compile Include="TrainingHistory.aspx.designer.cs" Condition="Exists('TrainingHistory.aspx.designer.cs')">
       <DependentUpon>TrainingHistory.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Training/Admin/ManageTraining.RequirementsVisibility.cs" Condition="Exists('Training/Admin/ManageTraining.RequirementsVisibility.cs')" />
   </ItemGroup>
 </Project>
