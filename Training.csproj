@@ -54,7 +54,7 @@
     <Reference Include="ClosedXML, Version=0.95.4.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ClosedXML.0.95.4\lib\net46\ClosedXML.dll</HintPath>
     </Reference>
-    <Reference Include="ClosedXML.Parser, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1d5f7376574c51ec, processorArchitecture=MSIL">
+    <Reference Include="ClosedXML.Parser, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ClosedXML.Parser.1.2.0\lib\netstandard2.0\ClosedXML.Parser.dll</HintPath>
     </Reference>
     <Reference Include="DocumentFormat.OpenXml, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
@@ -79,7 +79,7 @@
       <HintPath>..\packages\iTextSharp.5.5.13.5\lib\net461\itextsharp.dll</HintPath>
     </Reference>
     <Reference Include="itextsharp.xmlworker, Version=5.5.13.5, Culture=neutral, PublicKeyToken=8354ae6d2174ddca, processorArchitecture=MSIL">
-      <HintPath>..\packages\itextsharp.xmlworker.5.5.13.5\lib\net461\itextsharp.xmlworker.dll</HintPath>
+      <HintPath>..\packages\iTextSharp.5.5.13.5\lib\net461\itextsharp.xmlworker.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
@@ -96,7 +96,7 @@
     <Reference Include="QRCoder, Version=1.8.0.0, Culture=neutral, PublicKeyToken=c4ed5b9ae8358a28, processorArchitecture=MSIL">
       <HintPath>..\packages\QRCoder.1.8.0\lib\net40\QRCoder.dll</HintPath>
     </Reference>
-    <Reference Include="RBush, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="RBush, Version=4.0.0.0, Culture=neutral, PublicKeyToken=d7c0e8a8b8f7a0f8, processorArchitecture=MSIL">
       <HintPath>..\packages\RBush.4.0.0\lib\netstandard2.0\RBush.dll</HintPath>
     </Reference>
     <Reference Include="SixLabors.Fonts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
@@ -168,6 +168,7 @@
     <Content Include="Admin\css\bootstrap\_media.css" />
     <Content Include="Admin\css\style.css" />
     <Content Include="Admin\css\StyleSheet3.css" />
+    <Content Include="Admin\Dashboard.aspx" />
     <Content Include="Admin\Default.aspx" />
     <Content Include="Admin\EmpBasicMaster.aspx" />
     <Content Include="Admin\ExamResultReport.aspx" />
@@ -358,6 +359,7 @@
     <Content Include="SuperAdmin\scss\bootstrap\mixins\_forms.scss" />
     <Content Include="SuperAdmin\scss\bootstrap\mixins\_gradients.scss" />
     <Content Include="SuperAdmin\scss\bootstrap\mixins\_grid-framework.scss" />
+    <Content Include="SuperAdmin\scss\bootstrap\mixins\_grid.scss" />
     <Content Include="SuperAdmin\scss\bootstrap\mixins\_grid.scss" />
     <Content Include="SuperAdmin\scss\bootstrap\mixins\_hover.scss" />
     <Content Include="SuperAdmin\scss\bootstrap\mixins\_image.scss" />
@@ -637,6 +639,13 @@
     </Compile>
     <Compile Include="Admin\Default.aspx.designer.cs">
       <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\Dashboard.aspx.cs">
+      <DependentUpon>Dashboard.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\Dashboard.aspx.designer.cs">
+      <DependentUpon>Dashboard.aspx</DependentUpon>
     </Compile>
     <Compile Include="Admin\EmpBasicMaster.aspx.cs">
       <DependentUpon>EmpBasicMaster.aspx</DependentUpon>
@@ -1030,15 +1039,12 @@
     </Compile>
     <Compile Include="Error404.aspx.cs">
       <DependentUpon>Error404.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Error500.aspx.cs">
       <DependentUpon>Error500.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Error503.aspx.cs">
       <DependentUpon>Error503.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Forget_Password.aspx.cs">
       <DependentUpon>Forget_Password.aspx</DependentUpon>
@@ -1594,8 +1600,6 @@
     <Content Include="Admin\scss\bootstrap\mixins\_visibility.scss" />
     <Content Include="Admin\scss\bootstrap\utilities\_align.scss" />
     <Content Include="Admin\scss\bootstrap\utilities\_background.scss" />
-    <Content Include="Admin\scss\bootstrap\utilities\_borders.scss" />
-    <Content Include="Admin\scss\bootstrap\utilities\_clearfix.scss" />
     <Content Include="Admin\scss\bootstrap\utilities\_display.scss" />
     <Content Include="Admin\scss\bootstrap\utilities\_embed.scss" />
     <Content Include="Admin\scss\bootstrap\utilities\_flex.scss" />
@@ -1673,6 +1677,7 @@
     <Content Include="Employee\scss\bootstrap\mixins\_forms.scss" />
     <Content Include="Employee\scss\bootstrap\mixins\_gradients.scss" />
     <Content Include="Employee\scss\bootstrap\mixins\_grid-framework.scss" />
+    <Content Include="Employee\scss\bootstrap\mixins\_grid.scss" />
     <Content Include="Employee\scss\bootstrap\mixins\_grid.scss" />
     <Content Include="Employee\scss\bootstrap\mixins\_hover.scss" />
     <Content Include="Employee\scss\bootstrap\mixins\_image.scss" />
@@ -1833,24 +1838,6 @@
     <Content Include="Trainer\scss\bootstrap\mixins\_text-truncate.scss" />
     <Content Include="Trainer\scss\bootstrap\mixins\_transition.scss" />
     <Content Include="Trainer\scss\bootstrap\mixins\_visibility.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_align.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_background.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_borders.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_clearfix.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_display.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_embed.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_flex.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_float.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_overflow.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_position.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_screenreaders.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_shadows.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_sizing.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_spacing.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_stretched-link.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_text.scss" />
-    <Content Include="Trainer\scss\bootstrap\utilities\_visibility.scss" />
-    <Content Include="Trainer\scss\bootstrap\vendor\_rfs.scss" />
     <Content Include="Trainer\scss\style.scss" />
     <Content Include="Trainer\Sample\QuestionBankSample.xlsx" />
     <Content Include="TraineeMaster.Master" />
@@ -1939,8 +1926,6 @@
     <Content Include="Trainee\scss\bootstrap\mixins\_visibility.scss" />
     <Content Include="Trainee\scss\bootstrap\utilities\_align.scss" />
     <Content Include="Trainee\scss\bootstrap\utilities\_background.scss" />
-    <Content Include="Trainee\scss\bootstrap\utilities\_borders.scss" />
-    <Content Include="Trainee\scss\bootstrap\utilities\_clearfix.scss" />
     <Content Include="Trainee\scss\bootstrap\utilities\_display.scss" />
     <Content Include="Trainee\scss\bootstrap\utilities\_embed.scss" />
     <Content Include="Trainee\scss\bootstrap\utilities\_flex.scss" />
