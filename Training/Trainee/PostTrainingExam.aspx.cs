@@ -68,14 +68,30 @@ namespace Training.Trainee
 
                 SessionSummary1.LoadSession(ViewState["TrainingID"].ToString(), ViewState["SessionID"].ToString(), ViewState["EmpID"].ToString());
 
-                CheckAssignedTraining();
+                if (!CheckAssignedTraining())
+                {
+                    return;
+                }
 
                 if (!CheckPostTrainingRequired())
                 {
                     return;
                 }
 
-                CheckPublishedTest();
+                if (!CheckAttendanceCompleted())
+                {
+                    return;
+                }
+
+                if (!CheckPreTrainingCompleted())
+                {
+                    return;
+                }
+
+                if (!CheckPublishedTest())
+                {
+                    return;
+                }
 
                 LoadTest();
 
@@ -124,36 +140,52 @@ namespace Training.Trainee
         private bool CheckPostTrainingRequired()
         {
             string sql =
-                "SELECT FinalAssessmentRequired " +
-                "FROM TrainingDetails " +
-                "WHERE TrainingID=@TrainingID";
+                "SELECT TD.FinalAssessmentRequired,ISNULL(SM.PostAssessmentSkipped,0) AS PostAssessmentSkipped " +
+                "FROM TrainingDetails TD " +
+                "INNER JOIN SessionMaster SM " +
+                "ON TD.TrainingID=SM.TrainingID " +
+                "WHERE TD.TrainingID=@TrainingID " +
+                "AND SM.SessionID=@SessionID";
 
             SqlParameter[] parameter =
             {
                 new SqlParameter(
                     "@TrainingID",
-                    ViewState["TrainingID"])
+                    ViewState["TrainingID"]),
+
+                new SqlParameter(
+                    "@SessionID",
+                    ViewState["SessionID"])
             };
 
-            object result =
-                objDB.ExecuteScalar(
+            DataTable dt =
+                objDB.GetDataTable(
                     sql,
                     parameter);
 
             if
             (
-                result == null
+                dt.Rows.Count == 0
+            )
+            {
+                Response.Redirect(
+                    "MyTrainings.aspx");
+
+                return false;
+            }
+
+            if
+            (
+                !Convert.ToBoolean(dt.Rows[0]["FinalAssessmentRequired"])
                 ||
-                result == DBNull.Value
-                ||
-                !Convert.ToBoolean(result)
+                Convert.ToBoolean(dt.Rows[0]["PostAssessmentSkipped"])
             )
             {
                 ScriptManager.RegisterStartupScript(
                     this,
                     GetType(),
                     "PostTrainingRequired",
-                    "alert('Post-Training Assessment is not required for this training.');window.location='MySessions.aspx';",
+                    "alert('Post-Training Assessment is not required for this session.');window.location='MySessions.aspx';",
                     true);
 
                 return false;
@@ -213,19 +245,27 @@ namespace Training.Trainee
 
             return true;
         }
-        private void CheckAssignedTraining()
+        private bool CheckAssignedTraining()
         {
             string sql =
                 "SELECT COUNT(*) " +
-                "FROM TrainingAssignment " +
-                "WHERE TrainingID=@TrainingID " +
-                "AND EmpID=@EmpID";
+                "FROM TrainingAssignment TA " +
+                "INNER JOIN SessionMaster SM " +
+                "ON TA.TrainingID=SM.TrainingID " +
+                "AND SM.SessionID=@SessionID " +
+                "WHERE TA.TrainingID=@TrainingID " +
+                "AND TA.EmpID=@EmpID " +
+                "AND TA.AssignmentStatus='Assigned'";
 
             SqlParameter[] parameter =
             {
         new SqlParameter(
             "@TrainingID",
             ViewState["TrainingID"]),
+
+        new SqlParameter(
+            "@SessionID",
+            ViewState["SessionID"]),
 
         new SqlParameter(
             "@EmpID",
@@ -240,20 +280,176 @@ namespace Training.Trainee
 
             if
             (
-                count
-                ==
-                0
+                count == 0
             )
             {
                 ScriptManager.RegisterStartupScript(
                     this,
                     GetType(),
                     "msg",
-                    "alert('You are not assigned to this training.');window.location='Default.aspx';",
+                    "alert('You are not assigned to this training session.');window.location='MyTrainings.aspx';",
                     true);
 
-                return;
+                return false;
             }
+
+            return true;
+        }
+
+        private bool CheckPreTrainingCompleted()
+        {
+            string sql =
+                "SELECT ISNULL(TD.InitialAssessmentRequired,0) AS InitialAssessmentRequired,ISNULL(SM.PreAssessmentSkipped,0) AS PreAssessmentSkipped " +
+                "FROM TrainingDetails TD " +
+                "INNER JOIN SessionMaster SM " +
+                "ON TD.TrainingID=SM.TrainingID " +
+                "WHERE TD.TrainingID=@TrainingID " +
+                "AND SM.SessionID=@SessionID";
+
+            SqlParameter[] parameter =
+            {
+        new SqlParameter(
+            "@TrainingID",
+            ViewState["TrainingID"]),
+
+        new SqlParameter(
+            "@SessionID",
+            ViewState["SessionID"])
+    };
+
+            DataTable dt =
+                objDB.GetDataTable(
+                    sql,
+                    parameter);
+
+            if
+            (
+                dt.Rows.Count == 0
+            )
+            {
+                return false;
+            }
+
+            if
+            (
+                !Convert.ToBoolean(dt.Rows[0]["InitialAssessmentRequired"])
+                ||
+                Convert.ToBoolean(dt.Rows[0]["PreAssessmentSkipped"])
+            )
+            {
+                return true;
+            }
+
+            sql =
+                "SELECT COUNT(*) " +
+                "FROM TestMaster TM " +
+                "INNER JOIN TestResult TR " +
+                "ON TM.TestID=TR.TestID " +
+                "WHERE TM.SessionID=@SessionID " +
+                "AND TM.TestType='Pre' " +
+                "AND TM.IsPublished=1 " +
+                "AND TR.EmpID=@EmpID " +
+                "AND TR.IsFinalAttempt=1";
+
+            parameter =
+            new SqlParameter[]
+            {
+        new SqlParameter(
+            "@SessionID",
+            ViewState["SessionID"]),
+
+        new SqlParameter(
+            "@EmpID",
+            ViewState["EmpID"])
+            };
+
+            int count =
+                Convert.ToInt32(
+                    objDB.ExecuteScalar(
+                        sql,
+                        parameter));
+
+            if
+            (
+                count == 0
+            )
+            {
+                ScriptManager.RegisterStartupScript(
+                    this,
+                    GetType(),
+                    "PreTrainingPending",
+                    "alert('Pre-Training Assessment is not completed for this session.');window.location='MySessions.aspx';",
+                    true);
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool CheckAttendanceCompleted()
+        {
+            string sql =
+                "SELECT ISNULL(TD.AttendanceRequired,0) AS AttendanceRequired,ISNULL(SM.AttendanceSkipped,0) AS AttendanceSkipped,ISNULL(SM.AttendanceStatus,'') AS AttendanceStatus " +
+                "FROM TrainingDetails TD " +
+                "INNER JOIN SessionMaster SM " +
+                "ON TD.TrainingID=SM.TrainingID " +
+                "WHERE TD.TrainingID=@TrainingID " +
+                "AND SM.SessionID=@SessionID";
+
+            SqlParameter[] parameter =
+            {
+        new SqlParameter(
+            "@TrainingID",
+            ViewState["TrainingID"]),
+
+        new SqlParameter(
+            "@SessionID",
+            ViewState["SessionID"])
+    };
+
+            DataTable dt =
+                objDB.GetDataTable(
+                    sql,
+                    parameter);
+
+            if
+            (
+                dt.Rows.Count == 0
+            )
+            {
+                return false;
+            }
+
+            if
+            (
+                !Convert.ToBoolean(dt.Rows[0]["AttendanceRequired"])
+                ||
+                Convert.ToBoolean(dt.Rows[0]["AttendanceSkipped"])
+            )
+            {
+                return true;
+            }
+
+            if
+            (
+                !string.Equals(
+                    dt.Rows[0]["AttendanceStatus"].ToString(),
+                    "Completed",
+                    StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                ScriptManager.RegisterStartupScript(
+                    this,
+                    GetType(),
+                    "AttendancePending",
+                    "alert('Attendance is not completed for this session.');window.location='MySessions.aspx';",
+                    true);
+
+                return false;
+            }
+
+            return true;
         }
 
         private void SetRemainingTime()
@@ -340,7 +536,7 @@ namespace Training.Trainee
                     @"mm\:ss");
         }
 
-        private void CheckPublishedTest()
+        private bool CheckPublishedTest()
         {
             string sql =
                 "SELECT " +
@@ -373,10 +569,10 @@ namespace Training.Trainee
                     this,
                     GetType(),
                     "msg",
-                    "alert('Post Training Test is not available for this session.');window.location='MySessions.aspx';",
+                    "alert('Post Training Test is not published for this session.');window.location='MySessions.aspx';",
                     true);
 
-                return;
+                return false;
             }
 
             ViewState["TestID"] =
@@ -388,21 +584,21 @@ namespace Training.Trainee
                 .ToString();
 
             string sql2 =
-    "SELECT COUNT(*) " +
-    "FROM TestCandidateQuestion " +
-    "WHERE TestID=@TestID " +
-    "AND EmpID=@EmpID";
+                "SELECT COUNT(*) " +
+                "FROM TestCandidateQuestion " +
+                "WHERE TestID=@TestID " +
+                "AND EmpID=@EmpID";
 
             SqlParameter[] parameter2 =
             {
-    new SqlParameter(
-        "@TestID",
-        ViewState["TestID"]),
+        new SqlParameter(
+            "@TestID",
+            ViewState["TestID"]),
 
-    new SqlParameter(
-        "@EmpID",
-        ViewState["EmpID"])
-};
+        new SqlParameter(
+            "@EmpID",
+            ViewState["EmpID"])
+    };
 
             int count =
                 Convert.ToInt32(
@@ -412,9 +608,7 @@ namespace Training.Trainee
 
             if
             (
-                count
-                ==
-                0
+                count == 0
             )
             {
                 ScriptManager.RegisterStartupScript(
@@ -424,8 +618,10 @@ namespace Training.Trainee
                     "alert('Question paper has not been generated for you. Please contact the administrator.');window.location='MySessions.aspx';",
                     true);
 
-                return;
+                return false;
             }
+
+            return true;
         }
         private void LoadTest()
         {
@@ -1004,6 +1200,31 @@ namespace Training.Trainee
     object sender,
     EventArgs e)
         {
+            if (!CheckAssignedTraining())
+            {
+                return;
+            }
+
+            if (!CheckPostTrainingRequired())
+            {
+                return;
+            }
+
+            if (!CheckAttendanceCompleted())
+            {
+                return;
+            }
+
+            if (!CheckPreTrainingCompleted())
+            {
+                return;
+            }
+
+            if (!CheckPublishedTest())
+            {
+                return;
+            }
+
             if
             (
                 ResumeAttempt()
@@ -2304,36 +2525,35 @@ namespace Training.Trainee
         private bool IsAllSessionPostSubmitted()
         {
             string sql =
-                "SELECT COUNT(*) " +
-                "FROM TestMaster " +
-                "WHERE TrainingID=@TrainingID " +
-                "AND TestType='Post' " +
-                "AND IsPublished=1";
+                "SELECT CASE WHEN EXISTS " +
+                "(" +
+                "SELECT 1 " +
+                "FROM SessionMaster SM " +
+                "WHERE SM.TrainingID=@TrainingID " +
+                "AND ISNULL(SM.PostAssessmentSkipped,0)=0 " +
+                "AND (" +
+                "NOT EXISTS " +
+                "(" +
+                "SELECT 1 FROM TestMaster TM " +
+                "WHERE TM.SessionID=SM.SessionID " +
+                "AND TM.TestType='Post' " +
+                "AND TM.IsPublished=1" +
+                ") " +
+                "OR NOT EXISTS " +
+                "(" +
+                "SELECT 1 " +
+                "FROM TestMaster TM " +
+                "INNER JOIN TestResult TR ON TR.TestID=TM.TestID " +
+                "WHERE TM.SessionID=SM.SessionID " +
+                "AND TM.TestType='Post' " +
+                "AND TM.IsPublished=1 " +
+                "AND TR.EmpID=@EmpID " +
+                "AND TR.IsFinalAttempt=1" +
+                ")" +
+                ")" +
+                ") THEN 0 ELSE 1 END";
 
             SqlParameter[] parameter =
-            {
-        new SqlParameter(
-            "@TrainingID",
-            ViewState["TrainingID"])
-    };
-
-            int totalSession =
-                Convert.ToInt32(
-                    objDB.ExecuteScalar(
-                        sql,
-                        parameter));
-
-            sql =
-                "SELECT COUNT(DISTINCT TR.TestID) " +
-                "FROM TestResult TR " +
-                "INNER JOIN TestMaster TM " +
-                "ON TR.TestID=TM.TestID " +
-                "WHERE TM.TrainingID=@TrainingID " +
-                "AND TM.TestType='Post' " +
-                "AND TR.EmpID=@EmpID";
-
-            parameter =
-            new SqlParameter[]
             {
         new SqlParameter(
             "@TrainingID",
@@ -2342,18 +2562,14 @@ namespace Training.Trainee
         new SqlParameter(
             "@EmpID",
             ViewState["EmpID"])
-            };
+    };
 
-            int completedSession =
-                Convert.ToInt32(
-                    objDB.ExecuteScalar(
-                        sql,
-                        parameter));
+            object result =
+                objDB.ExecuteScalar(
+                    sql,
+                    parameter);
 
-            return
-                totalSession
-                ==
-                completedSession;
+            return Convert.ToInt32(result) == 1;
         }
     }
 }
