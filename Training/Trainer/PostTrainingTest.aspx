@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="PostTrainingTest.aspx.cs" Inherits="Training.Trainer.PostTrainingTest" MasterPageFile="~/TrainerMaster.Master" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="PostTrainingTest.aspx.cs" Inherits="Training.Trainer.PostTrainingTest" MasterPageFile="~/TrainerMaster.Master" %>
 
 <%@ Register Src="~/Trainer/SessionSummary.ascx" TagPrefix="uc2" TagName="SessionSummary" %>
 
@@ -74,25 +74,4 @@
             <asp:Button ID="btnBack" runat="server" Text="Back" CssClass="btn btn-primary" OnClick="btnBack_Click" />
         </div>
     </div>
-
-    <script runat="server">
-        protected void Page_PreInit(object sender, EventArgs e)
-        {
-            if (Session["TrainerID"] == null || Session["TrainingID"] == null || Session["SessionID"] == null)
-                return;
-
-            clsDataAccess db = new clsDataAccess();
-            object required = db.ExecuteScalar(
-                "SELECT FinalAssessmentRequired FROM TrainingDetails WHERE TrainingID=@TrainingID",
-                new System.Data.SqlClient.SqlParameter[]
-                {
-                    new System.Data.SqlClient.SqlParameter("@TrainingID", Session["TrainingID"].ToString())
-                });
-
-            if (required == null || required == DBNull.Value || !Convert.ToBoolean(required))
-            {
-                Response.Redirect("SessionDetails.aspx?SessionID=" + Server.UrlEncode(Session["SessionID"].ToString()), true);
-            }
-        }
-    </script>
 </asp:Content>
