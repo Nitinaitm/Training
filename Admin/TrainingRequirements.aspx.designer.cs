@@ -4,10 +4,23 @@
 namespace Training.Admin {
     public partial class TrainingRequirements {
         protected global::System.Web.UI.WebControls.Label lblTraining;
+        protected global::System.Web.UI.WebControls.Label lblAttendanceStatus;
+        protected global::System.Web.UI.WebControls.Button btnAttendanceRequired;
+        protected global::System.Web.UI.WebControls.Button btnAttendanceNotRequired;
+        protected global::System.Web.UI.WebControls.Label lblPreStatus;
+        protected global::System.Web.UI.WebControls.Button btnPreRequired;
+        protected global::System.Web.UI.WebControls.Button btnPreNotRequired;
+        protected global::System.Web.UI.WebControls.Label lblPostStatus;
+        protected global::System.Web.UI.WebControls.Button btnPostRequired;
+        protected global::System.Web.UI.WebControls.Button btnPostNotRequired;
         protected global::System.Web.UI.WebControls.Label lblFeedbackStatus;
+        protected global::System.Web.UI.WebControls.Button btnFeedbackRequired;
+        protected global::System.Web.UI.WebControls.Button btnFeedbackNotRequired;
         protected global::System.Web.UI.WebControls.TextBox txtFeedbackReason;
         protected global::System.Web.UI.WebControls.Button btnFeedback;
         protected global::System.Web.UI.WebControls.Label lblCertificateStatus;
+        protected global::System.Web.UI.WebControls.Button btnCertificateRequired;
+        protected global::System.Web.UI.WebControls.Button btnCertificateNotRequired;
         protected global::System.Web.UI.WebControls.TextBox txtCertificateReason;
         protected global::System.Web.UI.WebControls.Button btnCertificate;
         protected global::System.Web.UI.WebControls.GridView gvSessions;
