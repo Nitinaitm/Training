@@ -42,6 +42,24 @@ namespace Training.Admin
             }
         }
 
+        protected void ddlCourse_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (Request.QueryString["mode"] == "edit" && Session["TrainingID"] != null)
+                return;
+
+            txtBatch.Text = "";
+            if (string.IsNullOrEmpty(ddlCourse.SelectedValue))
+                return;
+
+            using (SqlConnection con = new SqlConnection(constr))
+            using (SqlCommand cmd = new SqlCommand("SELECT ISNULL(MAX(TRY_CONVERT(int,Batch)),0)+1 FROM TrainingDetails WHERE CourseID=@CourseID", con))
+            {
+                cmd.Parameters.AddWithValue("@CourseID", ddlCourse.SelectedValue);
+                con.Open();
+                txtBatch.Text = Convert.ToInt32(cmd.ExecuteScalar()).ToString();
+            }
+        }
+
         private void LoadTrainingForEdit(string trainingID)
         {
             clsDataAccess obj = new clsDataAccess();
@@ -108,6 +126,16 @@ namespace Training.Admin
                 DateTime fromDate, toDate;
                 if (!DateTime.TryParseExact(txtDateFrom.Text.Trim(), "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fromDate) || !DateTime.TryParseExact(txtDateTo.Text.Trim(), "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out toDate)) { lblMessage.Text = "Please enter valid From/To dates in dd-MM-yyyy format."; lblMessage.ForeColor = Color.Red; return; }
                 if (toDate < fromDate) { lblMessage.Text = "To Date cannot be before From Date."; lblMessage.ForeColor = Color.Red; return; }
+                if (string.IsNullOrWhiteSpace(txtBatch.Text) && string.IsNullOrEmpty(Session["TrainingID"] == null ? null : Session["TrainingID"].ToString()) && !string.IsNullOrEmpty(ddlCourse.SelectedValue))
+                {
+                    using (SqlConnection con = new SqlConnection(constr))
+                    using (SqlCommand cmd = new SqlCommand("SELECT ISNULL(MAX(TRY_CONVERT(int,Batch)),0)+1 FROM TrainingDetails WHERE CourseID=@CourseID", con))
+                    {
+                        cmd.Parameters.AddWithValue("@CourseID", ddlCourse.SelectedValue);
+                        con.Open();
+                        txtBatch.Text = Convert.ToInt32(cmd.ExecuteScalar()).ToString();
+                    }
+                }
                 if (string.IsNullOrWhiteSpace(txtBatch.Text) || ddlTrainingType.SelectedValue == "" || ddlTrainingOrganizer.SelectedValue == "" || ddlTrainingLocation.SelectedValue == "" || ddlTrainingCategory.SelectedValue == "" || ddlCourse.SelectedValue == "") { lblMessage.Text = "Please complete all mandatory batch details."; lblMessage.ForeColor = Color.Red; return; }
 
                 string trainingID = txtTrainingID.Text.Trim();
