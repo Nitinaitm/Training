@@ -1,0 +1,12 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Content Include="TrainingHistory.aspx" Condition="Exists('TrainingHistory.aspx')" />
+    <Compile Include="TrainingHistory.aspx.cs" Condition="Exists('TrainingHistory.aspx.cs')">
+      <DependentUpon>TrainingHistory.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="TrainingHistory.aspx.designer.cs" Condition="Exists('TrainingHistory.aspx.designer.cs')">
+      <DependentUpon>TrainingHistory.aspx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>
