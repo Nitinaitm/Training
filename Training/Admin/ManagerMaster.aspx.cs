@@ -141,6 +141,7 @@ namespace Training.Admin
 
             if (result > 0)
             {
+                CreateManagerLogin(empID);
                 ShowMessage("Manager saved successfully.", System.Drawing.Color.Green);
                 ClearForm();
                 BindGrid();
@@ -149,6 +150,28 @@ namespace Training.Admin
             {
                 ShowMessage("Manager could not be saved.", System.Drawing.Color.Red);
             }
+        }
+
+        private void CreateManagerLogin(string empID)
+        {
+            DataTable dtLogin = objDB.GetDataTable("SELECT LoginIDUserID FROM Login WHERE LoginIDUserID=@LoginIDUserID", new SqlParameter[] { new SqlParameter("@LoginIDUserID", empID) });
+
+            if (dtLogin.Rows.Count > 0)
+            {
+                return;
+            }
+
+            Encryptor2 encryptor = new Encryptor2();
+            string password = encryptor.Encrypt("Bsphcl*123");
+            string firstLogin = encryptor.Encrypt("Y");
+
+            objDB.ExecuteSql("INSERT INTO Login (LoginIDUserID, Password, Role, CorrespondingEmpID, Active, re) VALUES (@LoginIDUserID, @Password, 'Manager', @CorrespondingEmpID, 'Y', @FirstLogin)", new SqlParameter[]
+            {
+                new SqlParameter("@LoginIDUserID", empID),
+                new SqlParameter("@Password", password),
+                new SqlParameter("@CorrespondingEmpID", empID),
+                new SqlParameter("@FirstLogin", firstLogin)
+            });
         }
 
         protected void btnClear_Click(object sender, EventArgs e)
