@@ -81,7 +81,7 @@
             <asp:GridView ID="gvManager" runat="server" CssClass="table table-bordered table-hover" AutoGenerateColumns="False" DataKeyNames="ID"
                 OnRowEditing="gvManager_RowEditing" OnRowUpdating="gvManager_RowUpdating" OnRowCancelingEdit="gvManager_RowCancelingEdit" OnRowDeleting="gvManager_RowDeleting">
                 <Columns>
-                    <asp:TemplateField HeaderText="Manager ID"><ItemTemplate><%# Eval("ID") %></ItemTemplate></asp:TemplateField>
+                    <asp:BoundField DataField="ManagerID" HeaderText="Manager ID" ReadOnly="true" />
                     <asp:BoundField DataField="EmpID" HeaderText="EmpID" ReadOnly="true" />
                     <asp:BoundField DataField="EmpName" HeaderText="Name" ReadOnly="true" />
                     <asp:BoundField DataField="Designation" HeaderText="Designation" ReadOnly="true" />
