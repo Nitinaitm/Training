@@ -52,7 +52,7 @@ WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assign
 AND NOT EXISTS (
  SELECT 1 FROM SessionMaster S
  WHERE S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0
- AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Completed')
+ AND ISNULL(S.AttendanceStatus,'')<>'Completed'
 )";
             return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID)));
         }
@@ -96,9 +96,9 @@ AND EXISTS (SELECT 1 FROM TrainingCertificate C WHERE C.TrainingID=@TrainingID A
             string q = @"SELECT CASE WHEN EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned')
 AND EXISTS (SELECT 1 FROM SessionMaster S WHERE S.TrainingID=@TrainingID)
 AND NOT EXISTS (
- SELECT 1 FROM TrainingAssignment A CROSS JOIN SessionMaster S
- WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned' AND S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0
- AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=S.SessionID AND SA.EmpID=A.EmpID AND SA.AttendanceStatus='Completed')
+ SELECT 1 FROM SessionMaster S
+ WHERE S.TrainingID=@TrainingID AND ISNULL(S.AttendanceSkipped,0)=0
+ AND ISNULL(S.AttendanceStatus,'')<>'Completed'
 ) THEN 1 ELSE 0 END";
             return Convert.ToInt32(new clsDataAccess().ExecuteScalar(q, P("@TrainingID", TrainingID))) == 1;
         }
