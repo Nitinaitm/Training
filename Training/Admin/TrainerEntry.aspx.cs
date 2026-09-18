@@ -497,13 +497,6 @@ VALUES
                     System.Data.SqlClient.SqlParameter[] loginParameters = {
                         new System.Data.SqlClient.SqlParameter("@LoginIDUserID", trainerID),
                         new System.Data.SqlClient.SqlParameter("@Password", password),
-                        new System.Data.SqlClient.SqlParameter("@CorrespondingEmpID", trainerID),
-                        new System.Data.SqlClient.SqlParameter("@FirstLogin", firstLogin)
-                    };
-
-                    System.Data.SqlClient.SqlParameter[] loginParameters = {
-                        new System.Data.SqlClient.SqlParameter("@LoginIDUserID", trainerID),
-                        new System.Data.SqlClient.SqlParameter("@Password", password),
                         new System.Data.SqlClient.SqlParameter("@CorrespondingEmpID", txtEmpID.Text.Trim().ToUpperInvariant()),
                         new System.Data.SqlClient.SqlParameter("@FirstLogin", firstLogin)
                     };
@@ -643,14 +636,7 @@ VALUES
                     System.Data.SqlClient.SqlParameter[] loginParameters = {
                         new System.Data.SqlClient.SqlParameter("@LoginIDUserID", trainerID),
                         new System.Data.SqlClient.SqlParameter("@Password", password),
-                        new System.Data.SqlClient.SqlParameter("@CorrespondingEmpID", trainerID),
-                        new System.Data.SqlClient.SqlParameter("@FirstLogin", firstLogin)
-                    };
-
-                    System.Data.SqlClient.SqlParameter[] loginParameters = {
-                        new System.Data.SqlClient.SqlParameter("@LoginIDUserID", trainerID),
-                        new System.Data.SqlClient.SqlParameter("@Password", password),
-                        new System.Data.SqlClient.SqlParameter("@CorrespondingEmpID", txtEmpID.Text.Trim().ToUpperInvariant()),
+                        new System.Data.SqlClient.SqlParameter("@CorrespondingEmpID", txtEmpIDExternal.Text.Trim().ToUpperInvariant()),
                         new System.Data.SqlClient.SqlParameter("@FirstLogin", firstLogin)
                     };
 
