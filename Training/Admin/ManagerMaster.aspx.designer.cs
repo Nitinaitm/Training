@@ -14,7 +14,7 @@ namespace Training.Admin
         protected global::System.Web.UI.WebControls.DropDownList ddlMapForLocation;
         protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvMapForLocation;
         protected global::System.Web.UI.WebControls.DropDownList ddlTrainingLocation;
-        protected global::System.Web.UI.Web.UI.WebControls.RequiredFieldValidator rfvTrainingLocation;
+        protected global::System.Web.UI.WebControls.RequiredFieldValidator rfvTrainingLocation;
         protected global::System.Web.UI.WebControls.Button btnSave;
         protected global::System.Web.UI.WebControls.Button btnClear;
         protected global::System.Web.UI.WebControls.Label lblMessage;
