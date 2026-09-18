@@ -75,7 +75,7 @@ namespace Training.Trainer
 
         private void BindGrid()
         {
-            string query = "SELECT SM.SessionID,SM.TrainingID,CM.CourseName,TD.Batch,SM.SessionNo,SM.SessionName,TP.TopicName,SM.SessionDate,SM.StartTime,SM.EndTime,TD.WorkflowStatus,TD.TrainingStatus,ISNULL(SM.AttendanceStatus,'Pending') AttendanceStatus FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID LEFT JOIN TopicMaster TP ON SM.TopicID=TP.TopicID WHERE SM.TrainerID=@TrainerID AND TD.TrainingStatus IN ('InProgress','AttendanceCompleted') ORDER BY TRY_CONVERT(date,SM.SessionDate,105),TRY_CONVERT(int,SM.SessionNo)";
+            string query = "SELECT SM.SessionID,SM.TrainingID,CM.CourseName,TD.Batch,SM.SessionNo,SM.SessionName,TP.TopicName,SM.SessionDate,SM.StartTime,SM.EndTime,TD.WorkflowStatus,TD.TrainingStatus,ISNULL(SM.AttendanceStatus,'Pending') AttendanceStatus FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID LEFT JOIN TopicMaster TP ON SM.TopicID=TP.TopicID WHERE SM.TrainerID=@TrainerID AND ISNULL(TD.TrainingStatus,'') NOT IN ('Closed','Completed','TrainingCompleted') ORDER BY TRY_CONVERT(date,SM.SessionDate,105),TRY_CONVERT(int,SM.SessionNo)";
             SqlParameter[] param = { new SqlParameter("@TrainerID", TrainerID) };
             DataTable dt = obj.GetDataTable(query, param);
             gvSession.DataSource = dt;
@@ -93,7 +93,7 @@ namespace Training.Trainer
 
         protected void btnSearch_Click(object sender, EventArgs e)
         {
-            string query = "SELECT SM.SessionID,SM.TrainingID,CM.CourseName,TD.Batch,SM.SessionNo,SM.SessionName,TP.TopicName,SM.SessionDate,SM.StartTime,SM.EndTime,TD.WorkflowStatus,TD.TrainingStatus,ISNULL(SM.AttendanceStatus,'Pending') AttendanceStatus FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID LEFT JOIN TopicMaster TP ON SM.TopicID=TP.TopicID WHERE SM.TrainerID=@TrainerID AND TD.TrainingStatus IN ('InProgress','AttendanceCompleted')";
+            string query = "SELECT SM.SessionID,SM.TrainingID,CM.CourseName,TD.Batch,SM.SessionNo,SM.SessionName,TP.TopicName,SM.SessionDate,SM.StartTime,SM.EndTime,TD.WorkflowStatus,TD.TrainingStatus,ISNULL(SM.AttendanceStatus,'Pending') AttendanceStatus FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID LEFT JOIN TopicMaster TP ON SM.TopicID=TP.TopicID WHERE SM.TrainerID=@TrainerID AND ISNULL(TD.TrainingStatus,'') NOT IN ('Closed','Completed','TrainingCompleted')";
             List<SqlParameter> param = new List<SqlParameter>();
             param.Add(new SqlParameter("@TrainerID", TrainerID));
             if (!string.IsNullOrEmpty(ddlCourse.SelectedValue))
