@@ -396,6 +396,13 @@ namespace Training.Trainee
 
                 "(" +
                 "SELECT COUNT(*) " +
+                "FROM SessionMaster SM " +
+                "WHERE SM.TrainingID=@TrainingID " +
+                "AND (ISNULL(SM.AttendanceSkipped,0)=1 OR ISNULL(SM.AttendanceStatus,'')='Completed')" +
+                ") AS CompletedSessions," +
+
+                "(" +
+                "SELECT COUNT(*) " +
                 "FROM SessionAttendance SA " +
                 "INNER JOIN SessionMaster SM " +
                 "ON SM.SessionID=SA.SessionID " +
@@ -438,6 +445,10 @@ namespace Training.Trainee
                 GetIntValue(
                     dt.Rows[0]["TotalSessions"]);
 
+
+            int completedSessions =
+                GetIntValue(
+                    dt.Rows[0]["CompletedSessions"]);
 
             int presentSessions =
                 GetIntValue(
@@ -502,7 +513,7 @@ namespace Training.Trainee
             }
             else if
             (
-                presentSessions
+                completedSessions
                 ==
                 totalSessions
             )
