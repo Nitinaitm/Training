@@ -69,6 +69,8 @@ namespace Training.Trainee
 
         private bool AreAllRequiredSessionTestsCompleted(string trainingID, string empID, string testType, string skipColumn)
         {
+            if ((testType != "Pre" && testType != "Post") ||
+                (skipColumn != "PreAssessmentSkipped" && skipColumn != "PostAssessmentSkipped")) return false;
             string sql = @"SELECT CASE WHEN NOT EXISTS (
                 SELECT 1 FROM SessionMaster SM
                 WHERE SM.TrainingID=@TrainingID AND ISNULL(SM." + skipColumn + @",0)=0
