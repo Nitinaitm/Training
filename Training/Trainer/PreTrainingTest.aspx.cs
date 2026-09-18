@@ -171,7 +171,8 @@ namespace Training.Trainer
         {
             string sql = "SELECT QuestionID,Question,DifficultyLevel,Marks,QuestionOwnerType FROM QuestionBank WHERE TopicID=@TopicID AND IsActive=1 AND ((QuestionOwnerType='Admin') OR (QuestionOwnerType='Trainer' AND ApprovalStatus='Approved') OR (QuestionOwnerType='Trainer' AND OwnerID=@TrainerID)) ORDER BY CASE DifficultyLevel WHEN 'Easy' THEN 1 WHEN 'Medium' THEN 2 WHEN 'Hard' THEN 3 END,QuestionID";
             DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] {
-                new SqlParameter("@TopicID", ViewState["TopicID"]),
+                new SqlParameter("@QuestionCount", count),
+                        new SqlParameter("@TopicID", ViewState["TopicID"]),
                 new SqlParameter("@TrainerID", ViewState["TrainerID"])
             });
 
@@ -298,7 +299,7 @@ namespace Training.Trainer
 
         private void GetRandomQuestions(DataTable dtQuestion, string difficulty, int count)
         {
-            string sql = "SELECT TOP " + count + " QuestionID,Question,DifficultyLevel,Marks,QuestionOwnerType FROM QuestionBank WHERE TopicID=@TopicID AND DifficultyLevel=@DifficultyLevel AND IsActive=1 AND ((QuestionOwnerType='Admin') OR (QuestionOwnerType='Trainer' AND ApprovalStatus='Approved') OR (QuestionOwnerType='Trainer' AND OwnerID=@TrainerID)) ORDER BY NEWID()";
+            string sql = "SELECT TOP (@QuestionCount) QuestionID,Question,DifficultyLevel,Marks,QuestionOwnerType FROM QuestionBank WHERE TopicID=@TopicID AND DifficultyLevel=@DifficultyLevel AND IsActive=1 AND ((QuestionOwnerType='Admin') OR (QuestionOwnerType='Trainer' AND ApprovalStatus='Approved') OR (QuestionOwnerType='Trainer' AND OwnerID=@TrainerID)) ORDER BY NEWID()";
             DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] {
                 new SqlParameter("@TopicID", ViewState["TopicID"]),
                 new SqlParameter("@DifficultyLevel", difficulty),
