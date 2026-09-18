@@ -475,7 +475,6 @@ WHERE LoginIDUserID=@TrainerID",
                         encryptor.Encrypt("Y");
 
                     string loginQuery = @"
-
 INSERT INTO Login
 (
 LoginIDUserID,
@@ -485,22 +484,31 @@ CorrespondingEmpID,
 Active,
 re
 )
-
 VALUES
 (
-'"
-                + trainerID + @"',
-'"
-                + password + @"',
+@LoginIDUserID,
+@Password,
 'Trainer',
-'"
-                + txtEmpID.Text.Trim().ToUpperInvariant().Replace("'", "''") + @"',
+@CorrespondingEmpID,
 'Y',
-'"
-                + firstLogin + @"'
+@FirstLogin
 )";
 
-                    obj.ExecuteSql(loginQuery);
+                    System.Data.SqlClient.SqlParameter[] loginParameters = {
+                        new System.Data.SqlClient.SqlParameter("@LoginIDUserID", trainerID),
+                        new System.Data.SqlClient.SqlParameter("@Password", password),
+                        new System.Data.SqlClient.SqlParameter("@CorrespondingEmpID", trainerID),
+                        new System.Data.SqlClient.SqlParameter("@FirstLogin", firstLogin)
+                    };
+
+                    System.Data.SqlClient.SqlParameter[] loginParameters = {
+                        new System.Data.SqlClient.SqlParameter("@LoginIDUserID", trainerID),
+                        new System.Data.SqlClient.SqlParameter("@Password", password),
+                        new System.Data.SqlClient.SqlParameter("@CorrespondingEmpID", txtEmpID.Text.Trim().ToUpperInvariant()),
+                        new System.Data.SqlClient.SqlParameter("@FirstLogin", firstLogin)
+                    };
+
+                    obj.ExecuteSql(loginQuery, loginParameters);
                 }
                 ShowMessage("Internal Trainer Saved Successfully.", System.Drawing.Color.Green);
 
@@ -613,7 +621,6 @@ WHERE LoginIDUserID=@TrainerID",
                         encryptor.Encrypt("Y");
 
                     string loginQuery = @"
-
 INSERT INTO Login
 (
 LoginIDUserID,
@@ -623,22 +630,31 @@ CorrespondingEmpID,
 Active,
 re
 )
-
 VALUES
 (
-'"
-                + trainerID + @"',
-'"
-                + password + @"',
+@LoginIDUserID,
+@Password,
 'Trainer',
-'"
-                + trainerID + @"',
+@CorrespondingEmpID,
 'Y',
-'"
-                + firstLogin + @"'
+@FirstLogin
 )";
 
-                    obj.ExecuteSql(loginQuery);
+                    System.Data.SqlClient.SqlParameter[] loginParameters = {
+                        new System.Data.SqlClient.SqlParameter("@LoginIDUserID", trainerID),
+                        new System.Data.SqlClient.SqlParameter("@Password", password),
+                        new System.Data.SqlClient.SqlParameter("@CorrespondingEmpID", trainerID),
+                        new System.Data.SqlClient.SqlParameter("@FirstLogin", firstLogin)
+                    };
+
+                    System.Data.SqlClient.SqlParameter[] loginParameters = {
+                        new System.Data.SqlClient.SqlParameter("@LoginIDUserID", trainerID),
+                        new System.Data.SqlClient.SqlParameter("@Password", password),
+                        new System.Data.SqlClient.SqlParameter("@CorrespondingEmpID", txtEmpID.Text.Trim().ToUpperInvariant()),
+                        new System.Data.SqlClient.SqlParameter("@FirstLogin", firstLogin)
+                    };
+
+                    obj.ExecuteSql(loginQuery, loginParameters);
                 }
                 ShowMessage("External Trainer Saved Successfully.", System.Drawing.Color.Green);
 
