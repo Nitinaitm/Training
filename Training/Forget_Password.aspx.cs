@@ -53,6 +53,9 @@ SELECT TOP 1
 FROM Login L
 LEFT JOIN EmpBasicMaster E
     ON E.EmpID = L.CorrespondingEmpID
+LEFT JOIN ManagerMaster MM
+    ON MM.ManagerID = L.LoginIDUserID
+    AND ISNULL(MM.ActiveStatus,'Y')='Y'
 LEFT JOIN TrainerMaster TM
     ON TM.TrainerID = L.LoginIDUserID
     OR TM.EmpID = L.CorrespondingEmpID
@@ -116,7 +119,7 @@ WHERE L.LoginIDUserID = @UserID";
             {
                 if (Session["ResetCompleted"] == null || !Convert.ToBoolean(Session["ResetCompleted"]))
                 {
-                    Response.Redirect("ForgotPassword.aspx");
+                    Response.Redirect("Forget_Password.aspx");
                     return;
                 }
 
