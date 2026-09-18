@@ -26,6 +26,8 @@ namespace Training.Admin
 
         private bool GetRequirement(string column)
         {
+            string[] allowedColumns = { "FeedbackRequired", "FeedbackSkipped", "CertificateRequired", "CertificateSkipped", "AttendanceRequired", "InitialAssessmentRequired", "FinalAssessmentRequired" };
+            if (Array.IndexOf(allowedColumns, column) < 0) return false;
             object value = new clsDataAccess().ExecuteScalar("SELECT " + column + " FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
             return value != null && value != DBNull.Value && Convert.ToBoolean(value);
         }
