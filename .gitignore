@@ -1,0 +1,42 @@
+# Visual Studio / .NET
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+# NuGet
+*.nupkg
+*.snupkg
+# Keep the packages folder in the repository for this project.
+# NuGet restore can still update its contents.
+
+# Logs / temporary files
+[Ll]og/
+[Ll]ogs/
+*.log
+~$*
+*~
+
+# Publish / user-specific files
+*.publish.xml
+*.pubxml
+*.publishproj
+PublishScripts/
+
+# SQL Server local files
+*.mdf
+*.ldf
+*.ndf
+
+# Visual Studio generated files
+Generated_Code/
+UpgradeLog*.htm
+UpgradeLog*.XML
+_UpgradeReport_Files/
