@@ -42,7 +42,7 @@ namespace Training.Admin
 
         private void BindGrid()
         {
-            DataTable dt = objDB.GetDataTable("SELECT M.ID, M.EmpID, M.EmpName, M.Designation, M.PlaceOfPosting, M.MapForLocation, L.TrainingLocation, M.CreatedOn FROM ManagerMaster M LEFT JOIN TrainingLocationMaster L ON M.TrainingLocationID=L.TrainingLocationID WHERE ISNULL(M.ActiveStatus,'Y')='Y' ORDER BY M.ID DESC");
+            DataTable dt = objDB.GetDataTable("SELECT M.ID,M.EmpID,E.EmpName,E.EmpDesignation AS Designation,E.EmpPostingPlace AS PlaceOfPosting,M.MapForLocation,L.TrainingLocation,M.CreatedOn FROM ManagerMaster M INNER JOIN EmpBasicMaster E ON M.EmpID=E.EmpID LEFT JOIN TrainingLocationMaster L ON M.TrainingLocationID=L.TrainingLocationID WHERE ISNULL(M.ActiveStatus,'Y')='Y' ORDER BY M.ID DESC");
             gvManager.DataSource = dt;
             gvManager.DataBind();
         }
@@ -50,7 +50,7 @@ namespace Training.Admin
         private void BindSearchGrid()
         {
             string search = txtSearch.Text.Trim();
-            DataTable dt = objDB.GetDataTable("SELECT M.ID, M.EmpID, M.EmpName, M.Designation, M.PlaceOfPosting, M.MapForLocation, L.TrainingLocation, M.CreatedOn FROM ManagerMaster M LEFT JOIN TrainingLocationMaster L ON M.TrainingLocationID=L.TrainingLocationID WHERE ISNULL(M.ActiveStatus,'Y')='Y' AND (M.EmpID LIKE @Search OR M.EmpName LIKE @Search OR M.PlaceOfPosting LIKE @Search OR M.MapForLocation LIKE @Search OR L.TrainingLocation LIKE @Search) ORDER BY M.ID DESC", new SqlParameter[] { new SqlParameter("@Search", "%" + search + "%") });
+            DataTable dt = objDB.GetDataTable("SELECT M.ID,M.EmpID,E.EmpName,E.EmpDesignation AS Designation,E.EmpPostingPlace AS PlaceOfPosting,M.MapForLocation,L.TrainingLocation,M.CreatedOn FROM ManagerMaster M INNER JOIN EmpBasicMaster E ON M.EmpID=E.EmpID LEFT JOIN TrainingLocationMaster L ON M.TrainingLocationID=L.TrainingLocationID WHERE ISNULL(M.ActiveStatus,'Y')='Y' AND (M.EmpID LIKE @Search OR E.EmpName LIKE @Search OR E.EmpDesignation LIKE @Search OR E.EmpPostingPlace LIKE @Search OR M.MapForLocation LIKE @Search OR L.TrainingLocation LIKE @Search) ORDER BY M.ID DESC", new SqlParameter[] { new SqlParameter("@Search", "%" + search + "%") });
             gvManager.DataSource = dt;
             gvManager.DataBind();
         }
@@ -70,7 +70,7 @@ namespace Training.Admin
                 return;
             }
 
-            DataTable dt = objDB.GetDataTable("SELECT EmpID, EmpName, DOB, DOJ, MobileNo, EmailId, EmpDesignation, EmpPostingPlace FROM EmpBasicMaster WHERE EmpID=@EmpID", new SqlParameter[] { new SqlParameter("@EmpID", empID) });
+            DataTable dt = objDB.GetDataTable("SELECT EmpID,EmpName,DOB,DOJ,MobileNo,EmailId,EmpDesignation,EmpPostingPlace FROM EmpBasicMaster WHERE EmpID=@EmpID", new SqlParameter[] { new SqlParameter("@EmpID", empID) });
 
             if (dt.Rows.Count == 0)
             {
@@ -106,7 +106,7 @@ namespace Training.Admin
 
             string empID = txtEmpID.Text.Trim();
 
-            DataTable dtEmp = objDB.GetDataTable("SELECT EmpID, EmpName, DOB, DOJ, MobileNo, EmailId, EmpDesignation, EmpPostingPlace FROM EmpBasicMaster WHERE EmpID=@EmpID", new SqlParameter[] { new SqlParameter("@EmpID", empID) });
+            DataTable dtEmp = objDB.GetDataTable("SELECT EmpID FROM EmpBasicMaster WHERE EmpID=@EmpID", new SqlParameter[] { new SqlParameter("@EmpID", empID) });
 
             if (dtEmp.Rows.Count == 0)
             {
@@ -114,26 +114,9 @@ namespace Training.Admin
                 return;
             }
 
-            DataTable dtExisting = objDB.GetDataTable("SELECT ID FROM ManagerMaster WHERE EmpID=@EmpID AND ISNULL(ActiveStatus,'Y')='Y'", new SqlParameter[] { new SqlParameter("@EmpID", empID) });
-
-            if (dtExisting.Rows.Count > 0)
-            {
-                ShowMessage("This employee is already mapped as Manager.", System.Drawing.Color.Red);
-                return;
-            }
-
-            DataRow dr = dtEmp.Rows[0];
-
-            int result = objDB.ExecuteSql("INSERT INTO ManagerMaster (EmpID, EmpName, DOB, DOJ, MobileNo, EmailID, PlaceOfPosting, Designation, MapForLocation, TrainingLocationID, CreatedBy, ActiveStatus) VALUES (@EmpID, @EmpName, @DOB, @DOJ, @MobileNo, @EmailID, @PlaceOfPosting, @Designation, @MapForLocation, @TrainingLocationID, @CreatedBy, 'Y')", new SqlParameter[]
+            int result = objDB.ExecuteSql("INSERT INTO ManagerMaster (EmpID,MapForLocation,TrainingLocationID,CreatedBy,ActiveStatus) VALUES (@EmpID,@MapForLocation,@TrainingLocationID,@CreatedBy,'Y')", new SqlParameter[]
             {
                 new SqlParameter("@EmpID", empID),
-                new SqlParameter("@EmpName", dr["EmpName"].ToString()),
-                new SqlParameter("@DOB", dr["DOB"].ToString()),
-                new SqlParameter("@DOJ", dr["DOJ"].ToString()),
-                new SqlParameter("@MobileNo", dr["MobileNo"].ToString()),
-                new SqlParameter("@EmailID", dr["EmailId"].ToString()),
-                new SqlParameter("@PlaceOfPosting", dr["EmpPostingPlace"].ToString()),
-                new SqlParameter("@Designation", dr["EmpDesignation"].ToString()),
                 new SqlParameter("@MapForLocation", ddlMapForLocation.SelectedValue),
                 new SqlParameter("@TrainingLocationID", ddlTrainingLocation.SelectedValue),
                 new SqlParameter("@CreatedBy", "Admin")
@@ -142,13 +125,13 @@ namespace Training.Admin
             if (result > 0)
             {
                 CreateManagerLogin(empID);
-                ShowMessage("Manager saved successfully.", System.Drawing.Color.Green);
+                ShowMessage("Manager mapping saved successfully.", System.Drawing.Color.Green);
                 ClearForm();
                 BindGrid();
             }
             else
             {
-                ShowMessage("Manager could not be saved.", System.Drawing.Color.Red);
+                ShowMessage("Manager mapping could not be saved.", System.Drawing.Color.Red);
             }
         }
 
@@ -165,7 +148,7 @@ namespace Training.Admin
             string password = encryptor.Encrypt("Bsphcl*123");
             string firstLogin = encryptor.Encrypt("Y");
 
-            objDB.ExecuteSql("INSERT INTO Login (LoginIDUserID, Password, Role, CorrespondingEmpID, Active, re) VALUES (@LoginIDUserID, @Password, 'Manager', @CorrespondingEmpID, 'Y', @FirstLogin)", new SqlParameter[]
+            objDB.ExecuteSql("INSERT INTO Login (LoginIDUserID,Password,Role,CorrespondingEmpID,Active,re) VALUES (@LoginIDUserID,@Password,'Manager',@CorrespondingEmpID,'Y',@FirstLogin)", new SqlParameter[]
             {
                 new SqlParameter("@LoginIDUserID", empID),
                 new SqlParameter("@Password", password),
@@ -229,7 +212,7 @@ namespace Training.Admin
 
             if (result > 0)
             {
-                ShowMessage("Manager updated successfully.", System.Drawing.Color.Green);
+                ShowMessage("Manager mapping updated successfully.", System.Drawing.Color.Green);
             }
         }
 
@@ -240,7 +223,7 @@ namespace Training.Admin
 
             if (result > 0)
             {
-                ShowMessage("Manager deactivated successfully.", System.Drawing.Color.Green);
+                ShowMessage("Manager mapping deactivated successfully.", System.Drawing.Color.Green);
             }
 
             BindGrid();
