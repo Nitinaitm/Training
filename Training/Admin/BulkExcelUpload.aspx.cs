@@ -111,9 +111,15 @@ namespace Training.Admin
                 return;
             }
 
+            if (!tableFields.ContainsKey(ddlTable.SelectedValue))
+            {
+                lblSummary.Text = "Invalid table selected.";
+                return;
+            }
+
             List<string> selectedFields =
                 chkFields.Items.Cast<ListItem>()
-                .Where(x => x.Selected)
+                .Where(x => x.Selected && tableFields[ddlTable.SelectedValue].Contains(x.Value))
                 .Select(x => x.Value)
                 .ToList();
 
