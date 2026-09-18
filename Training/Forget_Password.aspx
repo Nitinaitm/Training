@@ -114,7 +114,7 @@
 
                                                 <div class="mb-3">
                                                     <%--<label for="txtEmpID" class="form-label">Enter Username/ Emp ID</label>--%>
-                                                    <asp:TextBox ID="txtEmpID" runat="server" CssClass="form-control" required="required" MaxLength="20" Placeholder="Enter Username/ Emp ID"></asp:TextBox>
+                                                    <asp:TextBox ID="txtEmpID" runat="server" CssClass="form-control" required="required" MaxLength="20" Placeholder="Enter Username / Emp ID / Manager ID"></asp:TextBox>
 
 
 
