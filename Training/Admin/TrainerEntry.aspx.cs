@@ -132,141 +132,54 @@ ORDER BY QualificationName");
         private void BindTrainerGrid()
         {
             string query = @"
-
 SELECT
-
 TM.TrainerID,
-
-CASE
-WHEN TM.TrainerType='Internal'
-THEN TM.TrainerID + ' / ' + TM.EmpID
-ELSE TM.TrainerID
-END AS DisplayTrainerID,
-
+CASE WHEN TM.TrainerType='Internal' THEN TM.TrainerID + ' / ' + TM.EmpID ELSE TM.TrainerID END AS DisplayTrainerID,
 TM.TrainerType,
-
-CASE
-WHEN TM.TrainerType='Internal'
-THEN E.EmpName
-ELSE TM.NameExternal
-END AS TrainerName,
-
-CASE
-
-WHEN TM.TrainerType='Internal'
-
-THEN E.EmpDesignation
-
-ELSE TM.DesignationExternal
-
-END AS Designation,
-
-CASE
-
-WHEN TM.TrainerType='Internal'
-
-THEN E.EmpCompany
-
-ELSE TM.TrainerOrganizerExternal
-
-END AS Organization,
-
-
-
+CASE WHEN TM.TrainerType='Internal' THEN E.EmpName ELSE TM.NameExternal END AS TrainerName,
+CASE WHEN TM.TrainerType='Internal' THEN E.EmpDesignation ELSE TM.DesignationExternal END AS Designation,
+CASE WHEN TM.TrainerType='Internal' THEN E.EmpCompany ELSE TM.TrainerOrganizerExternal END AS Organization,
 AEM.ExpertiseName,
-
 ISNULL(TM.ExperienceYears,0) AS ExperienceYears,
-
 ISNULL(TM.TrainerAvailability,'Available') AS TrainerAvailability,
-
 ISNULL(TM.ActiveStatus,'Active') AS ActiveStatus
-
 FROM TrainerMaster TM
-
-LEFT JOIN EmpBasicMaster E
-ON TM.EmpID=E.EmpID
-
-LEFT JOIN AreaOfExpertiseMaster AEM
-ON TM.AreaOfExpertiseID=AEM.ExpertiseID
-
+LEFT JOIN EmpBasicMaster E ON TM.EmpID=E.EmpID
+LEFT JOIN AreaOfExpertiseMaster AEM ON TM.AreaOfExpertiseID=AEM.ExpertiseID
 WHERE 1=1";
+
+            List<System.Data.SqlClient.SqlParameter> parameters = new List<System.Data.SqlClient.SqlParameter>();
 
             if (ddlSearchTrainerType.SelectedIndex > 0)
             {
-                query += @"
-
-AND TM.TrainerType='"
-                + ddlSearchTrainerType.SelectedValue.Replace("'", "''")
-                + "'";
+                query += " AND TM.TrainerType=@SearchTrainerType";
+                parameters.Add(new System.Data.SqlClient.SqlParameter("@SearchTrainerType", ddlSearchTrainerType.SelectedValue));
             }
 
-            if (txtSearchEmpID.Text.Trim().ToUpperInvariant() != "")
+            if (txtSearchEmpID.Text.Trim() != "")
             {
-                query += @"
-
-AND
-(
-TM.EmpID LIKE '%"
-            + txtSearchEmpID.Text.Trim().ToUpperInvariant().Replace("'", "''")
-            + @"%'
-
-OR
-
-TM.EmpIDExternal LIKE '%"
-            + txtSearchEmpID.Text.Trim().ToUpperInvariant().Replace("'", "''")
-            + @"%'
-)";
+                query += " AND (TM.EmpID LIKE @SearchEmpID OR TM.EmpIDExternal LIKE @SearchEmpID)";
+                parameters.Add(new System.Data.SqlClient.SqlParameter("@SearchEmpID", "%" + txtSearchEmpID.Text.Trim().ToUpperInvariant() + "%"));
             }
 
             if (txtSearchTrainerName.Text.Trim() != "")
             {
-                query += @"
-
-AND
-(
-E.EmpName LIKE '%"
-            + txtSearchTrainerName.Text.Trim().Replace("'", "''")
-            + @"%'
-
-OR
-
-TM.NameExternal LIKE '%"
-            + txtSearchTrainerName.Text.Trim().Replace("'", "''")
-            + @"%'
-)";
+                query += " AND (E.EmpName LIKE @SearchTrainerName OR TM.NameExternal LIKE @SearchTrainerName)";
+                parameters.Add(new System.Data.SqlClient.SqlParameter("@SearchTrainerName", "%" + txtSearchTrainerName.Text.Trim() + "%"));
             }
 
             if (txtSearchOrganization.Text.Trim() != "")
             {
-                query += @"
-
-AND
-(
-E.EmpCompany LIKE '%"
-            + txtSearchOrganization.Text.Trim().Replace("'", "''")
-            + @"%'
-
-OR
-
-TM.TrainerOrganizerExternal LIKE '%"
-            + txtSearchOrganization.Text.Trim().Replace("'", "''")
-            + @"%'
-)";
+                query += " AND (E.EmpCompany LIKE @SearchOrganization OR TM.TrainerOrganizerExternal LIKE @SearchOrganization)";
+                parameters.Add(new System.Data.SqlClient.SqlParameter("@SearchOrganization", "%" + txtSearchOrganization.Text.Trim() + "%"));
             }
 
-            query += @"
+            query += " ORDER BY TM.ID DESC";
 
-ORDER BY TM.ID DESC";
-
-            DataTable dt =
-    obj.GetDataTable(query);
-
+            DataTable dt = obj.GetDataTable(query, parameters.ToArray());
             gvTrainer.DataSource = dt;
-
             gvTrainer.DataBind();
-
-            lblCount.Text =
-                "Total Trainers : " + dt.Rows.Count;
+            lblCount.Text = "Total Trainers : " + dt.Rows.Count;
         }
         protected void SearchChanged(
 object sender,
