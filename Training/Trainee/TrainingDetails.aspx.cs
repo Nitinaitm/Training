@@ -145,6 +145,7 @@ WHERE SM.TrainingID=@TrainingID
 
         private bool HasRequiredSessions(string skipColumn)
         {
+            if (skipColumn != "AttendanceSkipped" && skipColumn != "PreAssessmentSkipped" && skipColumn != "PostAssessmentSkipped") return false;
             object v = objDB.ExecuteScalar("SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(" + skipColumn + ",0)=0) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID) });
             return v != null && Convert.ToInt32(v) == 1;
         }
