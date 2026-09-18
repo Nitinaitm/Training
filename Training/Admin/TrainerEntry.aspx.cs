@@ -389,9 +389,10 @@ SELECT *
 
 FROM EmpBasicMaster
 
-WHERE EmpID='"
-                + txtEmpID.Text.Trim().ToUpperInvariant().Replace("'", "''")
-                + "'");
+WHERE EmpID=@EmpID",
+                    new System.Data.SqlClient.SqlParameter[] {
+                        new System.Data.SqlClient.SqlParameter("@EmpID", txtEmpID.Text.Trim().ToUpperInvariant())
+                    });
 
             if (dtEmp.Rows.Count == 0)
             {
@@ -408,9 +409,10 @@ FROM TrainerMaster
 
 WHERE TrainerType='Internal'
 
-AND EmpID='"
-                + txtEmpID.Text.Trim().ToUpperInvariant().Replace("'", "''")
-                + "'");
+AND EmpID=@EmpID",
+                    new System.Data.SqlClient.SqlParameter[] {
+                        new System.Data.SqlClient.SqlParameter("@EmpID", txtEmpID.Text.Trim().ToUpperInvariant())
+                    });
 
             if (dtDup.Rows.Count > 0)
             {
@@ -421,52 +423,31 @@ AND EmpID='"
             string trainerID = GenerateInternalTrainerID();
 
             string query = @"
-
 INSERT INTO TrainerMaster
 (
-TrainerID,
-TrainerType,
-EmpID,
-AreaOfExpertiseID,
-QualificationID,
-ExperienceYears,
-Certifications,
-TrainerAvailability,
-AvailableFrom,
-AvailableTo,
-Remarks,
-CreatedOn,
-CreatedBy
+TrainerID,TrainerType,EmpID,AreaOfExpertiseID,QualificationID,ExperienceYears,
+Certifications,TrainerAvailability,AvailableFrom,AvailableTo,Remarks,CreatedOn,CreatedBy
 )
-
 VALUES
 (
-'"
-        + trainerID + @"',
-'Internal',
-'"
-        + txtEmpID.Text.Trim().ToUpperInvariant().Replace("'", "''") + @"',
-'"
-        + ddlExpertiseInternal.SelectedValue + @"',
-'"
-        + ddlQualificationInternal.SelectedValue + @"',
-'"
-        + txtExperienceInternal.Text.Trim() + @"',
-'"
-        + txtCertificationInternal.Text.Trim().Replace("'", "''") + @"',
-'"
-        + ddlAvailabilityInternal.SelectedValue + @"',
-'"
-        + txtAvailableFromInternal.Text.Trim() + @"',
-'"
-        + txtAvailableToInternal.Text.Trim() + @"',
-'"
-        + txtRemarksInternal.Text.Trim().Replace("'", "''") + @"',
-GETDATE(),
-'Admin'
+@TrainerID,'Internal',@EmpID,@AreaOfExpertiseID,@QualificationID,@ExperienceYears,
+@Certifications,@TrainerAvailability,@AvailableFrom,@AvailableTo,@Remarks,GETDATE(),'Admin'
 )";
 
-            int i = obj.ExecuteSql(query);
+            System.Data.SqlClient.SqlParameter[] parameters = {
+                new System.Data.SqlClient.SqlParameter("@TrainerID", trainerID),
+                new System.Data.SqlClient.SqlParameter("@EmpID", txtEmpID.Text.Trim().ToUpperInvariant()),
+                new System.Data.SqlClient.SqlParameter("@AreaOfExpertiseID", ddlExpertiseInternal.SelectedValue),
+                new System.Data.SqlClient.SqlParameter("@QualificationID", ddlQualificationInternal.SelectedValue),
+                new System.Data.SqlClient.SqlParameter("@ExperienceYears", txtExperienceInternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@Certifications", txtCertificationInternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@TrainerAvailability", ddlAvailabilityInternal.SelectedValue),
+                new System.Data.SqlClient.SqlParameter("@AvailableFrom", txtAvailableFromInternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@AvailableTo", txtAvailableToInternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@Remarks", txtRemarksInternal.Text.Trim())
+            };
+
+            int i = obj.ExecuteSql(query, parameters);
 
             if (i > 0)
             {
