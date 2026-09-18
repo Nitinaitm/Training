@@ -26,10 +26,7 @@ namespace Training.Trainee
                 Session.Remove("PostTrainingAccessMessage");
                 string safe = postMessage.Replace("\\", "\\\\").Replace("'", "\\'");
                 ScriptManager.RegisterStartupScript(this, GetType(), "PostTrainingAccessMessage", "alert('" + safe + "');", true);
-            }
-
-            RefreshTestStatuses();
-        }
+            }}
 
     }
 }
