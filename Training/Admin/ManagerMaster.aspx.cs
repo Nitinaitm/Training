@@ -124,7 +124,7 @@ namespace Training.Admin
 
             DataRow dr = dtEmp.Rows[0];
 
-            int result = objDB.ExecuteSql("INSERT INTO ManagerMaster (EmpID, EmpName, DOB, DOJ, MobileNo, EmailID, PlaceOfPosting, Designation, MapForLocation, TrainingLocationID, CreatedOn, CreatedBy, ActiveStatus) VALUES (@EmpID, @EmpName, @DOB, @DOJ, @MobileNo, @EmailID, @PlaceOfPosting, @Designation, @MapForLocation, @TrainingLocationID, GETDATE(), @CreatedBy, 'Y')", new SqlParameter[]
+            int result = objDB.ExecuteSql("INSERT INTO ManagerMaster (EmpID, EmpName, DOB, DOJ, MobileNo, EmailID, PlaceOfPosting, Designation, MapForLocation, TrainingLocationID, CreatedBy, ActiveStatus) VALUES (@EmpID, @EmpName, @DOB, @DOJ, @MobileNo, @EmailID, @PlaceOfPosting, @Designation, @MapForLocation, @TrainingLocationID, @CreatedBy, 'Y')", new SqlParameter[]
             {
                 new SqlParameter("@EmpID", empID),
                 new SqlParameter("@EmpName", dr["EmpName"].ToString()),
