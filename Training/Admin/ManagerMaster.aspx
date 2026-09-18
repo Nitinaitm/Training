@@ -30,7 +30,7 @@
             </div>
 
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">Employee Details</div>
+                <div class="card-header bg-primary text-white">Employee Details (from EmpBasicMaster)</div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-lg-4 mb-3"><label class="form-label">Name</label><asp:TextBox ID="txtEmpName" runat="server" CssClass="form-control readonly-field" ReadOnly="true"></asp:TextBox></div>
@@ -82,6 +82,7 @@
                 OnRowEditing="gvManager_RowEditing" OnRowUpdating="gvManager_RowUpdating" OnRowCancelingEdit="gvManager_RowCancelingEdit" OnRowDeleting="gvManager_RowDeleting">
                 <Columns>
                     <asp:TemplateField HeaderText="S.No"><ItemTemplate><%# Container.DataItemIndex + 1 %></ItemTemplate></asp:TemplateField>
+                    <asp:BoundField DataField="ID" HeaderText="Manager ID" ReadOnly="true" />
                     <asp:BoundField DataField="EmpID" HeaderText="EmpID" ReadOnly="true" />
                     <asp:BoundField DataField="EmpName" HeaderText="Name" ReadOnly="true" />
                     <asp:BoundField DataField="Designation" HeaderText="Designation" ReadOnly="true" />
