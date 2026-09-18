@@ -171,7 +171,6 @@ namespace Training.Trainer
         {
             string sql = "SELECT QuestionID,Question,DifficultyLevel,Marks,QuestionOwnerType FROM QuestionBank WHERE TopicID=@TopicID AND IsActive=1 AND ((QuestionOwnerType='Admin') OR (QuestionOwnerType='Trainer' AND ApprovalStatus='Approved') OR (QuestionOwnerType='Trainer' AND OwnerID=@TrainerID)) ORDER BY CASE DifficultyLevel WHEN 'Easy' THEN 1 WHEN 'Medium' THEN 2 WHEN 'Hard' THEN 3 END,QuestionID";
             DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] {
-                new SqlParameter("@QuestionCount", count),
                         new SqlParameter("@TopicID", ViewState["TopicID"]),
                 new SqlParameter("@TrainerID", ViewState["TrainerID"])
             });
