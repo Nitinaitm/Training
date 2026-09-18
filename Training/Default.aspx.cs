@@ -754,7 +754,7 @@ WHERE TraineeID=@TraineeID";
 
         private bool LoadManagerProfile(string empID)
         {
-            string query = "SELECT EmpID,EmpName,DOB,DOJ,MobileNo,EmailID,PlaceOfPosting,Designation,MapForLocation,TrainingLocationID FROM ManagerMaster WHERE EmpID=@EmpID AND ISNULL(ActiveStatus,'Y')='Y'";
+            string query = "SELECT E.EmpID,E.EmpName,E.DOB,E.DOJ,E.MobileNo,E.EmailId,E.EmpPostingPlace,E.EmpDesignation FROM EmpBasicMaster E INNER JOIN ManagerMaster M ON E.EmpID=M.EmpID WHERE E.EmpID=@EmpID AND ISNULL(M.ActiveStatus,'Y')='Y'";
 
             DataTable dt = cls.GetDataTable(query, new SqlParameter[] { new SqlParameter("@EmpID", empID) });
 
@@ -766,12 +766,11 @@ WHERE TraineeID=@TraineeID";
             Session["UserType"] = "Internal";
             Session["EmpID"] = dt.Rows[0]["EmpID"].ToString();
             Session["name"] = dt.Rows[0]["EmpName"].ToString();
-            Session["designation"] = dt.Rows[0]["Designation"].ToString();
-            Session["posting"] = dt.Rows[0]["PlaceOfPosting"].ToString();
+            Session["designation"] = dt.Rows[0]["EmpDesignation"].ToString();
+            Session["posting"] = dt.Rows[0]["EmpPostingPlace"].ToString();
             Session["mobileno"] = dt.Rows[0]["MobileNo"].ToString();
             Session["email"] = dt.Rows[0]["EmailID"].ToString();
-            Session["ManagerTrainingLocationID"] = dt.Rows[0]["TrainingLocationID"].ToString();
-            Session["ManagerMapForLocation"] = dt.Rows[0]["MapForLocation"].ToString();
+            Session["ManagerEmpID"] = empID;
 
             return true;
         }
