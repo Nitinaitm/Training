@@ -116,6 +116,24 @@ UNION ALL
 
 SELECT
 
+M.EmpID AS LoginID,
+
+M.EmpID AS CorrespondingEmpID,
+
+M.MobileNo,
+
+'Manager' AS Role,
+
+'Internal' AS UserType
+
+FROM ManagerMaster M
+
+WHERE ISNULL(M.ActiveStatus,'Y')='Y'
+
+UNION ALL
+
+SELECT
+
 TraineeID AS LoginID,
 
 TraineeID AS CorrespondingEmpID,
@@ -687,6 +705,12 @@ WHERE TraineeID=@TraineeID";
                         userID,
                         correspondingID);
 
+                case "Manager":
+
+                    Session["UserType"] = "Internal";
+
+                    return LoadManagerProfile(userID);
+
                 case "Trainee":
 
                     string query =
@@ -726,6 +750,30 @@ WHERE TraineeID=@TraineeID";
 
                     return false;
             }
+        }
+
+        private bool LoadManagerProfile(string empID)
+        {
+            string query = "SELECT EmpID,EmpName,DOB,DOJ,MobileNo,EmailID,PlaceOfPosting,Designation,MapForLocation,TrainingLocationID FROM ManagerMaster WHERE EmpID=@EmpID AND ISNULL(ActiveStatus,'Y')='Y'";
+
+            DataTable dt = cls.GetDataTable(query, new SqlParameter[] { new SqlParameter("@EmpID", empID) });
+
+            if (dt.Rows.Count == 0)
+            {
+                return false;
+            }
+
+            Session["UserType"] = "Internal";
+            Session["EmpID"] = dt.Rows[0]["EmpID"].ToString();
+            Session["name"] = dt.Rows[0]["EmpName"].ToString();
+            Session["designation"] = dt.Rows[0]["Designation"].ToString();
+            Session["posting"] = dt.Rows[0]["PlaceOfPosting"].ToString();
+            Session["mobileno"] = dt.Rows[0]["MobileNo"].ToString();
+            Session["email"] = dt.Rows[0]["EmailID"].ToString();
+            Session["ManagerTrainingLocationID"] = dt.Rows[0]["TrainingLocationID"].ToString();
+            Session["ManagerMapForLocation"] = dt.Rows[0]["MapForLocation"].ToString();
+
+            return true;
         }
 
         protected void btnLogin_Click(
@@ -1017,6 +1065,14 @@ startTimer();
 
                     Response.Redirect(
                         "~/Trainer/Default.aspx");
+
+                    break;
+
+                case "Manager":
+
+                    Session["InternalRedirect_Manager"] = true;
+
+                    Response.Redirect("~/Manager/Default.aspx");
 
                     break;
 
