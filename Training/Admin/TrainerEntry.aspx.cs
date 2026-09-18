@@ -458,8 +458,10 @@ SELECT *
 
 FROM Login
 
-WHERE LoginIDUserID='"
-+ trainerID + "'");
+WHERE LoginIDUserID=@TrainerID",
+                    new System.Data.SqlClient.SqlParameter[] {
+                        new System.Data.SqlClient.SqlParameter("@TrainerID", trainerID)
+                    });
 
                 if (dtLogin.Rows.Count == 0)
                 {
@@ -552,67 +554,38 @@ VALUES
             string trainerID = GenerateExternalTrainerID();
 
             string query = @"
-
 INSERT INTO TrainerMaster
 (
-TrainerID,
-TrainerType,
-EmpIDExternal,
-NameExternal,
-DesignationExternal,
-TrainerOrganizerExternal,
-AreaOfExpertiseID,
-QualificationID,
-ExperienceYears,
-Certifications,
-TrainerAvailability,
-AvailableFrom,
-AvailableTo,
-MobileNo,
-EmailID,
-Remarks,
-CreatedOn,
-CreatedBy
+TrainerID,TrainerType,EmpIDExternal,NameExternal,DesignationExternal,TrainerOrganizerExternal,
+AreaOfExpertiseID,QualificationID,ExperienceYears,Certifications,TrainerAvailability,
+AvailableFrom,AvailableTo,MobileNo,EmailID,Remarks,CreatedOn,CreatedBy
 )
-
 VALUES
 (
-'"
-        + trainerID + @"',
-'External',
-'"
-        + txtEmpIDExternal.Text.Trim().Replace("'", "''") + @"',
-'"
-        + txtNameExternal.Text.Trim().Replace("'", "''") + @"',
-'"
-        + txtDesignationExternal.Text.Trim().Replace("'", "''") + @"',
-'"
-        + txtOrganizationExternal.Text.Trim().Replace("'", "''") + @"',
-'"
-        + ddlExpertiseExternal.SelectedValue + @"',
-'"
-        + ddlQualificationExternal.SelectedValue + @"',
-'"
-        + txtExperienceExternal.Text.Trim() + @"',
-'"
-        + txtCertificationExternal.Text.Trim().Replace("'", "''") + @"',
-'"
-        + ddlAvailabilityExternal.SelectedValue + @"',
-'"
-        + txtAvailableFromExternal.Text.Trim() + @"',
-'"
-        + txtAvailableToExternal.Text.Trim() + @"',
-'"
-        + txtMobileExternal.Text.Trim().Replace("'", "''") + @"',
-'"
-        + txtEmailExternal.Text.Trim().Replace("'", "''") + @"',
-'"
-        + txtRemarksExternal.Text.Trim().Replace("'", "''") + @"',
-GETDATE(),
-'Admin'
+@TrainerID,'External',@EmpIDExternal,@NameExternal,@DesignationExternal,@TrainerOrganizerExternal,
+@AreaOfExpertiseID,@QualificationID,@ExperienceYears,@Certifications,@TrainerAvailability,
+@AvailableFrom,@AvailableTo,@MobileNo,@EmailID,@Remarks,GETDATE(),'Admin'
 )";
 
-            int i = obj.ExecuteSql(query);
+            System.Data.SqlClient.SqlParameter[] parameters = {
+                new System.Data.SqlClient.SqlParameter("@TrainerID", trainerID),
+                new System.Data.SqlClient.SqlParameter("@EmpIDExternal", txtEmpIDExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@NameExternal", txtNameExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@DesignationExternal", txtDesignationExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@TrainerOrganizerExternal", txtOrganizationExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@AreaOfExpertiseID", ddlExpertiseExternal.SelectedValue),
+                new System.Data.SqlClient.SqlParameter("@QualificationID", ddlQualificationExternal.SelectedValue),
+                new System.Data.SqlClient.SqlParameter("@ExperienceYears", txtExperienceExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@Certifications", txtCertificationExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@TrainerAvailability", ddlAvailabilityExternal.SelectedValue),
+                new System.Data.SqlClient.SqlParameter("@AvailableFrom", txtAvailableFromExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@AvailableTo", txtAvailableToExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@MobileNo", txtMobileExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@EmailID", txtEmailExternal.Text.Trim()),
+                new System.Data.SqlClient.SqlParameter("@Remarks", txtRemarksExternal.Text.Trim())
+            };
+
+            int i = obj.ExecuteSql(query, parameters);
 
             if (i > 0)
             {
@@ -623,9 +596,10 @@ SELECT *
 
 FROM Login
 
-WHERE LoginIDUserID='"
-+ trainerID
-+ "'");
+WHERE LoginIDUserID=@TrainerID",
+                    new System.Data.SqlClient.SqlParameter[] {
+                        new System.Data.SqlClient.SqlParameter("@TrainerID", trainerID)
+                    });
 
                 if (dtLogin.Rows.Count == 0)
                 {
