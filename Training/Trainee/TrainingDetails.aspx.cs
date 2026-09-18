@@ -108,9 +108,8 @@ ORDER BY TRY_CONVERT(INT,SM.SessionNo),SM.SessionNo";
         private void LoadProgress()
         {
             string sql = @"SELECT COUNT(*) TotalSession,
-SUM(CASE WHEN ISNULL(SM.AttendanceSkipped,0)=1 OR ISNULL(SA.AttendanceStatus,'Pending') IN ('Present','Completed') THEN 1 ELSE 0 END) AttendanceCompleted
+SUM(CASE WHEN ISNULL(SM.AttendanceSkipped,0)=1 OR ISNULL(SM.AttendanceStatus,'')='Completed' THEN 1 ELSE 0 END) AttendanceCompleted
 FROM SessionMaster SM
-LEFT JOIN SessionAttendance SA ON SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID
 WHERE SM.TrainingID=@TrainingID";
             SqlParameter[] param = { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", EmpID) };
             DataTable dt = objDB.GetDataTable(sql, param);
