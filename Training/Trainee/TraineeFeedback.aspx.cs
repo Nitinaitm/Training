@@ -114,7 +114,18 @@ namespace Training.Trainee
                 string sessionID = row["SessionID"] == DBNull.Value ? "" : Convert.ToString(row["SessionID"]);
                 string trainerID = row["TrainerID"] == DBNull.Value ? "" : Convert.ToString(row["TrainerID"]);
                 string controlID = "ANS_" + questionID + "_" + sessionID + "_" + trainerID;
-                Control answer = phFeedback.FindControl(controlID);
+                Control answer = null;
+                foreach (Control ctrl in phFeedback.Controls)
+                {
+                    Panel panel = ctrl as Panel;
+                    if (panel == null) continue;
+                    Control candidate = panel.FindControl(controlID);
+                    if (candidate != null)
+                    {
+                        answer = candidate;
+                        break;
+                    }
+                }
                 if (answer == null) continue;
                 if (answer is RadioButtonList)
                 {
