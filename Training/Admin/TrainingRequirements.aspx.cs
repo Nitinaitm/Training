@@ -21,7 +21,7 @@ namespace Training.Admin
 
         private void LoadBatchStatus()
         {
-            DataTable dt = db.GetDataTable(@"SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,ISNULL(FeedbackSkipped,0) FeedbackSkipped,CertificateRequired,ISNULL(CertificateSkipped,0) CertificateSkipped FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
+            DataTable dt = db.GetDataTable(@"SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,ISNULL(FeedbackSkipped,0) FeedbackSkipped,CertificateRequired,ISNULL(CertificateSkipped,0) CertificateSkipped,ISNULL(CertificateEligibilityMode,'ALL') CertificateEligibilityMode FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
             if (dt.Rows.Count == 0) { Response.Redirect("TrainingList.aspx"); return; }
 
             DataRow r = dt.Rows[0];
@@ -40,6 +40,10 @@ namespace Training.Admin
             lblPostStatus.Text = por ? "Required" : "Not Required";
             lblFeedbackStatus.Text = fs ? "Skipped" : (fr ? "Required" : "Not Required");
             lblCertificateStatus.Text = cs ? "Skipped" : (cr ? "Required" : "Not Required");
+            string basis = r["CertificateEligibilityMode"] == DBNull.Value ? "ALL" : r["CertificateEligibilityMode"].ToString().Trim().ToUpperInvariant();
+            if (ddlCertificateBasis.Items.FindByValue(basis) == null) basis = "ALL";
+            ddlCertificateBasis.SelectedValue = basis;
+            lblCertificateBasis.Text = "Current Basis: " + (basis == "PASS" ? "Pass only" : (basis == "FAIL" ? "Fail only" : "Pass or Fail"));
 
             btnAttendanceRequired.Enabled = !ar;
             btnAttendanceNotRequired.Enabled = ar;
@@ -75,6 +79,19 @@ namespace Training.Admin
         protected void btnFeedbackRequired_Click(object sender, EventArgs e) { SetBatchRequirement("FeedbackRequired", true, "FeedbackSkipped", "FeedbackSkipReason"); }
         protected void btnFeedbackNotRequired_Click(object sender, EventArgs e) { SetBatchRequirement("FeedbackRequired", false, "FeedbackSkipped", "FeedbackSkipReason"); }
         protected void btnCertificateRequired_Click(object sender, EventArgs e) { SetBatchRequirement("CertificateRequired", true, "CertificateSkipped", "CertificateSkipReason"); }
+
+        protected void btnSaveCertificateBasis_Click(object sender, EventArgs e)
+        {
+            string basis = ddlCertificateBasis.SelectedValue;
+            if (basis != "ALL" && basis != "PASS" && basis != "FAIL")
+            {
+                ShowError("Invalid certificate basis.");
+                return;
+            }
+            db.ExecuteSql("UPDATE TrainingDetails SET CertificateEligibilityMode=@Mode,UpdatedOn=GETDATE(),UpdatedBy=@By WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@Mode", basis), new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
+            ShowSuccess("Certificate eligibility basis updated successfully.");
+            LoadBatchStatus();
+        }
         protected void btnCertificateNotRequired_Click(object sender, EventArgs e) { SetBatchRequirement("CertificateRequired", false, "CertificateSkipped", "CertificateSkipReason"); }
 
         private void SetBatchRequirement(string requiredColumn, bool required, string sessionSkipColumn, string sessionReasonColumn)
