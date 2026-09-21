@@ -172,7 +172,7 @@ namespace Training.Trainee
                     if (preRequired) allowed = allowed && preDone;
                     if (postRequired) allowed = allowed && postDone;
                     if (feedbackRequired && !feedbackSkipped) allowed = allowed && feedbackDone;
-                    if (allowed && (preRequired || postRequired)) allowed = IsCertificateTestEligible(data["TrainingID"].ToString(), empID, preRequired, postRequired);
+                    if (allowed && (preRequired || postRequired)) allowed = IsCertificateTestEligible(data["TrainingID"].ToString(), Session["EmpID"].ToString().Trim().ToUpperInvariant(), preRequired, postRequired);
 
                     certificate.Enabled = allowed;
                     certificate.CssClass = allowed ? "btn btn-info btn-sm" : "btn btn-info btn-sm disabled";
