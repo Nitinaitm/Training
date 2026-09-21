@@ -295,6 +295,55 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             clsWorkflow.UpdateWorkflow(TrainingID, "InProgress", "E"); pnlHostelConfirmation.Visible = false; lblMessage.ForeColor = System.Drawing.Color.Green; lblMessage.Text = "Training has started successfully."; LoadWorkflow();
         }
         protected void btnAttendance_Click(object sender, EventArgs e) { Response.Redirect("TrainingAttendance.aspx"); }
+
+        protected void btnCloseTraining_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(TrainingID))
+            {
+                Response.Redirect("TrainingList.aspx");
+                return;
+            }
+
+            if (!AreAllAttendanceCompleted())
+            {
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                lblMessage.Text = "Cannot close training. Required attendance is not completed.";
+                return;
+            }
+
+            if (IsPreTestRequired() && !AreAllTestsCompleted("Pre"))
+            {
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                lblMessage.Text = "Cannot close training. Required Pre-Test is not completed for all applicable trainees.";
+                return;
+            }
+
+            if (IsPostTestRequired() && !AreAllTestsCompleted("Post"))
+            {
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                lblMessage.Text = "Cannot close training. Required Post-Test is not completed for all applicable trainees.";
+                return;
+            }
+
+            if (IsFeedbackRequired() && !IsFeedbackSubmitted())
+            {
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                lblMessage.Text = "Cannot close training. Required feedback is not submitted by all assigned trainees.";
+                return;
+            }
+
+            new clsDataAccess().ExecuteSql(
+                "UPDATE TrainingDetails SET TrainingStatus='Completed',WorkflowStatus='ABCDEFGHIJ',UpdatedOn=GETDATE(),UpdatedBy=@UpdatedBy WHERE TrainingID=@TrainingID",
+                new SqlParameter[]
+                {
+                    new SqlParameter("@UpdatedBy", Session["UserID"] == null ? "Admin" : Session["UserID"].ToString()),
+                    new SqlParameter("@TrainingID", TrainingID)
+                });
+
+            lblMessage.ForeColor = System.Drawing.Color.Green;
+            lblMessage.Text = "Training has been closed successfully.";
+            LoadWorkflow();
+        }
         protected void btnUpdateTraining_Click(object sender, EventArgs e) { Response.Redirect("CreateBatch.aspx?mode=edit"); }
         protected void btnAssignSession_Click(object sender, EventArgs e) { Response.Redirect("AssignSession.aspx"); }
         protected void btnAssignHostel_Click(object sender, EventArgs e) { Response.Redirect("AssignHostel.aspx"); }
