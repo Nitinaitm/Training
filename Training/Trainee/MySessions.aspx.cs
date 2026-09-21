@@ -60,19 +60,7 @@ namespace Training.Trainee
             if (!IsPostBack)
             {
                 LoadSessionDetails();
-
-                if (Response.IsRequestBeingRedirected)
-                {
-                    return;
-                }
-
                 LoadRequirements();
-
-                if (Response.IsRequestBeingRedirected)
-                {
-                    return;
-                }
-
                 SessionSummary1.LoadSession(trainingID, sessionID, empID);
                 LoadTestStatus();
             }
@@ -140,8 +128,18 @@ namespace Training.Trainee
 
             if (dt.Rows.Count == 0)
             {
-                Response.Redirect("TrainingDetails.aspx", false);
-                Context.ApplicationInstance.CompleteRequest();
+                lblTrainingID.Text = trainingID;
+                lblCourse.Text = "-";
+                lblTrainingType.Text = "-";
+                lblOrganizer.Text = "-";
+                lblSessionNo.Text = "-";
+                lblSessionName.Text = "-";
+                lblTopic.Text = "-";
+                lblTrainer.Text = "-";
+                lblSessionDate.Text = "-";
+                lblStartTime.Text = "-";
+                lblEndTime.Text = "-";
+                lblDuration.Text = "-";
                 return;
             }
 
