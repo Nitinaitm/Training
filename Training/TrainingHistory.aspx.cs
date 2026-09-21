@@ -17,7 +17,7 @@ namespace Training
         protected void Page_Load(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(TrainingID)) { GoDashboard(); return; }
-            if (string.Equals(Role, "Emp", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(Role, "Emp", StringComparison.OrdinalIgnoreCase) || string.Equals(Role, "Trainee", StringComparison.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(EmpID) || !HasTraineeAccess()) { GoDashboard(); return; }
             }
@@ -194,7 +194,7 @@ namespace Training
 
         private void SetCertificateButton()
         {
-            if (!string.Equals(Role, "Emp", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(Role, "Emp", StringComparison.OrdinalIgnoreCase) && !string.Equals(Role, "Trainee", StringComparison.OrdinalIgnoreCase))
             {
                 btnCertificate.Visible = false;
                 return;
@@ -220,7 +220,7 @@ namespace Training
         private void GoDashboard()
         {
             if (string.Equals(Role, "Trainer", StringComparison.OrdinalIgnoreCase)) Response.Redirect("~/Trainer/Default.aspx");
-            else if (string.Equals(Role, "Emp", StringComparison.OrdinalIgnoreCase)) Response.Redirect("~/Trainee/Default.aspx");
+            else if (string.Equals(Role, "Emp", StringComparison.OrdinalIgnoreCase) || string.Equals(Role, "Trainee", StringComparison.OrdinalIgnoreCase)) Response.Redirect("~/Trainee/Default.aspx");
             else Response.Redirect("~/Default.aspx");
         }
     }
