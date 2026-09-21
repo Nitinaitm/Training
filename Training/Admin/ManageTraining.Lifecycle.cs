@@ -42,7 +42,7 @@ namespace Training.Admin
         {
             string trainingID = Session["TrainingID"] == null ? "" : Session["TrainingID"].ToString();
             bool completed = IsTrainingCompleted();
-            bool started = GetLifecycleBool("SELECT CASE WHEN ISNULL(WorkflowStatus,'') LIKE '%E%' OR ISNULL(TrainingStatus,'') IN ('InProgress','AttendanceCompleted','TrainingCompleted') THEN 1 ELSE 0 END", trainingID);
+            bool started = GetLifecycleBool("SELECT CASE WHEN CHARINDEX('E',ISNULL(WorkflowStatus,'')) > 0 OR ISNULL(TrainingStatus,'') IN ('Started','InProgress','AttendanceCompleted','TrainingCompleted','Completed') THEN 1 ELSE 0 END", trainingID);
 
             if (completed)
             {
@@ -211,7 +211,7 @@ namespace Training.Admin
 
             bool feedbackAssigned = GetLifecycleCount("SELECT COUNT(*) FROM TrainingFeedbackCategory WHERE TrainingID=@TrainingID", trainingID) > 0;
             bool certificateConfigured = GetLifecycleCount("SELECT COUNT(*) FROM TrainingCertificateTemplate WHERE TrainingID=@TrainingID AND ISNULL(TemplateID,'')<>''", trainingID) > 0;
-            bool trainingStarted = GetLifecycleBool("SELECT CASE WHEN ISNULL(WorkflowStatus,'') LIKE '%E%' OR ISNULL(TrainingStatus,'') IN ('InProgress','AttendanceCompleted','TrainingCompleted') THEN 1 ELSE 0 END", trainingID);
+            bool trainingStarted = GetLifecycleBool("SELECT CASE WHEN CHARINDEX('E',ISNULL(WorkflowStatus,'')) > 0 OR ISNULL(TrainingStatus,'') IN ('Started','InProgress','AttendanceCompleted','TrainingCompleted','Completed') THEN 1 ELSE 0 END", trainingID);
 
             int feedbackDone = feedbackRequired && !feedbackSkipped ? GetLifecycleCount("SELECT COUNT(*) FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned' AND EXISTS (SELECT 1 FROM Feedback F WHERE F.TrainingID=A.TrainingID AND F.EmpID=A.EmpID AND F.Submitted=1)", trainingID) : 0;
             int certificateDone = certificateRequired && !certificateSkipped ? GetLifecycleCount("SELECT COUNT(*) FROM TrainingAssignment A WHERE A.TrainingID=@TrainingID AND ISNULL(A.AssignmentStatus,'Assigned')='Assigned' AND EXISTS (SELECT 1 FROM TrainingCertificate C WHERE C.TrainingID=A.TrainingID AND C.EmpID=A.EmpID AND C.CertificateStatus='A')", trainingID) : 0;
