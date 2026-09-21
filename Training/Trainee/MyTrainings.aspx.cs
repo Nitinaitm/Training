@@ -12,7 +12,7 @@ namespace Training.Trainee
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["EmpID"] == null || string.IsNullOrWhiteSpace(Session["EmpID"].ToString()))
+            if (Session["EmpID"] == null || string.IsNullOrWhiteSpace(Session["EmpID"].ToString()) || Session["Role"] == null || !string.Equals(Session["Role"].ToString(), "Trainee", StringComparison.OrdinalIgnoreCase))
             {
                 Response.Redirect("~/Default.aspx");
                 return;
@@ -53,8 +53,8 @@ namespace Training.Trainee
 
         private void LoadCourse()
         {
-            DataTable dt = objDB.GetDataTable("SELECT DISTINCT CM.CourseID,CM.CourseName FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TA.TrainingID=TD.TrainingID INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID WHERE TA.EmpID=@EmpID ORDER BY CM.CourseName",
-                new SqlParameter[] { new SqlParameter("@EmpID", Session["EmpID"].ToString().ToUpperInvariant()) });
+            DataTable dt = objDB.GetDataTable("SELECT DISTINCT CM.CourseID,CM.CourseName FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TA.TrainingID=TD.TrainingID LEFT JOIN CourseMaster CM ON TD.CourseID=CM.CourseID WHERE TA.EmpID=@EmpID ORDER BY CM.CourseName",
+                new SqlParameter[] { new SqlParameter("@EmpID", Session["EmpID"].ToString().Trim().ToUpperInvariant()) });
             ddlCourse.DataSource = dt;
             ddlCourse.DataTextField = "CourseName";
             ddlCourse.DataValueField = "CourseID";
@@ -201,7 +201,7 @@ namespace Training.Trainee
 
         private void LoadTraining()
         {
-            string sql = @"SELECT TA.TrainingID,CM.CourseName,TD.TrainingType,TD.TrainingOrganizer,TD.Batch,
+            string sql = @"SELECT TA.TrainingID,ISNULL(CM.CourseName,'') AS CourseName,TD.TrainingType,TD.TrainingOrganizer,TD.Batch,
 TRY_CONVERT(date,TD.DateFrom,105) DateFrom,TRY_CONVERT(date,TD.DateTo,105) DateTo,
 TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,
 TD.FeedbackRequired,ISNULL(TD.FeedbackSkipped,0) FeedbackSkipped,
