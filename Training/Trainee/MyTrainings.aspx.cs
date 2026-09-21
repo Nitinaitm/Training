@@ -128,10 +128,10 @@ namespace Training.Trainee
                 }
                 else if (feedbackDone)
                 {
-                    feedback.Text = "Feedback Submitted";
-                    feedback.Enabled = false;
-                    feedback.CssClass = "btn btn-success btn-sm disabled";
-                    feedback.ToolTip = "Batch feedback has already been submitted.";
+                    feedback.Text = "View Feedback";
+                    feedback.Enabled = true;
+                    feedback.CssClass = "btn btn-success btn-sm";
+                    feedback.ToolTip = "View submitted feedback in read-only mode.";
                 }
                 else if (attendanceRequired && !attendanceDone)
                 {
@@ -172,6 +172,7 @@ namespace Training.Trainee
                     if (preRequired) allowed = allowed && preDone;
                     if (postRequired) allowed = allowed && postDone;
                     if (feedbackRequired && !feedbackSkipped) allowed = allowed && feedbackDone;
+                    if (allowed && (preRequired || postRequired)) allowed = IsCertificateTestEligible(data["TrainingID"].ToString(), empID, preRequired, postRequired);
 
                     certificate.Enabled = allowed;
                     certificate.CssClass = allowed ? "btn btn-info btn-sm" : "btn btn-info btn-sm disabled";
@@ -183,6 +184,40 @@ namespace Training.Trainee
                 attendance.CssClass = "btn btn-primary btn-sm disabled";
         }
 
+        private bool IsCertificateTestEligible(string trainingID, string empID, bool preRequired, bool postRequired)
+        {
+            object modeValue = objDB.ExecuteScalar("SELECT ISNULL(CertificateEligibilityMode,'ALL') FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+            string mode = modeValue == null || modeValue == DBNull.Value ? "ALL" : modeValue.ToString().Trim().ToUpperInvariant();
+            if (mode == "ALL") return true;
+            if (mode == "PASS")
+            {
+                if (preRequired && !AreAllRequiredTestsPassed(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
+                if (postRequired && !AreAllRequiredTestsPassed(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
+                return true;
+            }
+            if (mode == "FAIL")
+            {
+                if (!preRequired && !postRequired) return true;
+                bool failed = false;
+                if (preRequired) failed = failed || HasRequiredTestFailed(trainingID, empID, "Pre", "PreAssessmentSkipped");
+                if (postRequired) failed = failed || HasRequiredTestFailed(trainingID, empID, "Post", "PostAssessmentSkipped");
+                return failed;
+            }
+            return true;
+        }
+
+        private bool AreAllRequiredTestsPassed(string trainingID, string empID, string testType, string skipColumn)
+        {
+            string sql = "SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + ",0)=0 AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1) OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestResult TR ON TR.TestID=TM.TestID AND TR.EmpID=@EmpID WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TR.IsFinalAttempt=1 AND TR.ResultStatus IN ('PASS','PASSED')))) THEN 1 ELSE 0 END";
+            return Convert.ToInt32(objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID), new SqlParameter("@TestType", testType) })) == 1;
+        }
+
+        private bool HasRequiredTestFailed(string trainingID, string empID, string testType, string skipColumn)
+        {
+            string sql = "SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionMaster S INNER JOIN TestMaster TM ON TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 INNER JOIN TestResult TR ON TR.TestID=TM.TestID AND TR.EmpID=@EmpID AND TR.IsFinalAttempt=1 WHERE S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + ",0)=0 AND TR.ResultStatus IN ('FAIL','FAILED')) THEN 1 ELSE 0 END";
+            return Convert.ToInt32(objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID), new SqlParameter("@TestType", testType) })) == 1;
+        }
+
         protected void gvTraining_RowCommand(object sender, GridViewCommandEventArgs e)
         {
             string trainingID = Convert.ToString(e.CommandArgument);
@@ -191,7 +226,7 @@ namespace Training.Trainee
             Session["TrainingID"] = trainingID;
             if (e.CommandName == "ViewTraining") { Response.Redirect("TrainingDetails.aspx", false); return; }
             if (e.CommandName == "Attendance") { Response.Redirect("Attendance.aspx", false); return; }
-            if (e.CommandName == "BatchFeedback") { Response.Redirect("TraineeFeedback.aspx", false); return; }
+            if (e.CommandName == "BatchFeedback") { Response.Redirect("TraineeFeedback.aspx?mode=view", false); return; }
             if (e.CommandName == "Certificate")
             {
                 Session["CertificateFromTraining"] = true;
