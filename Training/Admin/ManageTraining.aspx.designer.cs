@@ -14,6 +14,8 @@ namespace Training.Admin {
         protected global::System.Web.UI.WebControls.Button btnAssignHostel;
         protected global::System.Web.UI.WebControls.Button btnStartTraining;
         protected global::System.Web.UI.WebControls.Button btnAttendance;
+        
+        protected global::System.Web.UI.WebControls.Button btnCloseTraining;
         protected global::System.Web.UI.WebControls.Panel pnlHostelConfirmation;
         protected global::System.Web.UI.WebControls.Button btnHostelYes;
         protected global::System.Web.UI.WebControls.Button btnHostelNo;
