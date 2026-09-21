@@ -58,7 +58,9 @@
         /* Rating Stars */
 
         .star-rating {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
             .star-rating input[type="radio"] {
@@ -74,6 +76,15 @@
                 cursor: pointer;
                 margin-right: 4px;
                 line-height: 1;
+                transition: color 0.15s ease;
+            }
+
+            .star-rating input[type="radio"]:checked + label {
+                color: #ffc107;
+            }
+
+            .star-rating label:hover {
+                color: #ffc107;
             }
 
         /* Yes / No */
