@@ -3,7 +3,7 @@
     Inherits="Training.BatchLifecycle" %>
 
 <style>
-    .bl-wrap {
+    .lifecycle-section{margin-top:16px;padding:14px;border:1px solid #dee2e6;border-radius:10px;background:#fff}.lifecycle-section:first-child{margin-top:0}.lifecycle-title{font-size:17px;font-weight:700;margin-bottom:14px;text-align:center;color:#212529}.lifecycle-section .stage-line{display:flex;align-items:flex-start;min-width:900px}.lifecycle-section .bl-item{flex:1;position:relative;text-align:center}.lifecycle-section .bl-item:not(:last-child):after{content:"";position:absolute;top:25px;left:50%;width:100%;height:4px;background:#dc3545;z-index:0}.lifecycle-section .bl-item.bl-done:not(:last-child):after{background:#198754}.lifecycle-section .bl-bubble{position:relative;z-index:1}.lifecycle-section .bl-label{font-size:12px;font-weight:600;line-height:1.25;padding:0 4px}.lifecycle-section .bl-state{font-size:10px;margin-top:3px}.session-cycle{background:#fff}\n    .bl-wrap {
         margin: 20px 0 25px;
         padding: 20px;
         border: 1px solid #dee2e6;
