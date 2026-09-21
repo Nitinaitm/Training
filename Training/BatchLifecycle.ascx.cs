@@ -73,14 +73,14 @@ namespace Training
 
             if (skipped)
             {
-                css = "skipped";
+                css = "bl-skipped";
                 state = "Skipped";
                 bubble = "–";
                 tooltip = name + ": Skipped";
             }
             else if (!required)
             {
-                css = "na";
+                css = "bl-na";
                 state = "Not Required";
                 bubble = "–";
                 tooltip = name + ": Not Required";
@@ -98,14 +98,14 @@ namespace Training
 
                     if (i.Completed >= i.Total)
                     {
-                        css = "done";
+                        css = "bl-done";
                         state = "✓ Completed";
                         bubble = "✓";
                         tooltip = name + ": " + i.Completed + "/" + i.Total + " (100%) - Completed";
                     }
                     else
                     {
-                        css = "partial";
+                        css = "bl-partial";
                         state = i.Completed > 0 ? "In Progress" : "Pending";
                         bubble = "";
                         style = "background:conic-gradient(#198754 0% " + percent + "%, #dc3545 " + percent + "% 100%);";
@@ -114,7 +114,7 @@ namespace Training
                 }
                 else
                 {
-                    css = "pending";
+                    css = "bl-pending";
                     state = "Pending";
                     bubble = "";
                     tooltip = name + ": Pending";
