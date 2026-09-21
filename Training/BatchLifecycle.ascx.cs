@@ -136,7 +136,7 @@ namespace Training
 
                 bool attendanceDone = GetBool("SELECT CASE WHEN ISNULL(AttendanceStatus,'')='Completed' THEN 1 ELSE 0 END FROM SessionMaster WHERE TrainingID=@TrainingID AND SessionID=@SessionID", trainingID, new SqlParameter("@SessionID", sessionID));
                 if (trainee)
-                    attendanceDone = GetCount("SELECT COUNT(*) FROM SessionAttendance WHERE SessionID=@SessionID AND EmpID=@EmpID AND AttendanceStatus IN ('Present','Completed')", trainingID, new SqlParameter("@SessionID", sessionID), new SqlParameter("@EmpID", empID));
+                    attendanceDone = GetCount("SELECT COUNT(*) FROM SessionAttendance WHERE SessionID=@SessionID AND EmpID=@EmpID AND AttendanceStatus IN ('Present','Completed')", trainingID, new SqlParameter("@SessionID", sessionID), new SqlParameter("@EmpID", empID)) > 0;
 
                 bool publishedPre = GetCount("SELECT COUNT(*) FROM TestMaster WHERE SessionID=@SessionID AND TestType='Pre' AND IsPublished=1", trainingID, new SqlParameter("@SessionID", sessionID)) > 0;
                 bool publishedPost = GetCount("SELECT COUNT(*) FROM TestMaster WHERE SessionID=@SessionID AND TestType='Post' AND IsPublished=1", trainingID, new SqlParameter("@SessionID", sessionID)) > 0;
