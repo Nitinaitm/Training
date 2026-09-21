@@ -55,6 +55,17 @@ namespace Training.Trainee
                     trainingID,
                     empID);
 
+                if (String.Equals(Request.QueryString["mode"], "view", StringComparison.OrdinalIgnoreCase))
+                {
+                    BuildFeedback();
+                    LoadExistingFeedback();
+                    SetFeedbackReadOnly();
+                    btnSubmit.Visible = false;
+                    lblMessage.Text = "Feedback submitted. You are viewing it in read-only mode.";
+                    lblMessage.ForeColor = System.Drawing.Color.Green;
+                    return;
+                }
+
                 if (!CanSubmitFeedback())
                 {
                     lblMessage.Text =
@@ -91,6 +102,44 @@ namespace Training.Trainee
             }
 
             BuildFeedback();
+        }
+
+        private void LoadExistingFeedback()
+        {
+            string sql = "SELECT FD.QuestionID,FD.SessionID,FD.TrainerID,FD.Rating,FD.Answer FROM Feedback F INNER JOIN FeedbackDetail FD ON FD.FeedbackID=F.FeedbackID WHERE F.TrainingID=@TrainingID AND F.EmpID=@EmpID AND F.Submitted=1";
+            DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@TrainingID", Session["TrainingID"].ToString()), new SqlParameter("@EmpID", Session["EmpID"].ToString().ToUpperInvariant()) });
+            foreach (DataRow row in dt.Rows)
+            {
+                string questionID = Convert.ToString(row["QuestionID"]);
+                string sessionID = row["SessionID"] == DBNull.Value ? "" : Convert.ToString(row["SessionID"]);
+                string trainerID = row["TrainerID"] == DBNull.Value ? "" : Convert.ToString(row["TrainerID"]);
+                string controlID = "ANS_" + questionID + "_" + sessionID + "_" + trainerID;
+                Control answer = phFeedback.FindControl(controlID);
+                if (answer == null) continue;
+                if (answer is RadioButtonList)
+                {
+                    RadioButtonList rbl = (RadioButtonList)answer;
+                    string value = "";
+                    if (row["Rating"] != DBNull.Value && Convert.ToInt32(row["Rating"]) > 0) value = Convert.ToString(row["Rating"]);
+                    if (String.IsNullOrWhiteSpace(value)) value = row["Answer"] == DBNull.Value ? "" : Convert.ToString(row["Answer"]);
+                    if (!String.IsNullOrWhiteSpace(value) && rbl.Items.FindByValue(value) != null) rbl.SelectedValue = value;
+                }
+                else if (answer is TextBox)
+                {
+                    ((TextBox)answer).Text = row["Answer"] == DBNull.Value ? "" : Convert.ToString(row["Answer"]);
+                }
+            }
+        }
+
+        private void SetFeedbackReadOnly()
+        {
+            foreach (Control ctrl in phFeedback.Controls)
+            {
+                Panel panel = ctrl as Panel;
+                if (panel == null) continue;
+                panel.Enabled = false;
+                panel.CssClass = "question-row feedback-readonly";
+            }
         }
 
         private bool CanSubmitFeedback()
