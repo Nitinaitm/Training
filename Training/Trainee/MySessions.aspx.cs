@@ -13,13 +13,64 @@ namespace Training.Trainee
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["EmpID"] == null) { Response.Redirect("~/Default.aspx"); return; }
-            if (Session["TrainingID"] == null || Session["SessionID"] == null) { Response.Redirect("MyTrainings.aspx"); return; }
+            if (Session["EmpID"] == null)
+            {
+                Response.Redirect("~/Default.aspx");
+                return;
+            }
+
+            string empID = Convert.ToString(Session["EmpID"]).Trim().ToUpperInvariant();
+            string sessionID = Convert.ToString(Session["SessionID"]).Trim();
+            string trainingID = Convert.ToString(Session["TrainingID"]).Trim();
+
+            if (string.IsNullOrWhiteSpace(sessionID))
+            {
+                Response.Redirect("MyTrainings.aspx");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(trainingID))
+            {
+                object value = objDB.ExecuteScalar(
+                    "SELECT TrainingID FROM SessionMaster WHERE SessionID=@SessionID",
+                    new SqlParameter[] { new SqlParameter("@SessionID", sessionID) });
+
+                trainingID = value == null || value == DBNull.Value ? "" : Convert.ToString(value).Trim();
+
+                if (!string.IsNullOrWhiteSpace(trainingID))
+                {
+                    Session["TrainingID"] = trainingID;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(trainingID))
+            {
+                Response.Redirect("MyTrainings.aspx");
+                return;
+            }
+
             if (!IsPostBack)
             {
-                string trainingID = Session["TrainingID"].ToString(), sessionID = Session["SessionID"].ToString(), empID = Session["EmpID"].ToString().ToUpperInvariant();
+                Session["EmpID"] = empID;
+                Session["SessionID"] = sessionID;
+                Session["TrainingID"] = trainingID;
+
+                LoadSessionDetails();
+
+                if (Response.IsRequestBeingRedirected)
+                {
+                    return;
+                }
+
+                LoadRequirements();
+
+                if (Response.IsRequestBeingRedirected)
+                {
+                    return;
+                }
+
                 SessionSummary1.LoadSession(trainingID, sessionID, empID);
-                LoadSessionDetails(); LoadRequirements(); LoadTestStatus();
+                LoadTestStatus();
             }
         }
 
@@ -62,7 +113,22 @@ namespace Training.Trainee
             int running = 0, submitted = 0; if (a.Rows.Count > 0) { if (a.Rows[0]["RunningAttempt"] != DBNull.Value) running = Convert.ToInt32(a.Rows[0]["RunningAttempt"]); if (a.Rows[0]["SubmittedAttempt"] != DBNull.Value) submitted = Convert.ToInt32(a.Rows[0]["SubmittedAttempt"]); }
             Label status = pre ? lblPreStatus : lblPostStatus; Button button = pre ? btnPreTest : btnPostTest;
             if (AttendanceRequired && !SessionAttendanceDone()) { status.Text = "Waiting for Attendance"; status.CssClass = "badge badge-warning status-badge"; button.Text = "Start " + type + " Test"; button.Enabled = false; button.CommandArgument = ""; return; }
-            if (!pre && PreRequired && !PreSkipped && objDB.ExecuteScalar("SELECT CASE WHEN EXISTS(SELECT 1 FROM TestMaster WHERE SessionID=@SessionID AND TestType='Pre' AND IsPublished=1) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@SessionID", Session["SessionID"].ToString()) }) != null && Convert.ToInt32(objDB.ExecuteScalar("SELECT CASE WHEN EXISTS(SELECT 1 FROM TestMaster WHERE SessionID=@SessionID AND TestType='Pre' AND IsPublished=1) THEN 1 ELSE 0 END", new SqlParameter[] { new SqlParameter("@SessionID", Session["SessionID"].ToString()) })) == 1 && !IsPreCompleted()) { status.Text = "Waiting for Pre Test"; status.CssClass = "badge badge-warning status-badge"; button.Text = "Start Post Test"; button.Enabled = false; button.CommandArgument = ""; return; }
+            if (!pre && PreRequired && !PreSkipped)
+            {
+                object prePublished = objDB.ExecuteScalar(
+                    "SELECT CASE WHEN EXISTS(SELECT 1 FROM TestMaster WHERE SessionID=@SessionID AND TestType='Pre' AND IsPublished=1) THEN 1 ELSE 0 END",
+                    new SqlParameter[] { new SqlParameter("@SessionID", Session["SessionID"].ToString()) });
+
+                if (prePublished != null && prePublished != DBNull.Value && Convert.ToInt32(prePublished) == 1 && !IsPreCompleted())
+                {
+                    status.Text = "Waiting for Pre Test";
+                    status.CssClass = "badge badge-warning status-badge";
+                    button.Text = "Start Post Test";
+                    button.Enabled = false;
+                    button.CommandArgument = "";
+                    return;
+                }
+            }
             if (running > 0) { status.Text = "In Progress"; status.CssClass = "badge badge-warning status-badge"; button.Text = "Resume " + type + " Test"; button.Enabled = true; button.CommandArgument = "Resume"; return; }
             if (submitted > 0) { status.Text = "Completed"; status.CssClass = "badge badge-success status-badge"; button.Text = "View Result"; button.Enabled = true; button.CommandArgument = "Result"; return; }
             status.Text = "Available"; status.CssClass = "badge badge-primary status-badge"; button.Text = "Start " + type + " Test"; button.Enabled = true; button.CommandArgument = "Start";
