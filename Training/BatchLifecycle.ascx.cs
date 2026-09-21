@@ -136,8 +136,8 @@ namespace Training
         private StageInfo GetAttendance(string t, string e, string tr, bool trainee)
         {
             string q = trainee
-                ? "SELECT COUNT(*) Total,SUM(CASE WHEN EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID AND SA.AttendanceStatus IN ('Present','Completed')) THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0"
-                : "SELECT COUNT(*) Total,SUM(CASE WHEN EXISTS(SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.SessionID AND SA.AttendanceStatus IN ('Present','Completed')) THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND SM.TrainerID=@TrainerID";
+                ? "SELECT COUNT(*) Total,SUM(CASE WHEN ISNULL(SM.AttendanceStatus,'')='Completed' THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0"
+                : "SELECT COUNT(*) Total,SUM(CASE WHEN ISNULL(SM.AttendanceStatus,'')='Completed' THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND SM.TrainerID=@TrainerID";
 
             return ReadStage(
                 new clsDataAccess().GetDataTable(
