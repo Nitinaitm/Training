@@ -25,7 +25,7 @@
 <asp:BoundField HeaderText="Attendance" DataField="AttendanceStatus" />
 <asp:TemplateField HeaderText="Pre Test"><ItemTemplate><asp:Label ID="lblPre" runat="server" ForeColor="Black" Text='<%# Eval("PreStatus") %>'></asp:Label></ItemTemplate></asp:TemplateField>
 <asp:TemplateField HeaderText="Post Test"><ItemTemplate><asp:Label ID="lblPost" runat="server" ForeColor="Black" Text='<%# Eval("PostStatus") %>'></asp:Label></ItemTemplate></asp:TemplateField>
-<asp:TemplateField HeaderText="Action"><ItemTemplate><asp:LinkButton ID="lnkView" runat="server" CssClass="btn btn-primary btn-sm" CommandName="ViewSession" CommandArgument='<%# Eval("SessionID") %>'>View</asp:LinkButton></ItemTemplate></asp:TemplateField>
+<asp:TemplateField HeaderText="Action"><ItemTemplate><asp:HyperLink ID="lnkView" runat="server" CssClass="btn btn-primary btn-sm" NavigateUrl='<%# "MySessions.aspx?SessionID=" + Eval("SessionID") %>'>View</asp:HyperLink></ItemTemplate></asp:TemplateField>
 </Columns></asp:GridView></div></div>
 <div class="row"><div class="col-md-12 text-center">
 <asp:Button ID="btnBack" runat="server" Text="Back" CssClass="btn btn-secondary" CausesValidation="false" OnClick="btnBack_Click" />
