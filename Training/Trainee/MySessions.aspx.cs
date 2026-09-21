@@ -63,9 +63,15 @@ namespace Training.Trainee
 
             if (!IsPostBack)
             {
+                SessionSummary1.LoadSession(
+                    trainingID,
+                    sessionID,
+                    empID);
+
                 LoadSessionDetails();
+
                 LoadRequirements();
-                SessionSummary1.LoadSession(trainingID, sessionID, empID);
+
                 LoadTestStatus();
             }
         }
@@ -84,15 +90,17 @@ namespace Training.Trainee
 
             DataTable dt = objDB.GetDataTable("SELECT TOP 1 ISNULL(TD.AttendanceRequired,0) AS AttendanceRequired,ISNULL(TD.InitialAssessmentRequired,0) AS InitialAssessmentRequired,ISNULL(TD.FinalAssessmentRequired,0) AS FinalAssessmentRequired,ISNULL(SM.PreAssessmentSkipped,0) AS PreSkipped,ISNULL(SM.PostAssessmentSkipped,0) AS PostSkipped FROM SessionMaster SM LEFT JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID WHERE SM.TrainingID=@TrainingID AND SM.SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@SessionID", sessionID) });
 
-            if (dt.Rows.Count == 0)
+            AttendanceRequired = false;
+            PreRequired = false;
+            PostRequired = false;
+            PreSkipped = false;
+            PostSkipped = false;
+
+            btnPreTest.Visible = false;
+            btnPostTest.Visible = false;
+
+            if (dt == null || dt.Rows.Count == 0)
             {
-                AttendanceRequired = false;
-                PreRequired = false;
-                PostRequired = false;
-                PreSkipped = false;
-                PostSkipped = false;
-                btnPreTest.Visible = false;
-                btnPostTest.Visible = false;
                 return;
             }
 
@@ -105,15 +113,6 @@ namespace Training.Trainee
             btnPreTest.Visible = PreRequired;
             btnPostTest.Visible = PostRequired;
 
-            if (lblPreStatus.Parent != null)
-            {
-                lblPreStatus.Parent.Visible = PreRequired;
-            }
-
-            if (lblPostStatus.Parent != null)
-            {
-                lblPostStatus.Parent.Visible = PostRequired;
-            }
         }
 
         private bool SessionAttendanceDone()
@@ -135,7 +134,7 @@ namespace Training.Trainee
 
             DataTable dt = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@SessionID", sessionID) });
 
-            if (dt.Rows.Count == 0)
+            if (dt == null || dt.Rows.Count == 0)
             {
                 lblTrainingID.Text = trainingID;
                 lblCourse.Text = "-";
@@ -224,7 +223,7 @@ namespace Training.Trainee
 
             DataTable dt = objDB.GetDataTable("SELECT TOP 1 TestID,IsPublished FROM TestMaster WHERE SessionID=@SessionID AND TestType=@Type ORDER BY TestID DESC", new SqlParameter[] { new SqlParameter("@SessionID", sessionID), new SqlParameter("@Type", type) });
 
-            if (dt.Rows.Count == 0 || dt.Rows[0]["IsPublished"] == DBNull.Value || !Convert.ToBoolean(dt.Rows[0]["IsPublished"]))
+            if (dt == null || dt.Rows.Count == 0 || dt.Rows[0]["IsPublished"] == DBNull.Value || !Convert.ToBoolean(dt.Rows[0]["IsPublished"]))
             {
                 if (isPre)
                 {
@@ -245,7 +244,7 @@ namespace Training.Trainee
             int running = 0;
             int submitted = 0;
 
-            if (attemptDT.Rows.Count > 0)
+            if (attemptDT != null && attemptDT.Rows.Count > 0)
             {
                 if (attemptDT.Rows[0]["RunningAttempt"] != DBNull.Value)
                 {
@@ -359,6 +358,7 @@ namespace Training.Trainee
         {
             lblPreStatus.Text = "Not Published";
             lblPreStatus.CssClass = "badge badge-secondary status-badge";
+            btnPreTest.Visible = true;
             btnPreTest.Text = "Pre Test Not Available";
             btnPreTest.Enabled = false;
             btnPreTest.CommandArgument = "";
@@ -368,6 +368,7 @@ namespace Training.Trainee
         {
             lblPostStatus.Text = "Not Published";
             lblPostStatus.CssClass = "badge badge-secondary status-badge";
+            btnPostTest.Visible = true;
             btnPostTest.Text = "Post Test Not Available";
             btnPostTest.Enabled = false;
             btnPostTest.CommandArgument = "";
