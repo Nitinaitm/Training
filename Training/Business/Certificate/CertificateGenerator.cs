@@ -66,11 +66,22 @@ namespace Training.Business.Certificate
             if (attendanceRequired && !AreAllRequiredSessionAttendanceCompleted(trainingID))
                 return false;
 
-            if (preRequired && !AreAllRequiredSessionTestsPassed(trainingID, empID, "Pre", "PreAssessmentSkipped"))
-                return false;
-
-            if (postRequired && !AreAllRequiredSessionTestsPassed(trainingID, empID, "Post", "PostAssessmentSkipped"))
-                return false;
+            string certificateBasis = GetCertificateEligibilityMode(trainingID);
+            if (certificateBasis == "PASS")
+            {
+                if (preRequired && !AreAllRequiredSessionTestsPassed(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
+                if (postRequired && !AreAllRequiredSessionTestsPassed(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
+            }
+            else if (certificateBasis == "FAIL")
+            {
+                if (preRequired || postRequired)
+                {
+                    bool failed = false;
+                    if (preRequired) failed = failed || HasAnyRequiredSessionTestFailed(trainingID, empID, "Pre", "PreAssessmentSkipped");
+                    if (postRequired) failed = failed || HasAnyRequiredSessionTestFailed(trainingID, empID, "Post", "PostAssessmentSkipped");
+                    if (!failed) return false;
+                }
+            }
 
             if (feedbackRequired && !feedbackSkipped)
             {
@@ -153,6 +164,20 @@ namespace Training.Business.Certificate
                     new SqlParameter("@EmpID", empID),
                     new SqlParameter("@TestType", testType)
                 });
+            return value != null && value != DBNull.Value && Convert.ToInt32(value) == 1;
+        }
+
+        private string GetCertificateEligibilityMode(string trainingID)
+        {
+            object value = objDB.ExecuteScalar("SELECT ISNULL(CertificateEligibilityMode,'ALL') FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+            string mode = value == null || value == DBNull.Value ? "ALL" : value.ToString().Trim().ToUpperInvariant();
+            return mode == "PASS" || mode == "FAIL" ? mode : "ALL";
+        }
+
+        private bool HasAnyRequiredSessionTestFailed(string trainingID, string empID, string testType, string skipColumn)
+        {
+            string sql = "SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionMaster S INNER JOIN TestMaster TM ON TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 INNER JOIN TestResult TR ON TR.TestID=TM.TestID AND TR.EmpID=@EmpID AND TR.IsFinalAttempt=1 WHERE S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + ",0)=0 AND TR.ResultStatus IN ('FAIL','FAILED')) THEN 1 ELSE 0 END";
+            object value = objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID), new SqlParameter("@TestType", testType) });
             return value != null && value != DBNull.Value && Convert.ToInt32(value) == 1;
         }
 
