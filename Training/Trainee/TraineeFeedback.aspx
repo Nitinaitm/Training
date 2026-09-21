@@ -37,6 +37,16 @@
             border-bottom: 1px solid #ececec;
         }
 
+        .feedback-readonly {
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .feedback-readonly input,
+        .feedback-readonly textarea {
+            cursor: default;
+        }
+
             .question-row:last-child {
                 border-bottom: none;
             }
