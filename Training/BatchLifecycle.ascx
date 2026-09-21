@@ -21,7 +21,8 @@
 
     .bl-scroll {
         overflow-x: auto;
-        padding: 8px 0 12px;
+        overflow-y: visible;
+        padding: 8px 0 48px;
     }
 
     .bl-line {
@@ -47,12 +48,12 @@
         z-index: 0;
     }
 
-    .bl-item.done:not(:last-child):after {
+    .bl-item.bl-done:not(:last-child):after {
         background: #198754;
     }
 
-    .bl-item.skipped:not(:last-child):after,
-    .bl-item.na:not(:last-child):after {
+    .bl-item.bl-skipped:not(:last-child):after,
+    .bl-item.bl-na:not(:last-child):after {
         background: #dc3545;
     }
 
@@ -73,18 +74,18 @@
         cursor: help;
     }
 
-    .bl-item.done .bl-bubble {
+    .bl-item.bl-done .bl-bubble {
         background: #198754;
         box-shadow: 0 0 0 1px #198754;
     }
 
-    .bl-item.na .bl-bubble,
-    .bl-item.skipped .bl-bubble {
+    .bl-item.bl-na .bl-bubble,
+    .bl-item.bl-skipped .bl-bubble {
         background: #adb5bd;
         box-shadow: 0 0 0 1px #adb5bd;
     }
 
-    .bl-item.partial .bl-bubble {
+    .bl-item.bl-partial .bl-bubble {
         box-shadow: 0 0 0 1px #198754;
     }
 
@@ -102,12 +103,12 @@
         color: #dc3545;
     }
 
-    .bl-item.done .bl-state {
+    .bl-item.bl-done .bl-state {
         color: #198754;
     }
 
-    .bl-item.na .bl-state,
-    .bl-item.skipped .bl-state {
+    .bl-item.bl-na .bl-state,
+    .bl-item.bl-skipped .bl-state {
         color: #6c757d;
     }
 
@@ -119,7 +120,8 @@
         content: attr(data-tooltip);
         position: absolute;
         left: 50%;
-        bottom: calc(100% + 10px);
+        top: calc(100% + 8px);
+        bottom: auto;
         transform: translateX(-50%);
         background: #212529;
         color: #fff;
@@ -137,10 +139,12 @@
         content: "";
         position: absolute;
         left: 50%;
-        bottom: calc(100% + 4px);
+        top: calc(100% + 2px);
+        bottom: auto;
         transform: translateX(-50%);
         border: 6px solid transparent;
-        border-top-color: #212529;
+        border-top-color: transparent;
+        border-bottom-color: #212529;
         z-index: 1001;
     }
 
