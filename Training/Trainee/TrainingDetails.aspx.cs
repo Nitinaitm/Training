@@ -98,11 +98,23 @@ ORDER BY TRY_CONVERT(INT,SM.SessionNo),SM.SessionNo";
 
         protected void gvSession_RowCommand(object sender, GridViewCommandEventArgs e)
         {
-            if (e.CommandName == "ViewSession")
+            if (e.CommandName != "ViewSession") return;
+
+            string sessionID = Convert.ToString(e.CommandArgument).Trim();
+
+            if (string.IsNullOrWhiteSpace(sessionID))
             {
-                Session["SessionID"] = e.CommandArgument.ToString();
-                Response.Redirect("MySessions.aspx", false);
+                Response.Redirect("TrainingDetails.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
             }
+
+            Session["EmpID"] = EmpID;
+            Session["TrainingID"] = TrainingID;
+            Session["SessionID"] = sessionID;
+
+            Response.Redirect("MySessions.aspx", false);
+            Context.ApplicationInstance.CompleteRequest();
         }
 
         private void LoadProgress()
