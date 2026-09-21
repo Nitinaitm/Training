@@ -21,6 +21,9 @@ namespace Training.Admin {
         protected global::System.Web.UI.WebControls.Label lblCertificateStatus;
         protected global::System.Web.UI.WebControls.Button btnCertificateRequired;
         protected global::System.Web.UI.WebControls.Button btnCertificateNotRequired;
+        protected global::System.Web.UI.WebControls.Label lblCertificateBasis;
+        protected global::System.Web.UI.WebControls.DropDownList ddlCertificateBasis;
+        protected global::System.Web.UI.WebControls.Button btnSaveCertificateBasis;
         protected global::System.Web.UI.WebControls.TextBox txtCertificateReason;
         protected global::System.Web.UI.WebControls.Button btnCertificate;
         protected global::System.Web.UI.WebControls.GridView gvSessions;
