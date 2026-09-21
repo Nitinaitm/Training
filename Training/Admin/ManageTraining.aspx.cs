@@ -249,7 +249,6 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
                 btnAssignTrainee.Text = ta ? "Assign Trainee ✓" : "Assign Trainee";
             }
             else if (hostelRequired) btnAssignHostel.Text = "Assign Hostel";
-            BuildLifecycle();
         }
 
         private void ShowStartValidation(List<string> missingSteps)
