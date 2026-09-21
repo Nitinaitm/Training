@@ -1012,8 +1012,10 @@ question +
 
                 if (certificateGenerated)
                 {
-                    lblMessage.Text =
-                        "Feedback submitted successfully. Your certificate has been generated.";
+                    Session["CertificateFromTraining"] = "1";
+                    Response.Redirect("MyCertificate.aspx", false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
                 }
                 else
                 {
