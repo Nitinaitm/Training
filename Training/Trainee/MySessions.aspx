@@ -32,8 +32,8 @@
 
 <div class="container-fluid">
       <uc1:SessionSummary
-    ID="SessionSummary1"
-    runat="server" />
+            ID="SessionSummary1"
+            runat="server" />
 <div class="row" >
 
 <div class="col-md-12">
@@ -45,7 +45,7 @@
 
 <div class="card-body">
 
-<div class="row" runat="server" visible="false">
+<div class="row">
 
 <div class="col-md-3">
 
@@ -107,7 +107,7 @@ runat="server" />
 
 
 
-<div class="row"  runat="server" visible="false">
+<div class="row">
 
 <div class="col-md-3">
 
@@ -169,7 +169,7 @@ runat="server" />
 
 
 
-<div class="row"  runat="server" visible="false">
+<div class="row">
 
 <div class="col-md-3">
 
