@@ -82,12 +82,17 @@ namespace Training.Trainee
                 return;
             }
 
-            DataTable dt = objDB.GetDataTable("SELECT TD.AttendanceRequired,TD.InitialAssessmentRequired,TD.FinalAssessmentRequired,ISNULL(SM.PreAssessmentSkipped,0) AS PreSkipped,ISNULL(SM.PostAssessmentSkipped,0) AS PostSkipped FROM TrainingDetails TD INNER JOIN SessionMaster SM ON SM.TrainingID=TD.TrainingID WHERE TD.TrainingID=@TrainingID AND SM.SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@SessionID", sessionID) });
+            DataTable dt = objDB.GetDataTable("SELECT TOP 1 ISNULL(TD.AttendanceRequired,0) AS AttendanceRequired,ISNULL(TD.InitialAssessmentRequired,0) AS InitialAssessmentRequired,ISNULL(TD.FinalAssessmentRequired,0) AS FinalAssessmentRequired,ISNULL(SM.PreAssessmentSkipped,0) AS PreSkipped,ISNULL(SM.PostAssessmentSkipped,0) AS PostSkipped FROM SessionMaster SM LEFT JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID WHERE SM.TrainingID=@TrainingID AND SM.SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@SessionID", sessionID) });
 
             if (dt.Rows.Count == 0)
             {
-                Response.Redirect("TrainingDetails.aspx", false);
-                Context.ApplicationInstance.CompleteRequest();
+                AttendanceRequired = false;
+                PreRequired = false;
+                PostRequired = false;
+                PreSkipped = false;
+                PostSkipped = false;
+                btnPreTest.Visible = false;
+                btnPostTest.Visible = false;
                 return;
             }
 
@@ -235,7 +240,7 @@ namespace Training.Trainee
 
             string testID = Convert.ToString(dt.Rows[0]["TestID"]).Trim();
 
-            DataTable attemptDT = objDB.GetDataTable("SELECT SUM(CASE WHEN Submitted=0 THEN 1 ELSE 0 END) AS RunningAttempt,SUM(CASE WHEN Submitted=1 THEN 1 ELSE 0 END) AS SubmittedAttempt FROM TestAttempt WHERE TestID=@TestID AND EmpID=@EmpID", new SqlParameter[] { new SqlParameter("@TestID", testID), new SqlParameter("@EmpID", empID) });
+            DataTable attemptDT = objDB.GetDataTable("SELECT ISNULL(SUM(CASE WHEN ISNULL(Submitted,0)=0 THEN 1 ELSE 0 END),0) AS RunningAttempt,ISNULL(SUM(CASE WHEN Submitted=1 THEN 1 ELSE 0 END),0) AS SubmittedAttempt FROM TestAttempt WHERE TestID=@TestID AND EmpID=@EmpID", new SqlParameter[] { new SqlParameter("@TestID", testID), new SqlParameter("@EmpID", empID) });
 
             int running = 0;
             int submitted = 0;
