@@ -45,10 +45,12 @@ namespace Training.Admin
             if (completed)
             {
                 btnUpdateTraining.Visible = false; btnAssignSession.Visible = false; btnAssignTrainee.Visible = false; btnRequirements.Visible = false;
-                btnAssignFeedback.Visible = false; btnAssignHostel.Visible = false; btnCertificateTemplate.Visible = false; btnStartTraining.Visible = false; btnAttendance.Visible = true;
+                btnAssignFeedback.Visible = false; btnAssignHostel.Visible = false; btnCertificateTemplate.Visible = false; btnStartTraining.Visible = false; btnAttendance.Visible = true; btnCloseTraining.Visible = false;
             }
             else
             {
+                btnCloseTraining.Visible = started;
+                btnCloseTraining.Enabled = started;
                 btnRequirements.Visible = started;
                 if (!started)
                 {
