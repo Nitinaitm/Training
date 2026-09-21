@@ -14,14 +14,14 @@ namespace Training.Trainee
         protected void Page_Init(object sender, EventArgs e)
         {
             if (Session["EmpID"] == null || string.IsNullOrWhiteSpace(Session["EmpID"].ToString())) return;
-            if (Session["Role"] == null || !string.Equals(Session["Role"].ToString(), "Emp", StringComparison.OrdinalIgnoreCase)) return;
+            if (Session["Role"] == null || !string.Equals(Session["Role"].ToString(), "Trainee", StringComparison.OrdinalIgnoreCase)) return;
             EmpID = Session["EmpID"].ToString().Trim().ToUpperInvariant();
             BindClosedTraining();
         }
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["EmpID"] == null || string.IsNullOrWhiteSpace(Session["EmpID"].ToString()) || Session["Role"] == null || !string.Equals(Session["Role"].ToString(), "Emp", StringComparison.OrdinalIgnoreCase))
+            if (Session["EmpID"] == null || string.IsNullOrWhiteSpace(Session["EmpID"].ToString()) || Session["Role"] == null || !string.Equals(Session["Role"].ToString(), "Trainee", StringComparison.OrdinalIgnoreCase))
             {
                 Response.Redirect("~/Default.aspx");
                 return;
