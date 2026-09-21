@@ -159,7 +159,7 @@ namespace Training
         {
             string skip = type == "Pre" ? "PreAssessmentSkipped" : "PostAssessmentSkipped";
             string q = trainee
-                ? "SELECT COUNT(*) Total,SUM(CASE WHEN EXISTS(SELECT 1 FROM TestMaster T WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1) AND EXISTS(SELECT 1 FROM TestMaster T INNER JOIN TestAttempt A ON A.TestID=T.TestID WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1 AND A.EmpID=@EmpID AND A.Submitted=1) THEN 1 WHEN ISNULL(SM." + skip + ",0)=1 THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND (ISNULL(SM." + skip + ",0)=1 OR EXISTS(SELECT 1 FROM TestMaster T WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1))"
+                ? "SELECT COUNT(*) Total,SUM(CASE WHEN ISNULL(SM." + skip + ",0)=1 OR (EXISTS(SELECT 1 FROM TestMaster T WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1) AND EXISTS(SELECT 1 FROM TestMaster T INNER JOIN TestAttempt A ON A.TestID=T.TestID WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1 AND A.EmpID=@EmpID AND A.Submitted=1)) THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID"
                 : "SELECT COUNT(*) Total,SUM(CASE WHEN ISNULL(SM." + skip + ",0)=1 OR EXISTS(SELECT 1 FROM TestMaster T WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1) THEN 1 ELSE 0 END) Completed FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND SM.TrainerID=@TrainerID AND (ISNULL(SM." + skip + ",0)=1 OR EXISTS(SELECT 1 FROM TestMaster T WHERE T.SessionID=SM.SessionID AND T.TestType=@Type AND T.IsPublished=1))";
 
             return ReadStage(
