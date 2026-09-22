@@ -93,7 +93,7 @@ namespace Training.Trainee
 
         private bool CanGenerateCertificate(string trainingID, string empID)
         {
-            DataTable dt = objDB.GetDataTable(@"SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired,ISNULL(FeedbackSkipped,0) FeedbackSkipped,ISNULL(CertificateSkipped,0) CertificateSkipped FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+            DataTable dt = objDB.GetDataTable("SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,CertificateRequired,ISNULL(FeedbackSkipped,0) FeedbackSkipped,ISNULL(CertificateSkipped,0) CertificateSkipped,PreTestCertificateRule,PostTestCertificateRule FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
             if (dt.Rows.Count == 0) return false;
             DataRow r = dt.Rows[0];
 
@@ -101,39 +101,41 @@ namespace Training.Trainee
             bool certificateSkipped = Convert.ToBoolean(r["CertificateSkipped"]);
             if (!certificateRequired || certificateSkipped) return false;
 
+            bool attendanceRequired = Convert.ToBoolean(r["AttendanceRequired"]);
+            bool preRequired = Convert.ToBoolean(r["InitialAssessmentRequired"]);
+            bool postRequired = Convert.ToBoolean(r["FinalAssessmentRequired"]);
             bool feedbackRequired = Convert.ToBoolean(r["FeedbackRequired"]);
             bool feedbackSkipped = Convert.ToBoolean(r["FeedbackSkipped"]);
-            bool postRequired = Convert.ToBoolean(r["FinalAssessmentRequired"]);
-            bool preRequired = Convert.ToBoolean(r["InitialAssessmentRequired"]);
-            bool attendanceRequired = Convert.ToBoolean(r["AttendanceRequired"]);
 
             object assignment = objDB.ExecuteScalar("SELECT COUNT(*) FROM TrainingAssignment WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND AssignmentStatus='Assigned'", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) });
             if (assignment == null || Convert.ToInt32(assignment) == 0) return false;
 
-            if (attendanceRequired && !AreAllRequiredSessionAttendanceCompleted(trainingID))
-                return false;
+            if (attendanceRequired && !AreAllRequiredSessionAttendanceCompleted(trainingID)) return false;
 
-            string certificateBasis = GetCertificateEligibilityMode(trainingID);
-            if (certificateBasis == "PASS")
-            {
-                if (preRequired && !AreAllRequiredSessionTestsPassed(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
-                if (postRequired && !AreAllRequiredSessionTestsPassed(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
-            }
-            else if (certificateBasis == "FAIL")
-            {
-                if (preRequired || postRequired)
-                {
-                    bool failed = false;
-                    if (preRequired) failed = failed || HasAnyRequiredSessionTestFailed(trainingID, empID, "Pre", "PreAssessmentSkipped");
-                    if (postRequired) failed = failed || HasAnyRequiredSessionTestFailed(trainingID, empID, "Post", "PostAssessmentSkipped");
-                    if (!failed) return false;
-                }
-            }
+            string preRule = r["PreTestCertificateRule"] == DBNull.Value ? "" : r["PreTestCertificateRule"].ToString().Trim().ToUpperInvariant();
+            string postRule = r["PostTestCertificateRule"] == DBNull.Value ? "" : r["PostTestCertificateRule"].ToString().Trim().ToUpperInvariant();
 
-            if (feedbackRequired && !feedbackSkipped && !IsFeedbackSubmitted(trainingID, empID))
-                return false;
+            bool preApplicable = preRequired && HasUnskippedSessions(trainingID, "PreAssessmentSkipped");
+            bool postApplicable = postRequired && HasUnskippedSessions(trainingID, "PostAssessmentSkipped");
 
+            if (preApplicable && (preRule != "ALL" && preRule != "PASS")) return false;
+            if (postApplicable && (postRule != "ALL" && postRule != "PASS")) return false;
+
+            if (preApplicable && !AreAllRequiredSessionTestsCompleted(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
+            if (postApplicable && !AreAllRequiredSessionTestsCompleted(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
+
+            if (preApplicable && preRule == "PASS" && !AreAllRequiredSessionTestsPassed(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
+            if (postApplicable && postRule == "PASS" && !AreAllRequiredSessionTestsPassed(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
+
+            if (feedbackRequired && !feedbackSkipped && !IsFeedbackSubmitted(trainingID, empID)) return false;
             return true;
+        }
+
+        private bool HasUnskippedSessions(string trainingID, string skipColumn)
+        {
+            if (skipColumn != "PreAssessmentSkipped" && skipColumn != "PostAssessmentSkipped") return false;
+            object value = objDB.ExecuteScalar("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(" + skipColumn + ",0)=0", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+            return value != null && Convert.ToInt32(value) > 0;
         }
 
         private bool AreAllRequiredSessionAttendanceCompleted(string trainingID)
