@@ -15,7 +15,7 @@ namespace Training.Manager
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(TrainingID)) { Response.Redirect("TrainingList.aspx"); return; }
+            if (string.IsNullOrWhiteSpace(TrainingID)) { Response.Redirect("~/Manager/Default.aspx"); return; }
             if (!IsPostBack) { LoadBatchStatus(); LoadSessions(); }
         }
 
