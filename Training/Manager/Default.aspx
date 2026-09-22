@@ -32,7 +32,7 @@
             <h5 class="mb-3">Trainings for My Location</h5>
             <asp:Label ID="lblMessage" runat="server" CssClass="text-danger"></asp:Label>
             <div class="table-responsive">
-                <asp:GridView ID="gvTraining" runat="server" AutoGenerateColumns="False" CssClass="table table-bordered table-hover gridview" EmptyDataText="No Training Found" DataKeyNames="TrainingID">
+                <asp:GridView ID="gvTraining" runat="server" AutoGenerateColumns="False" CssClass="table table-bordered table-hover gridview" EmptyDataText="No Training Found" DataKeyNames="TrainingID" OnRowCommand="gvTraining_RowCommand">
                     <Columns>
                         <asp:TemplateField HeaderText="Sl No"><ItemTemplate><%# Container.DataItemIndex + 1 %></ItemTemplate></asp:TemplateField>
                         <asp:BoundField DataField="TrainingID" HeaderText="Training ID" />
@@ -43,6 +43,27 @@
                         <asp:BoundField DataField="DateFrom" HeaderText="From" />
                         <asp:BoundField DataField="DateTo" HeaderText="To" />
                         <asp:BoundField DataField="TrainingStatus" HeaderText="Status" />
+                        <asp:TemplateField HeaderText="Requirements"><ItemTemplate><asp:Button ID="btnRequirements" runat="server" Text="Required / Skip" CssClass="btn btn-warning btn-sm" CommandName="Requirements" CommandArgument='<%# Eval("TrainingID") %>' CausesValidation="false" /></ItemTemplate></asp:TemplateField>
+                    </Columns>
+                </asp:GridView>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h5 class="mb-3">Sessions for My Location</h5>
+            <div class="table-responsive">
+                <asp:GridView ID="gvSession" runat="server" AutoGenerateColumns="False" CssClass="table table-bordered table-hover gridview" EmptyDataText="No Session Found" DataKeyNames="SessionID,TrainingID" OnRowCommand="gvSession_RowCommand">
+                    <Columns>
+                        <asp:TemplateField HeaderText="Sl No"><ItemTemplate><%# Container.DataItemIndex + 1 %></ItemTemplate></asp:TemplateField>
+                        <asp:BoundField DataField="TrainingID" HeaderText="Training ID" />
+                        <asp:BoundField DataField="CourseName" HeaderText="Course" />
+                        <asp:BoundField DataField="Batch" HeaderText="Batch" />
+                        <asp:BoundField DataField="SessionNo" HeaderText="Session" />
+                        <asp:BoundField DataField="SessionName" HeaderText="Session Name" />
+                        <asp:BoundField DataField="SessionDate" HeaderText="Session Date" />
+                        <asp:BoundField DataField="AttendanceStatus" HeaderText="Attendance" />
+                        <asp:TemplateField HeaderText="Material"><ItemTemplate><asp:Button ID="btnMaterial" runat="server" Text="Material Upload" CssClass="btn btn-success btn-sm" CommandName="Material" CommandArgument='<%# Eval("SessionID") %>' CausesValidation="false" /></ItemTemplate></asp:TemplateField>
+                        <asp:TemplateField HeaderText="Attendance"><ItemTemplate><asp:Button ID="btnAttendance" runat="server" Text="Attendance" CssClass="btn btn-info btn-sm" CommandName="Attendance" CommandArgument='<%# Eval("SessionID") %>' CausesValidation="false" /></ItemTemplate></asp:TemplateField>
                     </Columns>
                 </asp:GridView>
             </div>
