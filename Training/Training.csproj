@@ -145,6 +145,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ManagerMaster.Master" />
+    <Content Include="Manager\Default.aspx" />
+    <Content Include="Manager\TrainingMaterial.aspx" />
+    <Content Include="Manager\SessionAttendance.aspx" />
+    <Content Include="Manager\TrainingRequirements.aspx" />
     <Content Include="Admin\AllCategory.aspx" />
     <Content Include="Admin\AllCourses.aspx" />
     <Content Include="Admin\AllTopic.aspx" />
@@ -527,6 +532,28 @@
     <Compile Include="AdminMaster.Master.designer.cs">
       <DependentUpon>AdminMaster.Master</DependentUpon>
     </Compile>
+    <Compile Include="ManagerMaster.Master.cs">
+      <DependentUpon>ManagerMaster.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ManagerMaster.Master.designer.cs">
+      <DependentUpon>ManagerMaster.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Manager\Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Manager\Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Manager\TrainingRequirements.aspx.cs">
+      <DependentUpon>TrainingRequirements.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Manager\TrainingRequirements.aspx.designer.cs">
+      <DependentUpon>TrainingRequirements.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Manager\TrainingRequirements.Lifecycle.cs" />
     <Compile Include="Admin\AllCategory.aspx.cs">
       <DependentUpon>AllCategory.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
