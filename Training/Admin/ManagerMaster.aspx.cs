@@ -42,7 +42,7 @@ namespace Training.Admin
 
         private void BindGrid()
         {
-            DataTable dt = objDB.GetDataTable("SELECT M.ID,M.EmpID,E.EmpName,E.EmpDesignation AS Designation,E.EmpPostingPlace AS PlaceOfPosting,M.MapForLocation,L.TrainingLocation,M.CreatedOn FROM ManagerMaster M INNER JOIN EmpBasicMaster E ON M.EmpID=E.EmpID LEFT JOIN TrainingLocationMaster L ON M.TrainingLocationID=L.TrainingLocationID WHERE ISNULL(M.ActiveStatus,'Y')='Y' ORDER BY M.ID DESC");
+            DataTable dt = objDB.GetDataTable("SELECT M.ID,M.ManagerID,M.EmpID,E.EmpName,E.EmpDesignation AS Designation,E.EmpPostingPlace AS PlaceOfPosting,M.MapForLocation,L.TrainingLocation,M.CreatedOn FROM ManagerMaster M INNER JOIN EmpBasicMaster E ON M.EmpID=E.EmpID LEFT JOIN TrainingLocationMaster L ON M.TrainingLocationID=L.TrainingLocationID WHERE ISNULL(M.ActiveStatus,'Y')='Y' ORDER BY M.ID DESC");
             gvManager.DataSource = dt;
             gvManager.DataBind();
         }
@@ -50,7 +50,7 @@ namespace Training.Admin
         private void BindSearchGrid()
         {
             string search = txtSearch.Text.Trim();
-            DataTable dt = objDB.GetDataTable("SELECT M.ID,M.EmpID,E.EmpName,E.EmpDesignation AS Designation,E.EmpPostingPlace AS PlaceOfPosting,M.MapForLocation,L.TrainingLocation,M.CreatedOn FROM ManagerMaster M INNER JOIN EmpBasicMaster E ON M.EmpID=E.EmpID LEFT JOIN TrainingLocationMaster L ON M.TrainingLocationID=L.TrainingLocationID WHERE ISNULL(M.ActiveStatus,'Y')='Y' AND (M.EmpID LIKE @Search OR E.EmpName LIKE @Search OR E.EmpDesignation LIKE @Search OR E.EmpPostingPlace LIKE @Search OR M.MapForLocation LIKE @Search OR L.TrainingLocation LIKE @Search) ORDER BY M.ID DESC", new SqlParameter[] { new SqlParameter("@Search", "%" + search + "%") });
+            DataTable dt = objDB.GetDataTable("SELECT M.ID,M.EmpID,E.EmpName,E.EmpDesignation AS Designation,E.EmpPostingPlace AS PlaceOfPosting,M.MapForLocation,L.TrainingLocation,M.CreatedOn FROM ManagerMaster M INNER JOIN EmpBasicMaster E ON M.EmpID=E.EmpID LEFT JOIN TrainingLocationMaster L ON M.TrainingLocationID=L.TrainingLocationID WHERE ISNULL(M.ActiveStatus,'Y')='Y' AND (M.EmpID LIKE @Search OR E.EmpName LIKE @Search OR E.EmpDesignation LIKE @Search OR E.EmpPostingPlace LIKE @Search OR M.MapForLocation LIKE @Search OR L.TrainingLocation LIKE @Search OR M.ManagerID LIKE @Search) ORDER BY M.ID DESC", new SqlParameter[] { new SqlParameter("@Search", "%" + search + "%") });
             gvManager.DataSource = dt;
             gvManager.DataBind();
         }
