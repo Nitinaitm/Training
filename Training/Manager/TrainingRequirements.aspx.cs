@@ -11,7 +11,7 @@ namespace Training.Manager
     {
         private readonly clsDataAccess db = new clsDataAccess();
         private string TrainingID { get { return Session["TrainingID"] == null ? "" : Session["TrainingID"].ToString(); } }
-        private string Actor { get { return Session["UserID"] == null ? "Admin" : Session["UserID"].ToString(); } }
+        private string Actor { get { return Session["ManagerID"] == null ? "Manager" : Session["ManagerID"].ToString(); } }
 
         protected void Page_Load(object sender, EventArgs e)
         {
