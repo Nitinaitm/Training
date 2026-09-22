@@ -11,23 +11,35 @@ namespace Training.Trainer
     {
         clsDataAccess obj = new clsDataAccess();
 
+        private bool IsManager
+        {
+            get { return Session["Role"] != null && Session["Role"].ToString() == "Manager"; }
+        }
+
+        private bool HasManagerSessionAccess()
+        {
+            if (!IsManager || Session["ManagerID"] == null || Session["TrainingID"] == null || Session["SessionID"] == null) return false;
+            object value = obj.ExecuteScalar("SELECT COUNT(*) FROM ManagerMaster M INNER JOIN TrainingDetails TD ON M.MapForLocation=TD.TrainingLocation INNER JOIN SessionMaster SM ON SM.TrainingID=TD.TrainingID WHERE M.ManagerID=@ManagerID AND ISNULL(M.ActiveStatus,'Y')='Y' AND TD.TrainingID=@TrainingID AND SM.SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@ManagerID",Session["ManagerID"].ToString()), new SqlParameter("@TrainingID",Session["TrainingID"].ToString()), new SqlParameter("@SessionID",Session["SessionID"].ToString()) });
+            return value != null && value != DBNull.Value && Convert.ToInt32(value) > 0;
+        }
+
         protected void Page_PreInit(object sender, EventArgs e)
         {
-            if (Session["TrainerID"] == null)
+            if (Session["TrainerID"] == null && !IsManager)
             {
                 Response.Redirect("~/Default.aspx");
                 return;
             }
 
-            if (Session["TrainingID"] == null)
+            if (Session["TrainingID"] == null || Session["SessionID"] == null)
             {
-                Response.Redirect("~/Trainer/Default.aspx");
+                Response.Redirect(IsManager ? "~/Manager/Default.aspx" : "~/Trainer/Default.aspx");
                 return;
             }
 
-            if (Session["SessionID"] == null)
+            if (IsManager && !HasManagerSessionAccess())
             {
-                Response.Redirect("~/Trainer/Default.aspx");
+                Response.Redirect("~/Manager/Default.aspx");
                 return;
             }
         }
@@ -47,17 +59,14 @@ namespace Training.Trainer
 
         private void CheckAttendanceStatus()
         {
-            string query = @"SELECT TD.WorkflowStatus,SM.AttendanceStatus FROM TrainingDetails TD INNER JOIN SessionMaster SM ON TD.TrainingID=SM.TrainingID WHERE SM.SessionID=@SessionID AND SM.TrainingID=@TrainingID AND SM.TrainerID=@TrainerID";
-            SqlParameter[] param =
-            {
-                new SqlParameter("@SessionID",Session["SessionID"].ToString()),
-                new SqlParameter("@TrainingID",Session["TrainingID"].ToString()),
-                new SqlParameter("@TrainerID",Session["TrainerID"].ToString())
-            };
+            string query = IsManager ? "SELECT TD.WorkflowStatus,SM.AttendanceStatus FROM TrainingDetails TD INNER JOIN SessionMaster SM ON TD.TrainingID=SM.TrainingID WHERE SM.SessionID=@SessionID AND SM.TrainingID=@TrainingID" : "SELECT TD.WorkflowStatus,SM.AttendanceStatus FROM TrainingDetails TD INNER JOIN SessionMaster SM ON TD.TrainingID=SM.TrainingID WHERE SM.SessionID=@SessionID AND SM.TrainingID=@TrainingID AND SM.TrainerID=@TrainerID";
+            SqlParameter[] param = IsManager
+                ? new SqlParameter[] { new SqlParameter("@SessionID",Session["SessionID"].ToString()), new SqlParameter("@TrainingID",Session["TrainingID"].ToString()) }
+                : new SqlParameter[] { new SqlParameter("@SessionID",Session["SessionID"].ToString()), new SqlParameter("@TrainingID",Session["TrainingID"].ToString()), new SqlParameter("@TrainerID",Session["TrainerID"].ToString()) };
             DataTable dt = obj.GetDataTable(query,param);
             if (dt.Rows.Count == 0)
             {
-                Response.Redirect("~/Trainer/Default.aspx");
+                Response.Redirect(IsManager ? "~/Manager/Default.aspx" : "~/Trainer/Default.aspx");
                 return;
             }
             string workflowStatus = dt.Rows[0]["WorkflowStatus"].ToString();
@@ -245,13 +254,10 @@ namespace Training.Trainer
                 lblMessage.Text = "Please mark attendance of all trainees.";
                 return;
             }
-            query = @"UPDATE SessionMaster SET AttendanceStatus='Completed',AttendanceCompletedOn=GETDATE(),AttendanceCompletedBy=@TrainerID WHERE SessionID=@SessionID AND TrainingID=@TrainingID AND TrainerID=@TrainerID";
-            param = new SqlParameter[]
-            {
-                new SqlParameter("@TrainerID",Session["TrainerID"].ToString()),
-                new SqlParameter("@TrainingID",Session["TrainingID"].ToString()),
-                new SqlParameter("@SessionID",Session["SessionID"].ToString())
-            };
+            query = IsManager ? "UPDATE SessionMaster SET AttendanceStatus='Completed',AttendanceCompletedOn=GETDATE(),AttendanceCompletedBy=@Actor WHERE SessionID=@SessionID AND TrainingID=@TrainingID" : "UPDATE SessionMaster SET AttendanceStatus='Completed',AttendanceCompletedOn=GETDATE(),AttendanceCompletedBy=@Actor WHERE SessionID=@SessionID AND TrainingID=@TrainingID AND TrainerID=@TrainerID";
+            param = IsManager
+                ? new SqlParameter[] { new SqlParameter("@Actor",Session["ManagerID"].ToString()), new SqlParameter("@TrainingID",Session["TrainingID"].ToString()), new SqlParameter("@SessionID",Session["SessionID"].ToString()) }
+                : new SqlParameter[] { new SqlParameter("@Actor",Session["TrainerID"].ToString()), new SqlParameter("@TrainingID",Session["TrainingID"].ToString()), new SqlParameter("@SessionID",Session["SessionID"].ToString()), new SqlParameter("@TrainerID",Session["TrainerID"].ToString()) };
             obj.ExecuteSql(query,param);
             UpdateTrainingAttendanceWorkflow();
             BindGrid();
@@ -281,14 +287,10 @@ namespace Training.Trainer
             if (!System.IO.Directory.Exists(folder)) System.IO.Directory.CreateDirectory(folder);
             string fileName = Session["SessionID"].ToString() + "_" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + "_" + Guid.NewGuid().ToString("N").Substring(0,6) + ".pdf";
             fuAttendanceSheet.SaveAs(folder + fileName);
-            string query = @"UPDATE SessionMaster SET AttendanceSheet=@AttendanceSheet WHERE SessionID=@SessionID AND TrainingID=@TrainingID AND TrainerID=@TrainerID";
-            SqlParameter[] param =
-            {
-                new SqlParameter("@AttendanceSheet",fileName),
-                new SqlParameter("@SessionID",Session["SessionID"].ToString()),
-                new SqlParameter("@TrainingID",Session["TrainingID"].ToString()),
-                new SqlParameter("@TrainerID",Session["TrainerID"].ToString())
-            };
+            string query = IsManager ? "UPDATE SessionMaster SET AttendanceSheet=@AttendanceSheet WHERE SessionID=@SessionID AND TrainingID=@TrainingID" : "UPDATE SessionMaster SET AttendanceSheet=@AttendanceSheet WHERE SessionID=@SessionID AND TrainingID=@TrainingID AND TrainerID=@TrainerID";
+            SqlParameter[] param = IsManager
+                ? new SqlParameter[] { new SqlParameter("@AttendanceSheet",fileName), new SqlParameter("@SessionID",Session["SessionID"].ToString()), new SqlParameter("@TrainingID",Session["TrainingID"].ToString()) }
+                : new SqlParameter[] { new SqlParameter("@AttendanceSheet",fileName), new SqlParameter("@SessionID",Session["SessionID"].ToString()), new SqlParameter("@TrainingID",Session["TrainingID"].ToString()), new SqlParameter("@TrainerID",Session["TrainerID"].ToString()) };
             obj.ExecuteSql(query,param);
             lblMessage.ForeColor = System.Drawing.Color.Green;
             lblMessage.Text = "Attendance sheet uploaded successfully.";
