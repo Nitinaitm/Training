@@ -14,5 +14,6 @@ namespace Training.Manager
         protected global::System.Web.UI.WebControls.Label lblTrainingLocation;
         protected global::System.Web.UI.WebControls.Label lblMessage;
         protected global::System.Web.UI.WebControls.GridView gvTraining;
+        protected global::System.Web.UI.WebControls.GridView gvSession;
     }
 }
