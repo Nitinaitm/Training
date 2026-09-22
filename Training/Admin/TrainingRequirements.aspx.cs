@@ -92,6 +92,8 @@ namespace Training.Admin
             db.ExecuteSql(updateTraining, new SqlParameter[] { new SqlParameter("@Required", required), new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
 
             if (!required) db.ExecuteSql(clearSession, P("@TrainingID", TrainingID));
+            if (!required && requiredColumn == "InitialAssessmentRequired") db.ExecuteSql("UPDATE SessionMaster SET PreTestCertificateRule=NULL WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
+            if (!required && requiredColumn == "FinalAssessmentRequired") db.ExecuteSql("UPDATE SessionMaster SET PostTestCertificateRule=NULL WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
 
             ShowSuccess((required ? "Required" : "Not Required") + " setting updated successfully.");
             LoadBatchStatus();
