@@ -139,6 +139,12 @@ namespace Training.Admin
             string updateTraining = "UPDATE TrainingDetails SET " + requiredColumn + "=@Required,UpdatedOn=GETDATE(),UpdatedBy=@By WHERE TrainingID=@TrainingID";
             db.ExecuteSql(updateTraining, new SqlParameter[] { new SqlParameter("@Required", required), new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
 
+            if (requiredColumn == "InitialAssessmentRequired" || requiredColumn == "FinalAssessmentRequired")
+            {
+                string ruleColumn = requiredColumn == "InitialAssessmentRequired" ? "PreTestCertificateRule" : "PostTestCertificateRule";
+                db.ExecuteSql("UPDATE TrainingDetails SET " + ruleColumn + "=NULL,UpdatedOn=GETDATE(),UpdatedBy=@By WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
+            }
+
             if (!required) db.ExecuteSql(clearSession, P("@TrainingID", TrainingID));
 
             ShowSuccess((required ? "Required" : "Not Required") + " setting updated successfully.");
