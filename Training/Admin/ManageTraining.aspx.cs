@@ -225,6 +225,7 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             btnAssignSession.Visible = true;
             btnAssignTrainee.Visible = true;
             btnRequirements.Visible = true;
+            btnCertificateRules.Visible = !string.Equals(lblStatus.Text, "Completed", StringComparison.OrdinalIgnoreCase) && !string.Equals(lblStatus.Text, "TrainingCompleted", StringComparison.OrdinalIgnoreCase) && workflow != "ABCDEFGHIJ";
             btnAssignFeedback.Visible = fr;
             btnAssignFeedback.Enabled = fr;
             btnAssignFeedback.Text = fa ? "Feedback Template ✓" : "Feedback Template";
@@ -275,7 +276,6 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             StartTraining();
         }
 
-        protected void btnRequirements_Click(object sender, EventArgs e) { Response.Redirect("TrainingRequirements.aspx"); }
         protected void btnAssignFeedback_Click(object sender, EventArgs e)
         {
             if (!IsFeedbackRequired()) { lblMessage.ForeColor = System.Drawing.Color.Red; lblMessage.Text = "Feedback is not required for this training."; return; }
@@ -358,6 +358,7 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             LoadWorkflow();
         }
         protected void btnRequirements_Click(object sender, EventArgs e) { if (string.IsNullOrWhiteSpace(TrainingID)) { Response.Redirect("TrainingList.aspx"); return; } Session["TrainingID"] = TrainingID; Response.Redirect("TrainingRequirements.aspx"); }
+        protected void btnCertificateRules_Click(object sender, EventArgs e) { if (string.IsNullOrWhiteSpace(TrainingID)) { Response.Redirect("TrainingList.aspx"); return; } Session["TrainingID"] = TrainingID; Response.Redirect("SetCertificateRules.aspx"); }
         protected void btnUpdateTraining_Click(object sender, EventArgs e) { Response.Redirect("CreateBatch.aspx?mode=edit"); }
         protected void btnAssignSession_Click(object sender, EventArgs e) { Response.Redirect("AssignSession.aspx"); }
         protected void btnAssignHostel_Click(object sender, EventArgs e) { Response.Redirect("AssignHostel.aspx"); }
