@@ -187,23 +187,34 @@ AND NOT EXISTS (SELECT 1 FROM SessionAttendance SA WHERE SA.SessionID=SM.Session
 
         private bool CanDownloadCertificate(bool attendanceRequired, bool preRequired, bool postRequired, bool feedbackRequired, bool feedbackSkipped)
         {
-            if (feedbackRequired && !feedbackSkipped)
-            {
-                return CanReachFeedback(attendanceRequired, preRequired, postRequired) && IsFeedbackSubmitted();
-            }
-            if (postRequired && HasRequiredSessions("PostAssessmentSkipped"))
-            {
-                return (!preRequired || !HasRequiredSessions("PreAssessmentSkipped") || AreTestsDoneForTrainee("Pre")) && AreTestsDoneForTrainee("Post");
-            }
-            if (preRequired && HasRequiredSessions("PreAssessmentSkipped"))
-            {
-                return AreTestsDoneForTrainee("Pre");
-            }
-            if (attendanceRequired && HasRequiredSessions("AttendanceSkipped"))
-            {
-                return AreAllAttendanceDone();
-            }
+            if (attendanceRequired && !AreAllAttendanceDone()) return false;
+            if (feedbackRequired && !feedbackSkipped && !IsFeedbackSubmitted()) return false;
+            if (!IsCertificateTestEligible(preRequired, postRequired)) return false;
             return true;
+        }
+
+        private bool IsCertificateTestEligible(bool preRequired, bool postRequired)
+        {
+            DataTable dt = objDB.GetDataTable("SELECT PreTestCertificateRule,PostTestCertificateRule FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID) });
+            if (dt.Rows.Count == 0) return false;
+            string preRule = dt.Rows[0]["PreTestCertificateRule"] == DBNull.Value ? "" : dt.Rows[0]["PreTestCertificateRule"].ToString().Trim().ToUpperInvariant();
+            string postRule = dt.Rows[0]["PostTestCertificateRule"] == DBNull.Value ? "" : dt.Rows[0]["PostTestCertificateRule"].ToString().Trim().ToUpperInvariant();
+            bool preApplicable = preRequired && HasRequiredSessions("PreAssessmentSkipped");
+            bool postApplicable = postRequired && HasRequiredSessions("PostAssessmentSkipped");
+            if (preApplicable && (preRule != "ALL" && preRule != "PASS")) return false;
+            if (postApplicable && (postRule != "ALL" && postRule != "PASS")) return false;
+            if (preApplicable && !AreTestsDoneForTrainee("Pre")) return false;
+            if (postApplicable && !AreTestsDoneForTrainee("Post")) return false;
+            if (preApplicable && preRule == "PASS" && !AreAllRequiredTestsPassedForTrainee("Pre", "PreAssessmentSkipped")) return false;
+            if (postApplicable && postRule == "PASS" && !AreAllRequiredTestsPassedForTrainee("Post", "PostAssessmentSkipped")) return false;
+            return true;
+        }
+
+        private bool AreAllRequiredTestsPassedForTrainee(string testType, string skipColumn)
+        {
+            string sql = "SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + ",0)=0 AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1) OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestResult TR ON TR.TestID=TM.TestID WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TR.EmpID=@EmpID AND TR.IsFinalAttempt=1 AND TR.ResultStatus IN ('PASS','PASSED')))) THEN 1 ELSE 0 END";
+            object value = objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", TrainingID), new SqlParameter("@EmpID", EmpID), new SqlParameter("@TestType", testType) });
+            return value != null && Convert.ToInt32(value) == 1;
         }
 
         private void LoadWorkflow()
