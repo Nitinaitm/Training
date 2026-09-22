@@ -32,8 +32,50 @@ namespace Training.Trainee
             {
                 TryGeneratePendingCertificate();
                 BindCertificate();
+                LoadCertificateAction();
                 Session.Remove("CertificateFromTraining");
             }
+        }
+
+        private void LoadCertificateAction()
+        {
+            btnGenerateCertificate.Visible = false;
+            btnGenerateCertificate.Enabled = false;
+            if (Session["TrainingID"] == null || String.IsNullOrWhiteSpace(Session["TrainingID"].ToString())) return;
+            string trainingID = Session["TrainingID"].ToString();
+            string empID = Session["EmpID"].ToString().ToUpperInvariant();
+            object existing = objDB.ExecuteScalar("SELECT COUNT(*) FROM TrainingCertificate WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND CertificateStatus='A'", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) });
+            if (existing != null && Convert.ToInt32(existing) > 0) return;
+            bool eligible = CanGenerateCertificate(trainingID, empID);
+            btnGenerateCertificate.Visible = true;
+            btnGenerateCertificate.Enabled = eligible;
+            btnGenerateCertificate.ToolTip = eligible ? "Generate and download your certificate." : "Certificate is not yet available. Complete the required workflow and wait for the applicable Admin certificate rules.";
+        }
+
+        protected void btnGenerateCertificate_Click(object sender, EventArgs e)
+        {
+            if (Session["TrainingID"] == null || String.IsNullOrWhiteSpace(Session["TrainingID"].ToString())) return;
+            string trainingID = Session["TrainingID"].ToString();
+            string empID = Session["EmpID"].ToString().ToUpperInvariant();
+            if (!CanGenerateCertificate(trainingID, empID))
+            {
+                ShowError("Certificate is not yet available. Please complete the required workflow and wait for the applicable Admin certificate rules.");
+                LoadCertificateAction();
+                return;
+            }
+            CertificateGenerator generator = new CertificateGenerator();
+            bool generated = generator.GenerateCertificate(trainingID, empID);
+            if (!generated)
+            {
+                ShowError("Certificate generation failed: " + generator.LastError);
+                LoadCertificateAction();
+                return;
+            }
+            Session["CertificateFromTraining"] = true;
+            BindCertificate();
+            LoadCertificateAction();
+            lblMessage.ForeColor = System.Drawing.Color.Green;
+            lblMessage.Text = "Certificate generated successfully. Use View Certificate or Download PDF below.";
         }
 
         private void BindCertificate()
