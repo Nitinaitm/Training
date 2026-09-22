@@ -19,6 +19,7 @@ namespace Training.Manager
                     return;
                 }
                 BindTraining();
+                BindSessions();
             }
         }
 
@@ -52,7 +53,7 @@ namespace Training.Manager
         private void BindTraining()
         {
             string mapForLocation = Session["ManagerMapForLocation"] == null ? "" : Session["ManagerMapForLocation"].ToString();
-            DataTable dt = objDB.GetDataTable("SELECT TrainingID,TrainingType,TrainingOrganizer,TrainingLocation,Batch,DateFrom,DateTo,TrainingStatus FROM TrainingDetails WHERE TrainingLocation=@TrainingLocation ORDER BY DateFrom DESC", new SqlParameter[] { new SqlParameter("@TrainingLocation", mapForLocation) });
+            DataTable dt = objDB.GetDataTable("SELECT TrainingID,TrainingType,TrainingOrganizer,TrainingLocation,Batch,DateFrom,DateTo,TrainingStatus FROM TrainingDetails WHERE TrainingLocation=@TrainingLocation AND ISNULL(TrainingStatus,'') NOT IN ('Completed','TrainingCompleted') ORDER BY TRY_CONVERT(date,DateFrom,105) DESC", new SqlParameter[] { new SqlParameter("@TrainingLocation", mapForLocation) });
             gvTraining.DataSource = dt;
             gvTraining.DataBind();
         }
