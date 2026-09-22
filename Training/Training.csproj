@@ -219,6 +219,7 @@
     <Content Include="Admin\TrainingReAssign.aspx" />
     <Content Include="Admin\TrainingReports.aspx" />
     <Content Include="Admin\TrainingSearch.aspx" />
+    <Content Include="Admin\TrainingRequirements.aspx" />
     <Content Include="Admin\TrainingSummary.ascx" />
     <Content Include="Admin\TrainingTypeEntry.aspx" />
     <Content Include="Admin\TrainingTypeManagement.aspx" />
@@ -918,6 +919,14 @@
     <Compile Include="Admin\TrainingSearch.aspx.designer.cs">
       <DependentUpon>TrainingSearch.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Admin\TrainingRequirements.aspx.cs">
+      <DependentUpon>TrainingRequirements.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin\TrainingRequirements.aspx.designer.cs">
+      <DependentUpon>TrainingRequirements.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\TrainingRequirements.Lifecycle.cs" />
     <Compile Include="Admin\TrainingSummary.ascx.cs">
       <DependentUpon>TrainingSummary.ascx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
