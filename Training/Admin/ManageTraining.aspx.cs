@@ -14,6 +14,12 @@ namespace Training.Admin
         private SqlParameter[] P(string name, object value) { return new SqlParameter[] { new SqlParameter(name, value) }; }
         private string TrainingID { get { return Session["TrainingID"] == null ? "" : Session["TrainingID"].ToString(); } }
 
+        private bool IsTrainingEndDateReached()
+        {
+            object value = new clsDataAccess().ExecuteScalar("SELECT CASE WHEN TRY_CONVERT(date,DateTo,105) IS NOT NULL AND CAST(GETDATE() AS date) >= TRY_CONVERT(date,DateTo,105) THEN 1 ELSE 0 END FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
+            return value != null && value != DBNull.Value && Convert.ToInt32(value) == 1;
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
@@ -301,6 +307,13 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             if (string.IsNullOrWhiteSpace(TrainingID))
             {
                 Response.Redirect("TrainingList.aspx");
+                return;
+            }
+
+            if (!IsTrainingEndDateReached())
+            {
+                lblMessage.ForeColor = System.Drawing.Color.Red;
+                lblMessage.Text = "Cannot close training before the training end date. Training can be closed on the last day or after the last day.";
                 return;
             }
 
