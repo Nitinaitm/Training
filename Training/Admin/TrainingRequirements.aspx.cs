@@ -21,7 +21,7 @@ namespace Training.Admin
 
         private void LoadBatchStatus()
         {
-            DataTable dt = db.GetDataTable(@"SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,ISNULL(FeedbackSkipped,0) FeedbackSkipped,CertificateRequired,ISNULL(CertificateSkipped,0) CertificateSkipped,PreTestCertificateRule,PostTestCertificateRule FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
+            DataTable dt = db.GetDataTable(@"SELECT AttendanceRequired,InitialAssessmentRequired,FinalAssessmentRequired,FeedbackRequired,ISNULL(FeedbackSkipped,0) FeedbackSkipped,CertificateRequired,ISNULL(CertificateSkipped,0) CertificateSkipped FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID));
             if (dt.Rows.Count == 0) { Response.Redirect("TrainingList.aspx"); return; }
 
             DataRow r = dt.Rows[0];
@@ -40,17 +40,6 @@ namespace Training.Admin
             lblPostStatus.Text = por ? "Required" : "Not Required";
             lblFeedbackStatus.Text = fs ? "Skipped" : (fr ? "Required" : "Not Required");
             lblCertificateStatus.Text = cs ? "Skipped" : (cr ? "Required" : "Not Required");
-            string preRule = r["PreTestCertificateRule"] == DBNull.Value ? "" : r["PreTestCertificateRule"].ToString().Trim().ToUpperInvariant();
-            string postRule = r["PostTestCertificateRule"] == DBNull.Value ? "" : r["PostTestCertificateRule"].ToString().Trim().ToUpperInvariant();
-            if (ddlPreCertificateRule.Items.FindByValue(preRule) == null) preRule = "";
-            if (ddlPostCertificateRule.Items.FindByValue(postRule) == null) postRule = "";
-            ddlPreCertificateRule.SelectedValue = preRule;
-            ddlPostCertificateRule.SelectedValue = postRule;
-            bool preApplicable = pr && HasUnskippedSession("PreAssessmentSkipped");
-            bool postApplicable = por && HasUnskippedSession("PostAssessmentSkipped");
-            pnlPreCertificateRule.Visible = preApplicable;
-            pnlPostCertificateRule.Visible = postApplicable;
-            lblCertificateBasis.Text = BuildCertificateRuleStatus(preApplicable, preRule, postApplicable, postRule);
 
             btnAttendanceRequired.Enabled = !ar;
             btnAttendanceNotRequired.Enabled = ar;
@@ -87,37 +76,6 @@ namespace Training.Admin
         protected void btnFeedbackNotRequired_Click(object sender, EventArgs e) { SetBatchRequirement("FeedbackRequired", false, "FeedbackSkipped", "FeedbackSkipReason"); }
         protected void btnCertificateRequired_Click(object sender, EventArgs e) { SetBatchRequirement("CertificateRequired", true, "CertificateSkipped", "CertificateSkipReason"); }
 
-        protected void btnSavePreCertificateRule_Click(object sender, EventArgs e)
-        {
-            SaveCertificateRule("Pre", ddlPreCertificateRule.SelectedValue);
-        }
-
-        protected void btnSavePostCertificateRule_Click(object sender, EventArgs e)
-        {
-            SaveCertificateRule("Post", ddlPostCertificateRule.SelectedValue);
-        }
-
-        private void SaveCertificateRule(string testType, string rule)
-        {
-            if (rule != "ALL" && rule != "PASS")
-            {
-                ShowError("Please select a certificate rule.");
-                return;
-            }
-            string skipColumn = testType == "Pre" ? "PreAssessmentSkipped" : "PostAssessmentSkipped";
-            bool required = testType == "Pre" ? Convert.ToBoolean(db.ExecuteScalar("SELECT ISNULL(InitialAssessmentRequired,0) FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID))) : Convert.ToBoolean(db.ExecuteScalar("SELECT ISNULL(FinalAssessmentRequired,0) FROM TrainingDetails WHERE TrainingID=@TrainingID", P("@TrainingID", TrainingID)));
-            bool applicable = required && HasUnskippedSession(skipColumn);
-            if (!applicable)
-            {
-                ShowError(testType + "-Test is not applicable for any session.");
-                return;
-            }
-            string column = testType == "Pre" ? "PreTestCertificateRule" : "PostTestCertificateRule";
-            db.ExecuteSql("UPDATE TrainingDetails SET " + column + "=@Rule,UpdatedOn=GETDATE(),UpdatedBy=@By WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@Rule", rule), new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
-            ShowSuccess(testType + "-Test certificate rule saved successfully.");
-            LoadBatchStatus();
-        }
-
         private bool HasUnskippedSession(string skipColumn)
         {
             if (skipColumn != "PreAssessmentSkipped" && skipColumn != "PostAssessmentSkipped") return false;
@@ -125,12 +83,6 @@ namespace Training.Admin
             return value != null && Convert.ToInt32(value) > 0;
         }
 
-        private string BuildCertificateRuleStatus(bool preApplicable, string preRule, bool postApplicable, string postRule)
-        {
-            string preText = !preApplicable ? "Pre-Test: Not Applicable" : (preRule == "" ? "Pre-Test: Rule Not Set" : "Pre-Test: " + (preRule == "PASS" ? "Pass Only" : "All"));
-            string postText = !postApplicable ? "Post-Test: Not Applicable" : (postRule == "" ? "Post-Test: Rule Not Set" : "Post-Test: " + (postRule == "PASS" ? "Pass Only" : "All"));
-            return preText + " | " + postText;
-        }
         protected void btnCertificateNotRequired_Click(object sender, EventArgs e) { SetBatchRequirement("CertificateRequired", false, "CertificateSkipped", "CertificateSkipReason"); }
 
         private void SetBatchRequirement(string requiredColumn, bool required, string sessionSkipColumn, string sessionReasonColumn)
@@ -138,12 +90,6 @@ namespace Training.Admin
             string clearSession = "UPDATE SessionMaster SET " + sessionSkipColumn + "=0," + sessionReasonColumn + "=NULL," + sessionReasonColumn.Replace("Reason", "By") + "=NULL," + sessionReasonColumn.Replace("Reason", "On") + "=NULL WHERE TrainingID=@TrainingID";
             string updateTraining = "UPDATE TrainingDetails SET " + requiredColumn + "=@Required,UpdatedOn=GETDATE(),UpdatedBy=@By WHERE TrainingID=@TrainingID";
             db.ExecuteSql(updateTraining, new SqlParameter[] { new SqlParameter("@Required", required), new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
-
-            if (requiredColumn == "InitialAssessmentRequired" || requiredColumn == "FinalAssessmentRequired")
-            {
-                string ruleColumn = requiredColumn == "InitialAssessmentRequired" ? "PreTestCertificateRule" : "PostTestCertificateRule";
-                db.ExecuteSql("UPDATE TrainingDetails SET " + ruleColumn + "=NULL,UpdatedOn=GETDATE(),UpdatedBy=@By WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@By", Actor), new SqlParameter("@TrainingID", TrainingID) });
-            }
 
             if (!required) db.ExecuteSql(clearSession, P("@TrainingID", TrainingID));
 
