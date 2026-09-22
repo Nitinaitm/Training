@@ -114,7 +114,7 @@ namespace Training.Admin
                 return;
             }
 
-            int result = objDB.ExecuteSql("INSERT INTO ManagerMaster (EmpID,MapForLocation,TrainingLocationID,CreatedBy,ActiveStatus) VALUES (@EmpID,@MapForLocation,@TrainingLocationID,@CreatedBy,'Y')", new SqlParameter[]
+            int result = objDB.ExecuteSql("INSERT INTO ManagerMaster (ManagerID,EmpID,MapForLocation,TrainingLocationID,CreatedBy,ActiveStatus) SELECT 'MGR' + RIGHT('0000' + CAST(ISNULL(MAX(ID),0) + 1 AS VARCHAR(20)),4),@EmpID,@MapForLocation,@TrainingLocationID,@CreatedBy,'Y' FROM ManagerMaster", new SqlParameter[]
             {
                 new SqlParameter("@EmpID", empID),
                 new SqlParameter("@MapForLocation", ddlMapForLocation.SelectedValue),
@@ -137,24 +137,16 @@ namespace Training.Admin
 
         private void CreateManagerLogin(string empID)
         {
-            DataTable dtLogin = objDB.GetDataTable("SELECT LoginIDUserID FROM Login WHERE LoginIDUserID=@LoginIDUserID", new SqlParameter[] { new SqlParameter("@LoginIDUserID", empID) });
-
-            if (dtLogin.Rows.Count > 0)
-            {
-                return;
-            }
-
+            DataTable dtManager = objDB.GetDataTable("SELECT TOP 1 ManagerID FROM ManagerMaster WHERE EmpID=@EmpID AND ISNULL(ActiveStatus,'Y')='Y' ORDER BY ID DESC", new SqlParameter[] { new SqlParameter("@EmpID", empID) });
+            if (dtManager.Rows.Count == 0) return;
+            string managerID = dtManager.Rows[0]["ManagerID"].ToString().Trim();
+            if (string.IsNullOrWhiteSpace(managerID)) return;
+            DataTable dtLogin = objDB.GetDataTable("SELECT LoginIDUserID FROM Login WHERE LoginIDUserID=@LoginIDUserID", new SqlParameter[] { new SqlParameter("@LoginIDUserID", managerID) });
+            if (dtLogin.Rows.Count > 0) return;
             Encryptor2 encryptor = new Encryptor2();
             string password = encryptor.Encrypt("Bsphcl*123");
             string firstLogin = encryptor.Encrypt("Y");
-
-            objDB.ExecuteSql("INSERT INTO Login (LoginIDUserID,Password,Role,CorrespondingEmpID,Active,re) VALUES (@LoginIDUserID,@Password,'Manager',@CorrespondingEmpID,'Y',@FirstLogin)", new SqlParameter[]
-            {
-                new SqlParameter("@LoginIDUserID", empID),
-                new SqlParameter("@Password", password),
-                new SqlParameter("@CorrespondingEmpID", empID),
-                new SqlParameter("@FirstLogin", firstLogin)
-            });
+            objDB.ExecuteSql("INSERT INTO Login (LoginIDUserID,Password,Role,CorrespondingEmpID,Active,re) VALUES (@LoginIDUserID,@Password,'Manager',@CorrespondingEmpID,'Y',@FirstLogin)", new SqlParameter[] { new SqlParameter("@LoginIDUserID", managerID), new SqlParameter("@Password", password), new SqlParameter("@CorrespondingEmpID", empID), new SqlParameter("@FirstLogin", firstLogin) });
         }
 
         protected void btnClear_Click(object sender, EventArgs e)
