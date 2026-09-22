@@ -43,6 +43,7 @@ namespace Training.Admin
             string trainingID = Session["TrainingID"] == null ? "" : Session["TrainingID"].ToString();
             bool completed = IsTrainingCompleted();
             bool started = GetLifecycleBool("SELECT CASE WHEN CHARINDEX('E',ISNULL(WorkflowStatus,'')) > 0 OR ISNULL(TrainingStatus,'') IN ('Started','InProgress','AttendanceCompleted','TrainingCompleted','Completed') THEN 1 ELSE 0 END", trainingID);
+            bool endDateReached = GetLifecycleBool("SELECT CASE WHEN TRY_CONVERT(date,DateTo,105) IS NOT NULL AND CAST(GETDATE() AS date) >= TRY_CONVERT(date,DateTo,105) THEN 1 ELSE 0 END FROM TrainingDetails WHERE TrainingID=@TrainingID", trainingID);
 
             if (completed)
             {
@@ -61,8 +62,8 @@ namespace Training.Admin
             {
                 btnRequirements.Visible = true;
                 btnRequirements.Enabled = true;
-                btnCloseTraining.Visible = started;
-                btnCloseTraining.Enabled = started;
+                btnCloseTraining.Visible = started && endDateReached;
+                btnCloseTraining.Enabled = started && endDateReached;
 
                 if (!started)
                 {
