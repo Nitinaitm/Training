@@ -167,13 +167,9 @@ namespace Training.Trainee
                 }
                 else
                 {
-                    bool allowed = true;
-                    if (attendanceRequired) allowed = allowed && attendanceDone;
-                    if (preRequired) allowed = allowed && preDone;
-                    if (postRequired) allowed = allowed && postDone;
+                    bool allowed = attendanceRequired ? attendanceDone : true;
                     if (feedbackRequired && !feedbackSkipped) allowed = allowed && feedbackDone;
-                    if (allowed && (preRequired || postRequired)) allowed = IsCertificateTestEligible(data["TrainingID"].ToString(), Session["EmpID"].ToString().Trim().ToUpperInvariant(), preRequired, postRequired);
-
+                    if (allowed) allowed = IsCertificateTestEligible(data["TrainingID"].ToString(), Session["EmpID"].ToString().Trim().ToUpperInvariant());
                     certificate.Enabled = allowed;
                     certificate.CssClass = allowed ? "btn btn-info btn-sm" : "btn btn-info btn-sm disabled";
                     certificate.ToolTip = allowed ? "Download Certificate" : "Complete the required training workflow before downloading the certificate.";
@@ -184,26 +180,42 @@ namespace Training.Trainee
                 attendance.CssClass = "btn btn-primary btn-sm disabled";
         }
 
-        private bool IsCertificateTestEligible(string trainingID, string empID, bool preRequired, bool postRequired)
+        private bool IsCertificateTestEligible(string trainingID, string empID)
         {
-            object modeValue = objDB.ExecuteScalar("SELECT ISNULL(CertificateEligibilityMode,'ALL') FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
-            string mode = modeValue == null || modeValue == DBNull.Value ? "ALL" : modeValue.ToString().Trim().ToUpperInvariant();
-            if (mode == "ALL") return true;
-            if (mode == "PASS")
-            {
-                if (preRequired && !AreAllRequiredTestsPassed(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
-                if (postRequired && !AreAllRequiredTestsPassed(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
-                return true;
-            }
-            if (mode == "FAIL")
-            {
-                if (!preRequired && !postRequired) return true;
-                bool failed = false;
-                if (preRequired) failed = failed || HasRequiredTestFailed(trainingID, empID, "Pre", "PreAssessmentSkipped");
-                if (postRequired) failed = failed || HasRequiredTestFailed(trainingID, empID, "Post", "PostAssessmentSkipped");
-                return failed;
-            }
+            DataTable dt = objDB.GetDataTable("SELECT InitialAssessmentRequired,FinalAssessmentRequired,PreTestCertificateRule,PostTestCertificateRule FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+            if (dt.Rows.Count == 0) return false;
+            bool preRequired = Convert.ToBoolean(dt.Rows[0]["InitialAssessmentRequired"]);
+            bool postRequired = Convert.ToBoolean(dt.Rows[0]["FinalAssessmentRequired"]);
+            string preRule = dt.Rows[0]["PreTestCertificateRule"] == DBNull.Value ? "" : dt.Rows[0]["PreTestCertificateRule"].ToString().Trim().ToUpperInvariant();
+            string postRule = dt.Rows[0]["PostTestCertificateRule"] == DBNull.Value ? "" : dt.Rows[0]["PostTestCertificateRule"].ToString().Trim().ToUpperInvariant();
+
+            bool preApplicable = preRequired && HasUnskippedSessions(trainingID, "PreAssessmentSkipped");
+            bool postApplicable = postRequired && HasUnskippedSessions(trainingID, "PostAssessmentSkipped");
+
+            if (preApplicable && (preRule != "ALL" && preRule != "PASS")) return false;
+            if (postApplicable && (postRule != "ALL" && postRule != "PASS")) return false;
+
+            if (preApplicable && !AreAllRequiredTestsCompleted(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
+            if (postApplicable && !AreAllRequiredTestsCompleted(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
+
+            if (preApplicable && preRule == "PASS" && !AreAllRequiredTestsPassed(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
+            if (postApplicable && postRule == "PASS" && !AreAllRequiredTestsPassed(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
+
             return true;
+        }
+
+        private bool HasUnskippedSessions(string trainingID, string skipColumn)
+        {
+            if (skipColumn != "PreAssessmentSkipped" && skipColumn != "PostAssessmentSkipped") return false;
+            object value = objDB.ExecuteScalar("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(" + skipColumn + ",0)=0", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+            return value != null && Convert.ToInt32(value) > 0;
+        }
+
+        private bool AreAllRequiredTestsCompleted(string trainingID, string empID, string testType, string skipColumn)
+        {
+            string sql = "SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + ",0)=0 AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1) OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1))) THEN 1 ELSE 0 END";
+            object value = objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID), new SqlParameter("@TestType", testType) });
+            return value != null && Convert.ToInt32(value) == 1;
         }
 
         private bool AreAllRequiredTestsPassed(string trainingID, string empID, string testType, string skipColumn)
