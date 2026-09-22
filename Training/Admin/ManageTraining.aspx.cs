@@ -357,6 +357,7 @@ AND NOT EXISTS (SELECT 1 FROM TrainingAssignment A WHERE A.TrainingID=@TrainingI
             lblMessage.Text = "Training has been closed successfully.";
             LoadWorkflow();
         }
+        protected void btnRequirements_Click(object sender, EventArgs e) { if (string.IsNullOrWhiteSpace(TrainingID)) { Response.Redirect("TrainingList.aspx"); return; } Session["TrainingID"] = TrainingID; Response.Redirect("TrainingRequirements.aspx"); }
         protected void btnUpdateTraining_Click(object sender, EventArgs e) { Response.Redirect("CreateBatch.aspx?mode=edit"); }
         protected void btnAssignSession_Click(object sender, EventArgs e) { Response.Redirect("AssignSession.aspx"); }
         protected void btnAssignHostel_Click(object sender, EventArgs e) { Response.Redirect("AssignHostel.aspx"); }
