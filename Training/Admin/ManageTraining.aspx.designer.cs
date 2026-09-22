@@ -9,6 +9,7 @@ namespace Training.Admin {
         protected global::System.Web.UI.WebControls.Button btnAssignSession;
         protected global::System.Web.UI.WebControls.Button btnAssignTrainee;
         protected global::System.Web.UI.WebControls.Button btnRequirements;
+        protected global::System.Web.UI.WebControls.Button btnCertificateRules;
         protected global::System.Web.UI.WebControls.Button btnAssignFeedback;
         protected global::System.Web.UI.WebControls.Button btnCertificateTemplate;
         protected global::System.Web.UI.WebControls.Button btnAssignHostel;
