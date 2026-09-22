@@ -226,6 +226,11 @@ namespace Training.Trainer
 
         protected void btnSessionDetails_Click(object sender, EventArgs e)
         {
+            if (IsManager)
+            {
+                Response.Redirect("~/Manager/Default.aspx");
+                return;
+            }
             Response.Redirect("~/Trainer/SessionDetails.aspx");
         }
 
