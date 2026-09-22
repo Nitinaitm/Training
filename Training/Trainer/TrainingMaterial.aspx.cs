@@ -109,6 +109,11 @@ namespace Training.Trainer
             object sender,
             EventArgs e)
         {
+            if (Session["Role"] != null && Session["Role"].ToString() == "Manager")
+            {
+                Response.Redirect("~/Manager/Default.aspx");
+                return;
+            }
             Response.Redirect("~/Trainer/SessionDetails.aspx");
         }
 
