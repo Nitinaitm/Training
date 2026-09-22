@@ -51,6 +51,36 @@ namespace Training.Manager
             return true;
         }
 
+
+        private void BindSessions()
+        {
+            string mapForLocation = Session["ManagerMapForLocation"] == null ? "" : Session["ManagerMapForLocation"].ToString();
+            DataTable dt = objDB.GetDataTable("SELECT SM.SessionID,SM.TrainingID,CM.CourseName,TD.Batch,SM.SessionNo,SM.SessionName,SM.SessionDate,ISNULL(SM.AttendanceStatus,'Pending') AttendanceStatus FROM SessionMaster SM INNER JOIN TrainingDetails TD ON SM.TrainingID=TD.TrainingID INNER JOIN CourseMaster CM ON TD.CourseID=CM.CourseID WHERE TD.TrainingLocation=@TrainingLocation AND ISNULL(TD.TrainingStatus,'') NOT IN ('Completed','TrainingCompleted') ORDER BY TRY_CONVERT(date,SM.SessionDate,105),TRY_CONVERT(int,SM.SessionNo)", new SqlParameter[] { new SqlParameter("@TrainingLocation", mapForLocation) });
+            gvSession.DataSource = dt;
+            gvSession.DataBind();
+        }
+
+        protected void gvTraining_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName != "Requirements") return;
+            string trainingID = e.CommandArgument == null ? "" : e.CommandArgument.ToString();
+            if (string.IsNullOrWhiteSpace(trainingID)) return;
+            Session["TrainingID"] = trainingID;
+            Response.Redirect("~/Manager/TrainingRequirements.aspx");
+        }
+
+        protected void gvSession_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName != "Material" && e.CommandName != "Attendance") return;
+            GridViewRow row = (GridViewRow)((Control)e.CommandSource).NamingContainer;
+            string sessionID = gvSession.DataKeys[row.RowIndex].Values["SessionID"].ToString();
+            string trainingID = gvSession.DataKeys[row.RowIndex].Values["TrainingID"].ToString();
+            Session["TrainingID"] = trainingID;
+            Session["SessionID"] = sessionID;
+            Session["TrainerID"] = Session["ManagerID"];
+            Response.Redirect(e.CommandName == "Material" ? "~/Manager/TrainingMaterial.aspx" : "~/Manager/SessionAttendance.aspx");
+        }
+
         private void BindTraining()
         {
             string mapForLocation = Session["ManagerMapForLocation"] == null ? "" : Session["ManagerMapForLocation"].ToString();
