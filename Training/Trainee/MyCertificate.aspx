@@ -104,11 +104,8 @@
         </div>
 
 
-        <asp:label
-            id="lblMessage"
-            runat="server"
-            font-bold="true">
-        </asp:label>
+        <asp:label id="lblMessage" runat="server" font-bold="true"></asp:label>
+        <asp:Button ID="btnGenerateCertificate" runat="server" Text="Generate / Download Certificate" CssClass="btn btn-success mb-3" CausesValidation="false" OnClick="btnGenerateCertificate_Click" />
 
 
         <div class="card certificate-card">
