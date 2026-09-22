@@ -182,52 +182,58 @@ namespace Training.Trainee
 
         private bool IsCertificateTestEligible(string trainingID, string empID)
         {
-            DataTable dt = objDB.GetDataTable("SELECT InitialAssessmentRequired,FinalAssessmentRequired,PreTestCertificateRule,PostTestCertificateRule FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+            DataTable dt = objDB.GetDataTable("SELECT InitialAssessmentRequired,FinalAssessmentRequired FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
             if (dt.Rows.Count == 0) return false;
             bool preRequired = Convert.ToBoolean(dt.Rows[0]["InitialAssessmentRequired"]);
             bool postRequired = Convert.ToBoolean(dt.Rows[0]["FinalAssessmentRequired"]);
-            string preRule = dt.Rows[0]["PreTestCertificateRule"] == DBNull.Value ? "" : dt.Rows[0]["PreTestCertificateRule"].ToString().Trim().ToUpperInvariant();
-            string postRule = dt.Rows[0]["PostTestCertificateRule"] == DBNull.Value ? "" : dt.Rows[0]["PostTestCertificateRule"].ToString().Trim().ToUpperInvariant();
 
-            bool preApplicable = preRequired && HasUnskippedSessions(trainingID, "PreAssessmentSkipped");
-            bool postApplicable = postRequired && HasUnskippedSessions(trainingID, "PostAssessmentSkipped");
-
-            if (preApplicable && (preRule != "ALL" && preRule != "PASS")) return false;
-            if (postApplicable && (postRule != "ALL" && postRule != "PASS")) return false;
-
-            if (preApplicable && !AreAllRequiredTestsCompleted(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
-            if (postApplicable && !AreAllRequiredTestsCompleted(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
-
-            if (preApplicable && preRule == "PASS" && !AreAllRequiredTestsPassed(trainingID, empID, "Pre", "PreAssessmentSkipped")) return false;
-            if (postApplicable && postRule == "PASS" && !AreAllRequiredTestsPassed(trainingID, empID, "Post", "PostAssessmentSkipped")) return false;
-
+            if (preRequired && !AreSessionWiseTestsEligible(trainingID, empID, "Pre")) return false;
+            if (postRequired && !AreSessionWiseTestsEligible(trainingID, empID, "Post")) return false;
             return true;
         }
 
-        private bool HasUnskippedSessions(string trainingID, string skipColumn)
+        private bool IsAttendancePercentageEligible(string trainingID, string empID, object minimumValue)
         {
-            if (skipColumn != "PreAssessmentSkipped" && skipColumn != "PostAssessmentSkipped") return false;
-            object value = objDB.ExecuteScalar("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(" + skipColumn + ",0)=0", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
-            return value != null && Convert.ToInt32(value) > 0;
+            if (minimumValue == null || minimumValue == DBNull.Value) return false;
+            decimal minimum = Convert.ToDecimal(minimumValue);
+            object totalValue = objDB.ExecuteScalar("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(AttendanceSkipped,0)=0", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
+            int total = totalValue == null || totalValue == DBNull.Value ? 0 : Convert.ToInt32(totalValue);
+            if (total == 0) return false;
+            object presentValue = objDB.ExecuteScalar("SELECT COUNT(*) FROM SessionMaster SM INNER JOIN SessionAttendance SA ON SA.SessionID=SM.SessionID AND SA.EmpID=@EmpID WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.AttendanceSkipped,0)=0 AND SA.AttendanceStatus IN ('Present','Completed')", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) });
+            int present = presentValue == null || presentValue == DBNull.Value ? 0 : Convert.ToInt32(presentValue);
+            decimal percentage = present * 100m / total;
+            return percentage >= minimum;
         }
 
-        private bool AreAllRequiredTestsCompleted(string trainingID, string empID, string testType, string skipColumn)
+        private bool AreSessionWiseTestsEligible(string trainingID, string empID, string testType)
         {
-            string sql = "SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + ",0)=0 AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1) OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1))) THEN 1 ELSE 0 END";
-            object value = objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID), new SqlParameter("@TestType", testType) });
-            return value != null && Convert.ToInt32(value) == 1;
-        }
+            string skipColumn = testType == "Pre" ? "PreAssessmentSkipped" : "PostAssessmentSkipped";
+            string ruleColumn = testType == "Pre" ? "PreTestCertificateRule" : "PostTestCertificateRule";
+            string requiredColumn = testType == "Pre" ? "InitialAssessmentRequired" : "FinalAssessmentRequired";
+            string sql = "SELECT SM.SessionID,ISNULL(SM." + skipColumn + ",0) Skipped,ISNULL(SM." + ruleColumn + ",'') RuleValue FROM SessionMaster SM INNER JOIN TrainingDetails TD ON TD.TrainingID=SM.TrainingID WHERE SM.TrainingID=@TrainingID AND ISNULL(TD." + requiredColumn + ",0)=1 ORDER BY SM.SessionID";
+            DataTable sessions = objDB.GetDataTable(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
 
-        private bool AreAllRequiredTestsPassed(string trainingID, string empID, string testType, string skipColumn)
-        {
-            string sql = "SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM SessionMaster S WHERE S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + ",0)=0 AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1) OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestResult TR ON TR.TestID=TM.TestID AND TR.EmpID=@EmpID WHERE TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TR.IsFinalAttempt=1 AND TR.ResultStatus IN ('PASS','PASSED')))) THEN 1 ELSE 0 END";
-            return Convert.ToInt32(objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID), new SqlParameter("@TestType", testType) })) == 1;
-        }
+            foreach (DataRow session in sessions.Rows)
+            {
+                if (Convert.ToBoolean(session["Skipped"])) continue;
+                string rule = Convert.ToString(session["RuleValue"]).Trim().ToUpperInvariant();
+                if (rule != "PASS" && rule != "ALL") return false;
+                string sessionID = Convert.ToString(session["SessionID"]);
 
-        private bool HasRequiredTestFailed(string trainingID, string empID, string testType, string skipColumn)
-        {
-            string sql = "SELECT CASE WHEN EXISTS (SELECT 1 FROM SessionMaster S INNER JOIN TestMaster TM ON TM.SessionID=S.SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 INNER JOIN TestResult TR ON TR.TestID=TM.TestID AND TR.EmpID=@EmpID AND TR.IsFinalAttempt=1 WHERE S.TrainingID=@TrainingID AND ISNULL(S." + skipColumn + ",0)=0 AND TR.ResultStatus IN ('FAIL','FAILED')) THEN 1 ELSE 0 END";
-            return Convert.ToInt32(objDB.ExecuteScalar(sql, new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID), new SqlParameter("@TestType", testType) })) == 1;
+                object testCount = objDB.ExecuteScalar("SELECT COUNT(*) FROM TestMaster WHERE SessionID=@SessionID AND TestType=@TestType AND IsPublished=1", new SqlParameter[] { new SqlParameter("@SessionID", sessionID), new SqlParameter("@TestType", testType) });
+                if (testCount == null || Convert.ToInt32(testCount) == 0) return false;
+
+                object submittedCount = objDB.ExecuteScalar("SELECT COUNT(*) FROM TestMaster TM INNER JOIN TestAttempt TA ON TA.TestID=TM.TestID WHERE TM.SessionID=@SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TA.EmpID=@EmpID AND TA.Submitted=1", new SqlParameter[] { new SqlParameter("@SessionID", sessionID), new SqlParameter("@TestType", testType), new SqlParameter("@EmpID", empID) });
+                if (submittedCount == null || Convert.ToInt32(submittedCount) == 0) return false;
+
+                if (rule == "PASS")
+                {
+                    object passCount = objDB.ExecuteScalar("SELECT COUNT(*) FROM TestMaster TM INNER JOIN TestResult TR ON TR.TestID=TM.TestID AND TR.EmpID=@EmpID WHERE TM.SessionID=@SessionID AND TM.TestType=@TestType AND TM.IsPublished=1 AND TR.IsFinalAttempt=1 AND TR.ResultStatus IN ('PASS','PASSED')", new SqlParameter[] { new SqlParameter("@SessionID", sessionID), new SqlParameter("@TestType", testType), new SqlParameter("@EmpID", empID) });
+                    if (passCount == null || Convert.ToInt32(passCount) == 0) return false;
+                }
+            }
+
+            return true;
         }
 
         protected void gvTraining_RowCommand(object sender, GridViewCommandEventArgs e)
@@ -248,7 +254,7 @@ namespace Training.Trainee
 
         private void LoadTraining()
         {
-            string sql = "SELECT TA.TrainingID,ISNULL(CM.CourseName,'') AS CourseName,TD.TrainingType,TD.TrainingOrganizer,TD.Batch,TRY_CONVERT(date,TD.DateFrom,105) AS DateFrom,TRY_CONVERT(date,TD.DateTo,105) AS DateTo,ISNULL(TD.AttendanceRequired,0) AS AttendanceRequired,ISNULL(TD.InitialAssessmentRequired,0) AS InitialAssessmentRequired,ISNULL(TD.FinalAssessmentRequired,0) AS FinalAssessmentRequired,ISNULL(TD.FeedbackRequired,0) AS FeedbackRequired,ISNULL(TD.FeedbackSkipped,0) AS FeedbackSkipped,ISNULL(TD.CertificateRequired,0) AS CertificateRequired,ISNULL(TD.CertificateSkipped,0) AS CertificateSkipped,ISNULL(TD.TrainingStatus,'') AS TrainingStatus FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TD.TrainingID=TA.TrainingID LEFT JOIN CourseMaster CM ON CM.CourseID=TD.CourseID WHERE LTRIM(RTRIM(TA.EmpID))=LTRIM(RTRIM(@EmpID))";
+            string sql = "SELECT TA.TrainingID,ISNULL(CM.CourseName,'') AS CourseName,TD.TrainingType,TD.TrainingOrganizer,TD.Batch,TRY_CONVERT(date,TD.DateFrom,105) AS DateFrom,TRY_CONVERT(date,TD.DateTo,105) AS DateTo,ISNULL(TD.AttendanceRequired,0) AS AttendanceRequired,ISNULL(TD.InitialAssessmentRequired,0) AS InitialAssessmentRequired,ISNULL(TD.FinalAssessmentRequired,0) AS FinalAssessmentRequired,ISNULL(TD.FeedbackRequired,0) AS FeedbackRequired,ISNULL(TD.FeedbackSkipped,0) AS FeedbackSkipped,ISNULL(TD.CertificateRequired,0) AS CertificateRequired,ISNULL(TD.CertificateSkipped,0) AS CertificateSkipped,TD.MinimumAttendancePercentage,ISNULL(TD.TrainingStatus,'') AS TrainingStatus FROM TrainingAssignment TA INNER JOIN TrainingDetails TD ON TD.TrainingID=TA.TrainingID LEFT JOIN CourseMaster CM ON CM.CourseID=TD.CourseID WHERE LTRIM(RTRIM(TA.EmpID))=LTRIM(RTRIM(@EmpID))";
 
             if (txtTrainingID.Text.Trim() != "") sql += " AND TA.TrainingID LIKE @TrainingID";
             if (ddlCourse.SelectedValue != "") sql += " AND TD.CourseID=@CourseID";
@@ -284,7 +290,7 @@ namespace Training.Trainee
                 bool certificateRequired = Convert.ToBoolean(r["CertificateRequired"]);
                 bool certificateSkipped = Convert.ToBoolean(r["CertificateSkipped"]);
 
-                bool attendanceDone = !attendanceRequired || Convert.ToInt32(objDB.ExecuteScalar("SELECT COUNT(*) FROM SessionMaster WHERE TrainingID=@TrainingID AND ISNULL(AttendanceSkipped,0)=0 AND ISNULL(AttendanceStatus,'')<>'Completed'", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) })) == 0;
+                bool attendanceDone = !attendanceRequired || IsAttendancePercentageEligible(trainingID, empID, r["MinimumAttendancePercentage"]);
                 bool preDone = !preRequired || Convert.ToInt32(objDB.ExecuteScalar("SELECT COUNT(*) FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.PreAssessmentSkipped,0)=0 AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1) OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Pre' AND TM.IsPublished=1 AND AT.EmpID=@EmpID AND AT.Submitted=1))", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) })) == 0;
                 bool postDone = !postRequired || Convert.ToInt32(objDB.ExecuteScalar("SELECT COUNT(*) FROM SessionMaster SM WHERE SM.TrainingID=@TrainingID AND ISNULL(SM.PostAssessmentSkipped,0)=0 AND (NOT EXISTS (SELECT 1 FROM TestMaster TM WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1) OR NOT EXISTS (SELECT 1 FROM TestMaster TM INNER JOIN TestAttempt AT ON AT.TestID=TM.TestID WHERE TM.SessionID=SM.SessionID AND TM.TestType='Post' AND TM.IsPublished=1 AND AT.EmpID=@EmpID AND AT.Submitted=1))", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) })) == 0;
                 bool feedbackDone = !feedbackRequired || feedbackSkipped || Convert.ToInt32(objDB.ExecuteScalar("SELECT COUNT(*) FROM BatchFeedback WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND ISNULL(Submitted,0)=1", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) })) > 0;
