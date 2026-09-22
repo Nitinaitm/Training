@@ -203,12 +203,6 @@ namespace Training.Trainee
             return true;
         }
 
-        private bool IsFeedbackSubmitted(string trainingID, string empID)
-        {
-            object value = objDB.ExecuteScalar("SELECT COUNT(*) FROM Feedback WHERE TrainingID=@TrainingID AND EmpID=@EmpID AND ISNULL(Submitted,0)=1", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID), new SqlParameter("@EmpID", empID) });
-            return value != null && Convert.ToInt32(value) > 0;
-        }
-
         private string GetCertificateEligibilityMode(string trainingID)
         {
             object value = objDB.ExecuteScalar("SELECT ISNULL(CertificateEligibilityMode,'ALL') FROM TrainingDetails WHERE TrainingID=@TrainingID", new SqlParameter[] { new SqlParameter("@TrainingID", trainingID) });
