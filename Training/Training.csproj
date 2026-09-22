@@ -203,6 +203,7 @@
     <Content Include="Admin\QuestionBank.aspx" />
     <Content Include="Admin\QuestionBankUpload.aspx" />
     <Content Include="Admin\SessionAttendance.aspx" />
+    <Content Include="Admin\SetCertificateRules.aspx" />
     <Content Include="Admin\TopicEntry.aspx" />
     <Content Include="Admin\TopicManagement.aspx" />
     <Content Include="Admin\TrainerEntry.aspx" />
@@ -800,7 +801,13 @@
     <Compile Include="Admin\QuestionBankUpload.aspx.designer.cs">
       <DependentUpon>QuestionBankUpload.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Admin\SessionAttendance.aspx.cs">
+        <Compile Include="Admin\SetCertificateRules.aspx.cs">
+      <DependentUpon>SetCertificateRules.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin\SetCertificateRules.aspx.designer.cs">
+      <DependentUpon>SetCertificateRules.aspx</DependentUpon>
+    </Compile>
+<Compile Include="Admin\SessionAttendance.aspx.cs">
       <DependentUpon>SessionAttendance.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
