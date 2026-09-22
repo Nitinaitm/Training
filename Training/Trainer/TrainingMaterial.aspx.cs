@@ -17,13 +17,25 @@ namespace Training.Trainer
         private readonly string UploadFolder =
             "~/Uploads/TrainingMaterial/";
 
+        private bool IsManager
+        {
+            get { return Session["Role"] != null && Session["Role"].ToString() == "Manager"; }
+        }
+
         private string TrainerID
         {
             get
             {
-                return
-                    Session["TrainerID"].ToString();
+                if (Session["TrainerID"] != null) return Session["TrainerID"].ToString();
+                return Session["ManagerID"] == null ? "" : Session["ManagerID"].ToString();
             }
+        }
+
+        private bool HasManagerSessionAccess()
+        {
+            if (!IsManager || Session["ManagerID"] == null || Session["TrainingID"] == null || Session["SessionID"] == null) return false;
+            object value = obj.ExecuteScalar("SELECT COUNT(*) FROM ManagerMaster M INNER JOIN TrainingDetails TD ON M.MapForLocation=TD.TrainingLocation INNER JOIN SessionMaster SM ON SM.TrainingID=TD.TrainingID WHERE M.ManagerID=@ManagerID AND ISNULL(M.ActiveStatus,'Y')='Y' AND TD.TrainingID=@TrainingID AND SM.SessionID=@SessionID", new SqlParameter[] { new SqlParameter("@ManagerID",Session["ManagerID"].ToString()), new SqlParameter("@TrainingID",Session["TrainingID"].ToString()), new SqlParameter("@SessionID",Session["SessionID"].ToString()) });
+            return value != null && value != DBNull.Value && Convert.ToInt32(value) > 0;
         }
 
         private string TrainingID
@@ -76,8 +88,14 @@ namespace Training.Trainer
             )
             {
                 Response.Redirect(
-                    "~/Trainer/Default.aspx");
+                    IsManager ? "~/Manager/Default.aspx" : "~/Trainer/Default.aspx");
 
+                return;
+            }
+
+            if (IsManager && !HasManagerSessionAccess())
+            {
+                Response.Redirect("~/Manager/Default.aspx");
                 return;
             }
 
