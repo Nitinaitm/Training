@@ -76,7 +76,7 @@ namespace Training.Admin
 
         private void BindCompany()
         {
-            DataTable dt = DB().GetDataTable("SELECT ID,CompanyName,CompanyAlias FROM CompanyMaster ORDER BY CompanyName");
+            DataTable dt = DB().GetDataTable("SELECT CompanyID,CompanyName,CompanyAlias FROM CompanyMaster ORDER BY CompanyName");
             ddlCompany.Items.Clear();
             ddlCompany.Items.Add(new ListItem("Select Company", ""));
             foreach (DataRow row in dt.Rows)
@@ -143,7 +143,7 @@ namespace Training.Admin
         {
             ClearList(ddlAreaBoardZone, "Select Area Board / Zone");
 
-            int companyID = GetCompanyID(ddlCompany.SelectedValue);
+            string companyID = GetCompanyID(ddlCompany.SelectedValue);
 
             if (companyID <= 0)
             {
