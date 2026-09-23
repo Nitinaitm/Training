@@ -165,6 +165,20 @@ namespace Training.Admin {
         /// </remarks>
         protected global::System.Web.UI.WebControls.DropDownList ddlPostingPlace;
         
+        protected global::System.Web.UI.WebControls.DropDownList ddlPostingDetailPlace;
+        protected global::System.Web.UI.WebControls.DropDownList ddlPostingDepartment;
+        protected global::System.Web.UI.WebControls.DropDownList ddlAreaBoardZone;
+        protected global::System.Web.UI.WebControls.DropDownList ddlCircle;
+        protected global::System.Web.UI.WebControls.DropDownList ddlDivision;
+        protected global::System.Web.UI.WebControls.DropDownList ddlSubdivision;
+        protected global::System.Web.UI.WebControls.DropDownList ddlSection;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divPostingDepartment;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divAreaBoardZone;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divCircle;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divDivision;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divSubdivision;
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divSection;
+        
         /// <summary>
         /// btnSave control.
         /// </summary>
