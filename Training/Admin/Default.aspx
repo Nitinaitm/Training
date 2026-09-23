@@ -541,22 +541,47 @@
 
 
                 <!-- =================================================
-                     POSTING PLACE
+                     HRMS POSTING PLACE
                 ================================================== -->
 
                 <div class="form-group">
+                    <label>Posting Place (HRMS)</label>
+                    <asp:ListBox ID="lstPostingPlace" runat="server" SelectionMode="Multiple" CssClass="form-control"></asp:ListBox>
+                </div>
 
-                    <label>
-                        Posting Place
-                    </label>
+                <div class="form-group">
+                    <label>Posting Details - Place</label>
+                    <asp:ListBox ID="lstDetailPostingPlace" runat="server" SelectionMode="Multiple" CssClass="form-control" AutoPostBack="true" OnSelectedIndexChanged="lstDetailPostingPlace_SelectedIndexChanged"></asp:ListBox>
+                </div>
 
-                    <asp:ListBox
-                        ID="lstPostingPlace"
-                        runat="server"
-                        SelectionMode="Multiple"
-                        CssClass="form-control">
-                    </asp:ListBox>
+                <div class="form-group">
+                    <label>Department / Office / Cell</label>
+                    <asp:ListBox ID="lstPostingDepartment" runat="server" SelectionMode="Multiple" CssClass="form-control"></asp:ListBox>
+                </div>
 
+                <div class="form-group">
+                    <label>Area Board / Zone</label>
+                    <asp:ListBox ID="lstAreaBoardZone" runat="server" SelectionMode="Multiple" CssClass="form-control" AutoPostBack="true" OnSelectedIndexChanged="lstAreaBoardZone_SelectedIndexChanged"></asp:ListBox>
+                </div>
+
+                <div class="form-group">
+                    <label>Circle</label>
+                    <asp:ListBox ID="lstCircle" runat="server" SelectionMode="Multiple" CssClass="form-control" AutoPostBack="true" OnSelectedIndexChanged="lstCircle_SelectedIndexChanged"></asp:ListBox>
+                </div>
+
+                <div class="form-group">
+                    <label>Division</label>
+                    <asp:ListBox ID="lstDivision" runat="server" SelectionMode="Multiple" CssClass="form-control" AutoPostBack="true" OnSelectedIndexChanged="lstDivision_SelectedIndexChanged"></asp:ListBox>
+                </div>
+
+                <div class="form-group">
+                    <label>Subdivision</label>
+                    <asp:ListBox ID="lstSubdivision" runat="server" SelectionMode="Multiple" CssClass="form-control" AutoPostBack="true" OnSelectedIndexChanged="lstSubdivision_SelectedIndexChanged"></asp:ListBox>
+                </div>
+
+                <div class="form-group">
+                    <label>Section</label>
+                    <asp:ListBox ID="lstSection" runat="server" SelectionMode="Multiple" CssClass="form-control"></asp:ListBox>
                 </div>
 
 
@@ -669,9 +694,14 @@
 
                   
 
-                    <asp:BoundField
-                        DataField="EmpPostingPlace"
-                        HeaderText="Posting Place" />
+                    <asp:BoundField DataField="EmpPostingPlace" HeaderText="Posting Place (HRMS)" />
+                    <asp:BoundField DataField="DetailPostingPlace" HeaderText="Posting Details" />
+                    <asp:BoundField DataField="EmpPostingDepartment" HeaderText="Department / Office / Cell" />
+                    <asp:BoundField DataField="AreaBoardZone" HeaderText="Area Board / Zone" />
+                    <asp:BoundField DataField="Circle" HeaderText="Circle" />
+                    <asp:BoundField DataField="Division" HeaderText="Division" />
+                    <asp:BoundField DataField="Subdivision" HeaderText="Subdivision" />
+                    <asp:BoundField DataField="Section" HeaderText="Section" />
 
 
                 </Columns>
