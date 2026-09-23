@@ -58,42 +58,6 @@ namespace Training.Admin {
         protected global::System.Web.UI.WebControls.TextBox txtCourseDescription;
         
         /// <summary>
-        /// txtPassingPercentage control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtPassingPercentage;
-        
-        /// <summary>
-        /// rvPassing control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RangeValidator rvPassing;
-        
-        /// <summary>
-        /// txtAttendancePercentage control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtAttendancePercentage;
-        
-        /// <summary>
-        /// rvAttendance control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.RangeValidator rvAttendance;
-        
-        /// <summary>
         /// txtRemarks control.
         /// </summary>
         /// <remarks>
