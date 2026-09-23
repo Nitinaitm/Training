@@ -145,7 +145,7 @@ namespace Training.Admin
 
             string companyID = GetCompanyID(ddlCompany.SelectedValue);
 
-            if (companyID <= 0)
+            if (string.IsNullOrWhiteSpace(companyID))
             {
                 return;
             }
@@ -162,9 +162,9 @@ namespace Training.Admin
             ClearList(ddlCircle, "Select Circle");
 
             int zoneID;
-            int companyID = GetCompanyID(ddlCompany.SelectedValue);
+            string companyID = GetCompanyID(ddlCompany.SelectedValue);
 
-            if (companyID <= 0 || !int.TryParse(ddlAreaBoardZone.SelectedValue, out zoneID))
+            if (string.IsNullOrWhiteSpace(companyID) || !int.TryParse(ddlAreaBoardZone.SelectedValue, out zoneID))
             {
                 return;
             }
@@ -239,16 +239,15 @@ namespace Training.Admin
             }
         }
 
-        private int GetCompanyID(string company)
+        private string GetCompanyID(string company)
         {
             if (string.IsNullOrWhiteSpace(company))
             {
-                return 0;
+                return "";
             }
 
-            object value = DB().ExecuteScalar("SELECT TOP 1 ID FROM CompanyMaster WHERE CompanyName=@Company OR CompanyAlias=@Company", new SqlParameter[] { new SqlParameter("@Company", company) });
-            int companyID;
-            return value != null && int.TryParse(Convert.ToString(value), out companyID) ? companyID : 0;
+            object value = DB().ExecuteScalar("SELECT TOP 1 CompanyID FROM CompanyMaster WHERE CompanyName=@Company OR CompanyAlias=@Company", new SqlParameter[] { new SqlParameter("@Company", company) });
+            return value == null ? "" : Convert.ToString(value);
         }
 
         private bool IsHqOnlyCompany()
