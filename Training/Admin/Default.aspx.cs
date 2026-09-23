@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
@@ -11,573 +10,423 @@ namespace Training.Admin
 {
     public partial class Default : System.Web.UI.Page
     {
-        string constr =
-            ConfigurationManager.ConnectionStrings["constr"].ConnectionString;
-
-
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {
                 BindCompany();
-
                 BindDesignation();
-
                 BindPostingPlace();
+                BindPostingDetailPlace();
+                BindPostingDepartment();
+                BindAreaBoardZone();
+                BindCircle();
+                BindDivision();
+                BindSubdivision();
+                BindSection();
             }
 
             LoadPlugins();
         }
 
+        private clsDataAccess DB()
+        {
+            return new clsDataAccess();
+        }
 
-        // =========================================================
-        // COMPANY
-        // =========================================================
+        private List<string> SelectedValues(ListBox listBox)
+        {
+            List<string> values = new List<string>();
+            foreach (ListItem item in listBox.Items)
+            {
+                if (item.Selected && item.Value != "ALL")
+                {
+                    values.Add(item.Value);
+                }
+            }
+            return values;
+        }
+
+        private bool IsAllSelected(ListBox listBox)
+        {
+            foreach (ListItem item in listBox.Items)
+            {
+                if (item.Selected && item.Value == "ALL")
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         private void BindCompany()
         {
+            DataTable dt = DB().GetDataTable("SELECT CompanyName FROM CompanyMaster ORDER BY CompanyName");
             lstCompany.Items.Clear();
-
-            lstCompany.Items.Add(
-                new ListItem(
-                    "ALL COMPANIES",
-                    "ALL"));
-
-            string query =
-                "SELECT DISTINCT EmpCompany FROM EmpBasicMaster WHERE ISNULL(EmpCompany,'')<>'' ORDER BY EmpCompany";
-
-            using (SqlConnection con =
-                new SqlConnection(constr))
+            lstCompany.Items.Add(new ListItem("ALL COMPANIES", "ALL"));
+            foreach (DataRow row in dt.Rows)
             {
-                using (SqlCommand cmd =
-                    new SqlCommand(query, con))
-                {
-                    con.Open();
-
-                    SqlDataReader dr =
-                        cmd.ExecuteReader();
-
-                    while (dr.Read())
-                    {
-                        string company =
-                            dr["EmpCompany"].ToString();
-
-                        lstCompany.Items.Add(
-                            new ListItem(
-                                company,
-                                company));
-                    }
-                }
+                string value = Convert.ToString(row["CompanyName"]);
+                lstCompany.Items.Add(new ListItem(value, value));
             }
         }
-
-
-        // =========================================================
-        // DESIGNATION
-        // =========================================================
 
         private void BindDesignation()
         {
-            lstDesignation.Items.Clear();
-
-            StringBuilder query =
-                new StringBuilder();
-
-            query.Append(
-                "SELECT DISTINCT EmpDesignation FROM EmpBasicMaster WHERE ISNULL(EmpDesignation,'')<>''");
-
-            using (SqlConnection con =
-                new SqlConnection(constr))
-            {
-                using (SqlCommand cmd =
-                    new SqlCommand())
-                {
-                    cmd.Connection =
-                        con;
-
-                    AddCompanyFilter(
-                        query,
-                        cmd);
-
-                    query.Append(
-                        " ORDER BY EmpDesignation");
-
-                    cmd.CommandText =
-                        query.ToString();
-
-                    con.Open();
-
-                    SqlDataReader dr =
-                        cmd.ExecuteReader();
-
-                    while (dr.Read())
-                    {
-                        string designation =
-                            dr["EmpDesignation"].ToString();
-
-                        lstDesignation.Items.Add(
-                            new ListItem(
-                                designation,
-                                designation));
-                    }
-                }
-            }
+            DataTable dt = DB().GetDataTable("SELECT DISTINCT EmpDesignation FROM EmpBasicMaster WHERE ISNULL(EmpDesignation,'')<>''" + CompanyWhere("EmpCompany") + " ORDER BY EmpDesignation", CompanyParameters());
+            BindList(lstDesignation, dt, "EmpDesignation");
         }
-
-
-        // =========================================================
-        // POSTING PLACE
-        // =========================================================
 
         private void BindPostingPlace()
         {
-            lstPostingPlace.Items.Clear();
-
-            StringBuilder query =
-                new StringBuilder();
-
-            query.Append(
-                "SELECT DISTINCT EmpPostingPlace FROM EmpBasicMaster WHERE ISNULL(EmpPostingPlace,'')<>''");
-
-            using (SqlConnection con =
-                new SqlConnection(constr))
-            {
-                using (SqlCommand cmd =
-                    new SqlCommand())
-                {
-                    cmd.Connection =
-                        con;
-
-                    AddCompanyFilter(
-                        query,
-                        cmd);
-
-                    query.Append(
-                        " ORDER BY EmpPostingPlace");
-
-                    cmd.CommandText =
-                        query.ToString();
-
-                    con.Open();
-
-                    SqlDataReader dr =
-                        cmd.ExecuteReader();
-
-                    while (dr.Read())
-                    {
-                        string postingPlace =
-                            dr["EmpPostingPlace"].ToString();
-
-                        lstPostingPlace.Items.Add(
-                            new ListItem(
-                                postingPlace,
-                                postingPlace));
-                    }
-                }
-            }
+            DataTable dt = DB().GetDataTable("SELECT DISTINCT EmpPostingPlace FROM EmpBasicMaster WHERE ISNULL(EmpPostingPlace,'')<>''" + CompanyWhere("EmpCompany") + " ORDER BY EmpPostingPlace", CompanyParameters());
+            BindList(lstPostingPlace, dt, "EmpPostingPlace");
         }
 
-
-        // =========================================================
-        // COMPANY FILTER
-        // Used while loading Designation / Posting Place
-        // =========================================================
-
-        private void AddCompanyFilter(
-            StringBuilder query,
-            SqlCommand cmd)
+        private void BindPostingDetailPlace()
         {
-            List<string> parameters =
-                new List<string>();
-
-            bool allSelected =
-                false;
-
-            int count =
-                0;
-
-            foreach (ListItem item in lstCompany.Items)
+            DataTable dt = DB().GetDataTable("SELECT DISTINCT EPD.EmpPostingPlace FROM EmpPostingDetails EPD INNER JOIN EmpBasicMaster EBM ON EBM.EmpID=EPD.EmpID WHERE ISNULL(EPD.EmpPostingPlace,'')<>''" + CompanyWhere("EBM.EmpCompany") + " ORDER BY EPD.EmpPostingPlace", CompanyParameters());
+            BindList(lstDetailPostingPlace, dt, "EmpPostingPlace");
+            if (HasHqOnlyCompanySelection())
             {
-                if (item.Selected)
-                {
-                    if (item.Value == "ALL")
-                    {
-                        allSelected =
-                            true;
-
-                        break;
-                    }
-
-                    string parameterName =
-                        "@CompanyFilter" + count;
-
-                    parameters.Add(
-                        parameterName);
-
-                    cmd.Parameters.AddWithValue(
-                        parameterName,
-                        item.Value);
-
-                    count++;
-                }
-            }
-
-            if (allSelected)
-            {
-                return;
-            }
-
-            if (parameters.Count > 0)
-            {
-                query.Append(
-                    " AND EmpCompany IN (");
-
-                query.Append(
-                    string.Join(
-                        ",",
-                        parameters));
-
-                query.Append(
-                    ")");
+                lstDetailPostingPlace.Items.Remove(lstDetailPostingPlace.Items.FindByValue("Field"));
             }
         }
 
+        private void BindPostingDepartment()
+        {
+            DataTable dt = DB().GetDataTable("SELECT DISTINCT EPD.EmpPostingDepartment FROM EmpPostingDetails EPD INNER JOIN EmpBasicMaster EBM ON EBM.EmpID=EPD.EmpID WHERE ISNULL(EPD.EmpPostingDepartment,'')<>''" + CompanyWhere("EBM.EmpCompany") + DetailPlaceWhere("EPD.EmpPostingPlace") + " ORDER BY EPD.EmpPostingDepartment", MergeParameters(CompanyParameters(), DetailPlaceParameters("EPD.EmpPostingPlace")));
+            BindList(lstPostingDepartment, dt, "EmpPostingDepartment");
+        }
 
-        // =========================================================
-        // COMPANY SELECTED INDEX CHANGED
-        // =========================================================
+        private void BindAreaBoardZone()
+        {
+            DataTable dt = DB().GetDataTable("SELECT DISTINCT EPD.AreaBoardZone FROM EmpPostingDetails EPD INNER JOIN EmpBasicMaster EBM ON EBM.EmpID=EPD.EmpID WHERE ISNULL(EPD.AreaBoardZone,'')<>''" + CompanyWhere("EBM.EmpCompany") + DetailPlaceWhere("EPD.EmpPostingPlace") + " ORDER BY EPD.AreaBoardZone", MergeParameters(CompanyParameters(), DetailPlaceParameters("EPD.EmpPostingPlace")));
+            BindList(lstAreaBoardZone, dt, "AreaBoardZone");
+        }
 
-        protected void lstCompany_SelectedIndexChanged(
-            object sender,
-            EventArgs e)
+        private void BindCircle()
+        {
+            DataTable dt = DB().GetDataTable("SELECT DISTINCT EPD.Circle FROM EmpPostingDetails EPD INNER JOIN EmpBasicMaster EBM ON EBM.EmpID=EPD.EmpID WHERE ISNULL(EPD.Circle,'')<>''" + CompanyWhere("EBM.EmpCompany") + DetailPlaceWhere("EPD.EmpPostingPlace") + ParentWhere("EPD.AreaBoardZone", lstAreaBoardZone) + " ORDER BY EPD.Circle", MergeParameters(CompanyParameters(), DetailPlaceParameters("EPD.EmpPostingPlace"), ParentParameters("EPD.AreaBoardZone", lstAreaBoardZone)));
+            BindList(lstCircle, dt, "Circle");
+        }
+
+        private void BindDivision()
+        {
+            DataTable dt = DB().GetDataTable("SELECT DISTINCT EPD.Division FROM EmpPostingDetails EPD INNER JOIN EmpBasicMaster EBM ON EBM.EmpID=EPD.EmpID WHERE ISNULL(EPD.Division,'')<>''" + CompanyWhere("EBM.EmpCompany") + DetailPlaceWhere("EPD.EmpPostingPlace") + ParentWhere("EPD.AreaBoardZone", lstAreaBoardZone) + ParentWhere("EPD.Circle", lstCircle) + " ORDER BY EPD.Division", MergeParameters(CompanyParameters(), DetailPlaceParameters("EPD.EmpPostingPlace"), ParentParameters("EPD.AreaBoardZone", lstAreaBoardZone), ParentParameters("EPD.Circle", lstCircle)));
+            BindList(lstDivision, dt, "Division");
+        }
+
+        private void BindSubdivision()
+        {
+            DataTable dt = DB().GetDataTable("SELECT DISTINCT EPD.Subdivision FROM EmpPostingDetails EPD INNER JOIN EmpBasicMaster EBM ON EBM.EmpID=EPD.EmpID WHERE ISNULL(EPD.Subdivision,'')<>''" + CompanyWhere("EBM.EmpCompany") + DetailPlaceWhere("EPD.EmpPostingPlace") + ParentWhere("EPD.AreaBoardZone", lstAreaBoardZone) + ParentWhere("EPD.Circle", lstCircle) + ParentWhere("EPD.Division", lstDivision) + " ORDER BY EPD.Subdivision", MergeParameters(CompanyParameters(), DetailPlaceParameters("EPD.EmpPostingPlace"), ParentParameters("EPD.AreaBoardZone", lstAreaBoardZone), ParentParameters("EPD.Circle", lstCircle), ParentParameters("EPD.Division", lstDivision)));
+            BindList(lstSubdivision, dt, "Subdivision");
+        }
+
+        private void BindSection()
+        {
+            DataTable dt = DB().GetDataTable("SELECT DISTINCT EPD.Section FROM EmpPostingDetails EPD INNER JOIN EmpBasicMaster EBM ON EBM.EmpID=EPD.EmpID WHERE ISNULL(EPD.Section,'')<>''" + CompanyWhere("EBM.EmpCompany") + DetailPlaceWhere("EPD.EmpPostingPlace") + ParentWhere("EPD.AreaBoardZone", lstAreaBoardZone) + ParentWhere("EPD.Circle", lstCircle) + ParentWhere("EPD.Division", lstDivision) + ParentWhere("EPD.Subdivision", lstSubdivision) + " ORDER BY EPD.Section", MergeParameters(CompanyParameters(), DetailPlaceParameters("EPD.EmpPostingPlace"), ParentParameters("EPD.AreaBoardZone", lstAreaBoardZone), ParentParameters("EPD.Circle", lstCircle), ParentParameters("EPD.Division", lstDivision), ParentParameters("EPD.Subdivision", lstSubdivision)));
+            BindList(lstSection, dt, "Section");
+        }
+
+        private void BindList(ListBox listBox, DataTable dt, string field)
+        {
+            listBox.Items.Clear();
+            foreach (DataRow row in dt.Rows)
+            {
+                string value = Convert.ToString(row[field]);
+                listBox.Items.Add(new ListItem(value, value));
+            }
+        }
+
+        private string CompanyWhere(string column)
+        {
+            List<string> values = SelectedValues(lstCompany);
+            if (values.Count == 0 || IsAllSelected(lstCompany))
+            {
+                return "";
+            }
+
+            List<string> p = new List<string>();
+            for (int i = 0; i < values.Count; i++)
+            {
+                p.Add("@C" + i);
+            }
+            return " AND " + column + " IN (" + string.Join(",", p) + ")";
+        }
+
+        private SqlParameter[] CompanyParameters()
+        {
+            List<string> values = SelectedValues(lstCompany);
+            List<SqlParameter> p = new List<SqlParameter>();
+            if (IsAllSelected(lstCompany))
+            {
+                return p.ToArray();
+            }
+            for (int i = 0; i < values.Count; i++)
+            {
+                p.Add(new SqlParameter("@C" + i, values[i]));
+            }
+            return p.ToArray();
+        }
+
+        private string DetailPlaceWhere(string column)
+        {
+            List<string> values = SelectedValues(lstDetailPostingPlace);
+            if (values.Count == 0)
+            {
+                return "";
+            }
+
+            List<string> p = new List<string>();
+            for (int i = 0; i < values.Count; i++)
+            {
+                p.Add("@P" + i);
+            }
+            return " AND " + column + " IN (" + string.Join(",", p) + ")";
+        }
+
+        private SqlParameter[] DetailPlaceParameters(string column)
+        {
+            List<string> values = SelectedValues(lstDetailPostingPlace);
+            List<SqlParameter> p = new List<SqlParameter>();
+            for (int i = 0; i < values.Count; i++)
+            {
+                p.Add(new SqlParameter("@P" + i, values[i]));
+            }
+            return p.ToArray();
+        }
+
+        private string ParentWhere(string column, ListBox listBox)
+        {
+            List<string> values = SelectedValues(listBox);
+            if (values.Count == 0)
+            {
+                return "";
+            }
+
+            List<string> p = new List<string>();
+            string prefix = column.Replace("EPD.", "").Substring(0, 1).ToUpperInvariant();
+            for (int i = 0; i < values.Count; i++)
+            {
+                p.Add("@" + prefix + i);
+            }
+            return " AND " + column + " IN (" + string.Join(",", p) + ")";
+        }
+
+        private SqlParameter[] ParentParameters(string column, ListBox listBox)
+        {
+            List<string> values = SelectedValues(listBox);
+            List<SqlParameter> p = new List<SqlParameter>();
+            string prefix = column.Replace("EPD.", "").Substring(0, 1).ToUpperInvariant();
+            for (int i = 0; i < values.Count; i++)
+            {
+                p.Add(new SqlParameter("@" + prefix + i, values[i]));
+            }
+            return p.ToArray();
+        }
+
+        private SqlParameter[] MergeParameters(params SqlParameter[][] arrays)
+        {
+            List<SqlParameter> result = new List<SqlParameter>();
+            foreach (SqlParameter[] array in arrays)
+            {
+                result.AddRange(array);
+            }
+            return result.ToArray();
+        }
+
+        private bool HasHqOnlyCompanySelection()
+        {
+            List<string> values = SelectedValues(lstCompany);
+            if (values.Count == 0 || IsAllSelected(lstCompany))
+            {
+                return false;
+            }
+            foreach (string value in values)
+            {
+                if (value.Equals("BSPHCL", StringComparison.OrdinalIgnoreCase) || value.Equals("BSPGCL", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void ClearDependentLists()
+        {
+            lstCircle.Items.Clear();
+            lstDivision.Items.Clear();
+            lstSubdivision.Items.Clear();
+            lstSection.Items.Clear();
+        }
+
+        protected void lstCompany_SelectedIndexChanged(object sender, EventArgs e)
         {
             BindDesignation();
-
             BindPostingPlace();
-
-            gvEmployee.DataSource =
-                null;
-
-            gvEmployee.DataBind();
-
+            BindPostingDetailPlace();
+            BindPostingDepartment();
+            BindAreaBoardZone();
+            ClearDependentLists();
             LoadPlugins();
         }
 
+        protected void lstDetailPostingPlace_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindPostingDepartment();
+            BindAreaBoardZone();
+            ClearDependentLists();
+            LoadPlugins();
+        }
 
-        // =========================================================
-        // SEARCH
-        // =========================================================
+        protected void lstAreaBoardZone_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindCircle();
+            lstDivision.Items.Clear();
+            lstSubdivision.Items.Clear();
+            lstSection.Items.Clear();
+            LoadPlugins();
+        }
 
-        protected void btnSearch_Click(
-            object sender,
-            EventArgs e)
+        protected void lstCircle_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindDivision();
+            lstSubdivision.Items.Clear();
+            lstSection.Items.Clear();
+            LoadPlugins();
+        }
+
+        protected void lstDivision_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindSubdivision();
+            lstSection.Items.Clear();
+            LoadPlugins();
+        }
+
+        protected void lstSubdivision_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindSection();
+            LoadPlugins();
+        }
+
+        protected void btnSearch_Click(object sender, EventArgs e)
         {
             BindEmployee();
-
             LoadPlugins();
         }
-
-
-        // =========================================================
-        // LOAD EMPLOYEE
-        // =========================================================
 
         private void BindEmployee()
         {
-            StringBuilder query =
-                new StringBuilder();
+            StringBuilder query = new StringBuilder();
+            query.Append("SELECT EBM.ID,EBM.EmpID,EBM.EmpName,EBM.MobileNo,EBM.EmailId,EBM.EmpCompany,EBM.EmpDesignation,EBM.EmpPostingPlace,EPD.EmpPostingPlace AS DetailPostingPlace,EPD.EmpPostingDepartment,EPD.AreaBoardZone,EPD.Circle,EPD.Division,EPD.Subdivision,EPD.Section FROM EmpBasicMaster EBM LEFT JOIN EmpPostingDetails EPD ON EPD.ID=(SELECT TOP 1 X.ID FROM EmpPostingDetails X WHERE X.EmpID=EBM.EmpID ORDER BY X.ID DESC) WHERE 1=1");
 
-            query.Append(
-                "SELECT ID, EmpID, EmpName, MobileNo, EmailId, EmpCompany, EmpDesignation, EmpPostingPlace FROM EmpBasicMaster WHERE 1=1");
-
-            using (SqlConnection con =
-                new SqlConnection(constr))
+            using (SqlConnection con = new SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["constr"].ConnectionString))
+            using (SqlCommand cmd = new SqlCommand())
             {
-                using (SqlCommand cmd =
-                    new SqlCommand())
-                {
-                    cmd.Connection =
-                        con;
+                cmd.Connection = con;
 
+                AddTextFilter(query, cmd, "EBM.EmpID", txtEmpID.Text, "@EmpID");
+                AddTextFilter(query, cmd, "EBM.EmpName", txtEmpName.Text, "@EmpName");
+                AddTextFilter(query, cmd, "EBM.MobileNo", txtMobile.Text, "@MobileNo");
+                AddTextFilter(query, cmd, "EBM.EmailId", txtEmail.Text, "@EmailId");
+                AddMultiSelectFilter(query, cmd, lstCompany, "EBM.EmpCompany", "Company");
+                AddMultiSelectFilter(query, cmd, lstDesignation, "EBM.EmpDesignation", "Designation");
+                AddMultiSelectFilter(query, cmd, lstPostingPlace, "EBM.EmpPostingPlace", "PostingPlace");
+                AddMultiSelectFilter(query, cmd, lstDetailPostingPlace, "EPD.EmpPostingPlace", "DetailPlace");
+                AddMultiSelectFilter(query, cmd, lstPostingDepartment, "EPD.EmpPostingDepartment", "Department");
+                AddMultiSelectFilter(query, cmd, lstAreaBoardZone, "EPD.AreaBoardZone", "AreaBoard");
+                AddMultiSelectFilter(query, cmd, lstCircle, "EPD.Circle", "Circle");
+                AddMultiSelectFilter(query, cmd, lstDivision, "EPD.Division", "Division");
+                AddMultiSelectFilter(query, cmd, lstSubdivision, "EPD.Subdivision", "Subdivision");
+                AddMultiSelectFilter(query, cmd, lstSection, "EPD.Section", "Section");
 
-                    // =================================================
-                    // EMPLOYEE ID
-                    // =================================================
+                query.Append(" ORDER BY EBM.EmpID");
+                cmd.CommandText = query.ToString();
 
-                    if (!string.IsNullOrWhiteSpace(
-                        txtEmpID.Text))
-                    {
-                        query.Append(
-                            " AND EmpID LIKE @EmpID");
-
-                        cmd.Parameters.AddWithValue(
-                            "@EmpID",
-                            "%"
-                            +
-                            txtEmpID.Text.Trim().ToUpperInvariant()
-                            +
-                            "%");
-                    }
-
-
-                    // =================================================
-                    // EMPLOYEE NAME
-                    // =================================================
-
-                    if (!string.IsNullOrWhiteSpace(
-                        txtEmpName.Text))
-                    {
-                        query.Append(
-                            " AND EmpName LIKE @EmpName");
-
-                        cmd.Parameters.AddWithValue(
-                            "@EmpName",
-                            "%"
-                            +
-                            txtEmpName.Text.Trim()
-                            +
-                            "%");
-                    }
-
-
-                    // =================================================
-                    // MOBILE
-                    // =================================================
-
-                    if (!string.IsNullOrWhiteSpace(
-                        txtMobile.Text))
-                    {
-                        query.Append(
-                            " AND MobileNo LIKE @MobileNo");
-
-                        cmd.Parameters.AddWithValue(
-                            "@MobileNo",
-                            "%"
-                            +
-                            txtMobile.Text.Trim()
-                            +
-                            "%");
-                    }
-
-
-                    // =================================================
-                    // EMAIL
-                    // =================================================
-
-                    if (!string.IsNullOrWhiteSpace(
-                        txtEmail.Text))
-                    {
-                        query.Append(
-                            " AND EmailId LIKE @EmailId");
-
-                        cmd.Parameters.AddWithValue(
-                            "@EmailId",
-                            "%"
-                            +
-                            txtEmail.Text.Trim()
-                            +
-                            "%");
-                    }
-
-
-                    // =================================================
-                    // COMPANY
-                    // =================================================
-
-                    AddMultiSelectFilter(
-                        query,
-                        cmd,
-                        lstCompany,
-                        "EmpCompany",
-                        "Company");
-
-
-                    // =================================================
-                    // DESIGNATION
-                    // =================================================
-
-                    AddMultiSelectFilter(
-                        query,
-                        cmd,
-                        lstDesignation,
-                        "EmpDesignation",
-                        "Designation");
-
-
-                    // =================================================
-                    // POSTING PLACE
-                    // =================================================
-
-                    AddMultiSelectFilter(
-                        query,
-                        cmd,
-                        lstPostingPlace,
-                        "EmpPostingPlace",
-                        "PostingPlace");
-
-
-                    query.Append(
-                        " ORDER BY EmpID");
-
-
-                    cmd.CommandText =
-                        query.ToString();
-
-
-                    SqlDataAdapter da =
-                        new SqlDataAdapter(cmd);
-
-                    DataTable dt =
-                        new DataTable();
-
-                    da.Fill(dt);
-
-
-                    gvEmployee.DataSource =
-                        dt;
-
-                    gvEmployee.DataBind();
-                }
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                gvEmployee.DataSource = dt;
+                gvEmployee.DataBind();
             }
         }
 
-
-        // =========================================================
-        // COMMON MULTI SELECT FILTER
-        // =========================================================
-
-        private void AddMultiSelectFilter(
-            StringBuilder query,
-            SqlCommand cmd,
-            ListBox listBox,
-            string columnName,
-            string parameterPrefix)
+        private void AddTextFilter(StringBuilder query, SqlCommand cmd, string column, string value, string parameter)
         {
-            List<string> parameters =
-                new List<string>();
-
-            bool allSelected =
-                false;
-
-            int count =
-                0;
-
-
-            foreach (ListItem item in listBox.Items)
+            if (!string.IsNullOrWhiteSpace(value))
             {
-                if (item.Selected)
-                {
-                    if (item.Value == "ALL")
-                    {
-                        allSelected =
-                            true;
-
-                        break;
-                    }
-
-                    string parameterName =
-                        "@"
-                        +
-                        parameterPrefix
-                        +
-                        count;
-
-                    parameters.Add(
-                        parameterName);
-
-                    cmd.Parameters.AddWithValue(
-                        parameterName,
-                        item.Value);
-
-                    count++;
-                }
+                query.Append(" AND " + column + " LIKE " + parameter);
+                cmd.Parameters.AddWithValue(parameter, "%" + value.Trim() + "%");
             }
+        }
 
-
-            if (allSelected)
+        private void AddMultiSelectFilter(StringBuilder query, SqlCommand cmd, ListBox listBox, string columnName, string parameterPrefix)
+        {
+            List<string> parameters = new List<string>();
+            if (IsAllSelected(listBox))
             {
                 return;
             }
 
+            int count = 0;
+            foreach (ListItem item in listBox.Items)
+            {
+                if (item.Selected && item.Value != "ALL")
+                {
+                    string parameterName = "@" + parameterPrefix + count;
+                    parameters.Add(parameterName);
+                    cmd.Parameters.AddWithValue(parameterName, item.Value);
+                    count++;
+                }
+            }
 
             if (parameters.Count > 0)
             {
-                query.Append(
-                    " AND "
-                    +
-                    columnName
-                    +
-                    " IN (");
-
-                query.Append(
-                    string.Join(
-                        ",",
-                        parameters));
-
-                query.Append(
-                    ")");
+                query.Append(" AND " + columnName + " IN (" + string.Join(",", parameters) + ")");
             }
         }
 
-
-        // =========================================================
-        // RESET
-        // =========================================================
-
-        protected void btnReset_Click(
-            object sender,
-            EventArgs e)
+        protected void btnReset_Click(object sender, EventArgs e)
         {
-            txtEmpID.Text =
-                "";
-
-            txtEmpName.Text =
-                "";
-
-            txtMobile.Text =
-                "";
-
-            txtEmail.Text =
-                "";
-
-
+            txtEmpID.Text = "";
+            txtEmpName.Text = "";
+            txtMobile.Text = "";
+            txtEmail.Text = "";
             lstCompany.ClearSelection();
-
             lstDesignation.ClearSelection();
-
             lstPostingPlace.ClearSelection();
-
-
+            lstDetailPostingPlace.ClearSelection();
+            lstPostingDepartment.ClearSelection();
+            lstAreaBoardZone.ClearSelection();
+            lstCircle.ClearSelection();
+            lstDivision.ClearSelection();
+            lstSubdivision.ClearSelection();
+            lstSection.ClearSelection();
+            BindCompany();
             BindDesignation();
-
             BindPostingPlace();
-
-
-            gvEmployee.DataSource =
-                null;
-
+            BindPostingDetailPlace();
+            BindPostingDepartment();
+            BindAreaBoardZone();
+            ClearDependentLists();
+            gvEmployee.DataSource = null;
             gvEmployee.DataBind();
-
-
             LoadPlugins();
         }
 
-
-        // =========================================================
-        // SELECT2 PLUGIN
-        // Same pattern as AssignTrainee
-        // =========================================================
-
         private void LoadPlugins()
         {
-            ScriptManager.RegisterStartupScript(
-                this,
-                GetType(),
-                Guid.NewGuid().ToString(),
-                "$('#" + lstCompany.ClientID + "').select2({width:'100%',placeholder:'Search / Select Company',closeOnSelect:false});" +
+            ScriptManager.RegisterStartupScript(this, GetType(), Guid.NewGuid().ToString(), "$('#" + lstCompany.ClientID + "').select2({width:'100%',placeholder:'Search / Select Company',closeOnSelect:false});" +
                 "$('#" + lstDesignation.ClientID + "').select2({width:'100%',placeholder:'Search / Select Designation',closeOnSelect:false});" +
-                "$('#" + lstPostingPlace.ClientID + "').select2({width:'100%',placeholder:'Search / Select Posting Place',closeOnSelect:false});",
-                true);
+                "$('#" + lstPostingPlace.ClientID + "').select2({width:'100%',placeholder:'Search / Select HRMS Posting Place',closeOnSelect:false});" +
+                "$('#" + lstDetailPostingPlace.ClientID + "').select2({width:'100%',placeholder:'Search / Select Posting Details',closeOnSelect:false});" +
+                "$('#" + lstPostingDepartment.ClientID + "').select2({width:'100%',placeholder:'Search / Select Department / Office / Cell',closeOnSelect:false});" +
+                "$('#" + lstAreaBoardZone.ClientID + "').select2({width:'100%',placeholder:'Search / Select Area Board / Zone',closeOnSelect:false});" +
+                "$('#" + lstCircle.ClientID + "').select2({width:'100%',placeholder:'Search / Select Circle',closeOnSelect:false});" +
+                "$('#" + lstDivision.ClientID + "').select2({width:'100%',placeholder:'Search / Select Division',closeOnSelect:false});" +
+                "$('#" + lstSubdivision.ClientID + "').select2({width:'100%',placeholder:'Search / Select Subdivision',closeOnSelect:false});" +
+                "$('#" + lstSection.ClientID + "').select2({width:'100%',placeholder:'Search / Select Section',closeOnSelect:false});", true);
         }
     }
 }
