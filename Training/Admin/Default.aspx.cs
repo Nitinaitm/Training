@@ -150,7 +150,7 @@ namespace Training.Admin
             List<string> p = new List<string>();
             for (int i = 0; i < values.Count; i++)
             {
-                p.Add("@C" + i);
+                p.Add("@COMP" + i);
             }
             return " AND " + column + " IN (" + string.Join(",", p) + ")";
         }
@@ -165,7 +165,7 @@ namespace Training.Admin
             }
             for (int i = 0; i < values.Count; i++)
             {
-                p.Add(new SqlParameter("@C" + i, values[i]));
+                p.Add(new SqlParameter("@COMP" + i, values[i]));
             }
             return p.ToArray();
         }
@@ -181,7 +181,7 @@ namespace Training.Admin
             List<string> p = new List<string>();
             for (int i = 0; i < values.Count; i++)
             {
-                p.Add("@P" + i);
+                p.Add("@PLACE" + i);
             }
             return " AND " + column + " IN (" + string.Join(",", p) + ")";
         }
@@ -192,7 +192,7 @@ namespace Training.Admin
             List<SqlParameter> p = new List<SqlParameter>();
             for (int i = 0; i < values.Count; i++)
             {
-                p.Add(new SqlParameter("@P" + i, values[i]));
+                p.Add(new SqlParameter("@PLACE" + i, values[i]));
             }
             return p.ToArray();
         }
@@ -206,7 +206,7 @@ namespace Training.Admin
             }
 
             List<string> p = new List<string>();
-            string prefix = column.Replace("EPD.", "").Substring(0, 1).ToUpperInvariant();
+            string prefix = "PAR" + column.Replace("EPD.", "");
             for (int i = 0; i < values.Count; i++)
             {
                 p.Add("@" + prefix + i);
