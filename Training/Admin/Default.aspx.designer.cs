@@ -75,6 +75,14 @@ namespace Training.Admin {
         /// </remarks>
         protected global::System.Web.UI.WebControls.ListBox lstPostingPlace;
         
+        protected global::System.Web.UI.WebControls.ListBox lstDetailPostingPlace;
+        protected global::System.Web.UI.WebControls.ListBox lstPostingDepartment;
+        protected global::System.Web.UI.WebControls.ListBox lstAreaBoardZone;
+        protected global::System.Web.UI.WebControls.ListBox lstCircle;
+        protected global::System.Web.UI.WebControls.ListBox lstDivision;
+        protected global::System.Web.UI.WebControls.ListBox lstSubdivision;
+        protected global::System.Web.UI.WebControls.ListBox lstSection;
+        
         /// <summary>
         /// btnSearch control.
         /// </summary>
