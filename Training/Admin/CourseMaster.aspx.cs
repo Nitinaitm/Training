@@ -66,7 +66,7 @@ namespace Training.Admin
 
         private void BindGrid()
         {
-            SqlDataAdapter da = new SqlDataAdapter("SELECT CourseID,CourseName,CourseCategory,PassingPercentage,AttendancePercentage,CreatedOn FROM CourseMaster ORDER BY ID DESC", con);
+            SqlDataAdapter da = new SqlDataAdapter("SELECT CourseID,CourseName,CourseCategory,CreatedOn FROM CourseMaster ORDER BY ID DESC", con);
 
             DataTable dt = new DataTable();
 
@@ -85,11 +85,7 @@ namespace Training.Admin
 
             txtCourseDescription.Text = "";
 
-            txtPassingPercentage.Text = "50";
-
-            txtAttendancePercentage.Text = "90";
-
-            txtRemarks.Text = "";
+                        txtRemarks.Text = "";
 
             lblMessage.Text = "";
 
@@ -140,10 +136,7 @@ namespace Training.Admin
         CourseID,
         CourseName,
         CourseDescription,
-        CourseCategory,
-        PassingPercentage,
-        AttendancePercentage,
-        Remarks,
+        CourseCategory, Remarks,
         CreatedBy
     )
     VALUES
@@ -151,10 +144,7 @@ namespace Training.Admin
         @CourseID,
         @CourseName,
         @CourseDescription,
-        @CourseCategory,
-        @PassingPercentage,
-        @AttendancePercentage,
-        @Remarks,
+        @CourseCategory, NULL,NULL,@Remarks,
         @CreatedBy
     )", con);
 
@@ -165,11 +155,6 @@ namespace Training.Admin
             cmd.Parameters.AddWithValue("@CourseDescription", txtCourseDescription.Text.Trim());
 
             cmd.Parameters.AddWithValue("@CourseCategory", ddlCourseCategory.SelectedValue);
-
-            cmd.Parameters.AddWithValue("@PassingPercentage", Convert.ToDecimal(txtPassingPercentage.Text.Trim()));
-
-            cmd.Parameters.AddWithValue("@AttendancePercentage", Convert.ToDecimal(txtAttendancePercentage.Text.Trim()));
-
             cmd.Parameters.AddWithValue("@Remarks", txtRemarks.Text.Trim());
 
             cmd.Parameters.AddWithValue("@CreatedBy", Session["UserID"] == null ? "" : Session["UserID"].ToString());
@@ -217,13 +202,7 @@ namespace Training.Admin
 
                 txtCourseDescription.Text = dt.Rows[0]["CourseDescription"].ToString();
 
-                ddlCourseCategory.SelectedValue = dt.Rows[0]["CourseCategory"].ToString();
-
-                txtPassingPercentage.Text = dt.Rows[0]["PassingPercentage"].ToString();
-
-                txtAttendancePercentage.Text = dt.Rows[0]["AttendancePercentage"].ToString();
-
-                txtRemarks.Text = dt.Rows[0]["Remarks"].ToString();
+                ddlCourseCategory.SelectedValue = dt.Rows[0]["CourseCategory"].ToString();                txtRemarks.Text = dt.Rows[0]["Remarks"].ToString();
 
                 btnSave.Visible = false;
 
@@ -297,23 +276,14 @@ namespace Training.Admin
             SqlCommand cmd = new SqlCommand(@"UPDATE CourseMaster SET
 CourseName=@CourseName,
 CourseDescription=@CourseDescription,
-CourseCategory=@CourseCategory,
-PassingPercentage=@PassingPercentage,
-AttendancePercentage=@AttendancePercentage,
-Remarks=@Remarks
+CourseCategory=@CourseCategory, Remarks=@Remarks
 WHERE CourseID=@CourseID", con);
 
             cmd.Parameters.AddWithValue("@CourseName", txtCourseName.Text.Trim());
 
             cmd.Parameters.AddWithValue("@CourseDescription", txtCourseDescription.Text.Trim());
 
-            cmd.Parameters.AddWithValue("@CourseCategory", ddlCourseCategory.SelectedValue);
-
-            cmd.Parameters.AddWithValue("@PassingPercentage", Convert.ToDecimal(txtPassingPercentage.Text));
-
-            cmd.Parameters.AddWithValue("@AttendancePercentage", Convert.ToDecimal(txtAttendancePercentage.Text));
-
-            cmd.Parameters.AddWithValue("@Remarks", txtRemarks.Text.Trim());
+            cmd.Parameters.AddWithValue("@CourseCategory", ddlCourseCategory.SelectedValue);            cmd.Parameters.AddWithValue("@Remarks", txtRemarks.Text.Trim());
 
             cmd.Parameters.AddWithValue("@CourseID", ViewState["CourseID"].ToString());
 
@@ -342,11 +312,7 @@ WHERE CourseID=@CourseID", con);
         protected void txtSearch_TextChanged(object sender, EventArgs e)
         {
             SqlDataAdapter da = new SqlDataAdapter(@"SELECT CourseID,
-CourseName,
-CourseCategory,
-PassingPercentage,
-AttendancePercentage,
-CreatedOn
+CourseName, CourseCategory, CreatedOn
 FROM CourseMaster
 WHERE CourseName LIKE @Search
 OR CourseCategory LIKE @Search
@@ -380,8 +346,6 @@ ORDER BY CourseName", con);
             SqlDataAdapter da = new SqlDataAdapter(@"SELECT
 CourseName AS [Course Name],
 CourseCategory AS [Category],
-PassingPercentage AS [Passing %],
-AttendancePercentage AS [Attendance %],
 Remarks,
 CreatedOn AS [Created On]
 FROM CourseMaster
@@ -430,54 +394,6 @@ ORDER BY CourseName", con);
                 lblMessage.Text = "Select Course Category.";
 
                 ddlCourseCategory.Focus();
-
-                return false;
-            }
-
-            decimal Passing;
-
-            if (!decimal.TryParse(txtPassingPercentage.Text.Trim(), out Passing))
-            {
-                lblMessage.ForeColor = System.Drawing.Color.Red;
-
-                lblMessage.Text = "Invalid Passing Percentage.";
-
-                txtPassingPercentage.Focus();
-
-                return false;
-            }
-
-            if (Passing < 0 || Passing > 100)
-            {
-                lblMessage.ForeColor = System.Drawing.Color.Red;
-
-                lblMessage.Text = "Passing Percentage must be between 0 and 100.";
-
-                txtPassingPercentage.Focus();
-
-                return false;
-            }
-
-            decimal Attendance;
-
-            if (!decimal.TryParse(txtAttendancePercentage.Text.Trim(), out Attendance))
-            {
-                lblMessage.ForeColor = System.Drawing.Color.Red;
-
-                lblMessage.Text = "Invalid Attendance Percentage.";
-
-                txtAttendancePercentage.Focus();
-
-                return false;
-            }
-
-            if (Attendance < 0 || Attendance > 100)
-            {
-                lblMessage.ForeColor = System.Drawing.Color.Red;
-
-                lblMessage.Text = "Attendance Percentage must be between 0 and 100.";
-
-                txtAttendancePercentage.Focus();
 
                 return false;
             }
