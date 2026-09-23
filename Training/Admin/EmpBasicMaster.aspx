@@ -26,26 +26,24 @@
     <script>
 
         function LoadSearchableDropdown() {
-
-            $('[id*=ddlDesignation]').select2({
-                placeholder: 'Search Designation',
-                allowClear: true,
-                width: '100%'
-            });
-
-            $('[id*=ddlPostingPlace]').select2({
-                placeholder: 'Search Posting Place',
-                allowClear: true,
-                width: '100%'
-            });
-
+            $('[id*=ddlDesignation]').select2({ placeholder: 'Search Designation', allowClear: true, width: '100%' });
+            $('[id*=ddlPostingPlace]').select2({ placeholder: 'Search HRMS Posting Place', allowClear: true, width: '100%' });
+            $('[id*=ddlCompany]').select2({ placeholder: 'Search Company', allowClear: true, width: '100%' });
+            $('[id*=ddlPostingDetailPlace]').select2({ placeholder: 'Search Posting Place', allowClear: true, width: '100%' });
+            $('[id*=ddlPostingDepartment]').select2({ placeholder: 'Search Department / Office / Cell', allowClear: true, width: '100%' });
+            $('[id*=ddlAreaBoardZone]').select2({ placeholder: 'Search Area Board / Zone', allowClear: true, width: '100%' });
+            $('[id*=ddlCircle]').select2({ placeholder: 'Search Circle', allowClear: true, width: '100%' });
+            $('[id*=ddlDivision]').select2({ placeholder: 'Search Division', allowClear: true, width: '100%' });
+            $('[id*=ddlSubdivision]').select2({ placeholder: 'Search Subdivision', allowClear: true, width: '100%' });
+            $('[id*=ddlSection]').select2({ placeholder: 'Search Section', allowClear: true, width: '100%' });
         }
 
         function ClearSearchableDropdown() {
 
             $('[id*=ddlDesignation]').val('').trigger('change');
-
             $('[id*=ddlPostingPlace]').val('').trigger('change');
+            $('[id*=ddlCompany]').val('').trigger('change');
+            $('[id*=ddlPostingDetailPlace]').val('').trigger('change');
 
         }
 
@@ -317,7 +315,9 @@
 
                             <asp:DropDownList ID="ddlCompany"
                                 runat="server"
-                                CssClass="form-select">
+                                CssClass="form-select"
+                                AutoPostBack="true"
+                                OnSelectedIndexChanged="ddlCompany_SelectedIndexChanged">
                             </asp:DropDownList>
 
                             <asp:RequiredFieldValidator ID="rfvCompany"
@@ -368,6 +368,46 @@
 
                         </div>
 
+                        <!-- Posting Details -->
+                        <div class="col-12 mt-4">
+                            <div class="border rounded p-3">
+                                <h5 class="mb-3 text-primary">Posting Details</h5>
+                                <div class="row">
+                                    <div class="col-lg-4 col-md-6 mb-3">
+                                        <label class="form-label">Posting Place</label>
+                                        <asp:DropDownList ID="ddlPostingDetailPlace" runat="server" CssClass="form-select" AutoPostBack="true" OnSelectedIndexChanged="ddlPostingDetailPlace_SelectedIndexChanged">
+                                            <asp:ListItem Text="Select Posting Place" Value="" />
+                                            <asp:ListItem Text="HQ" Value="HQ" />
+                                            <asp:ListItem Text="Field Office" Value="Field" />
+                                        </asp:DropDownList>
+                                    </div>
+                                    <div class="col-lg-8 col-md-6 mb-3" id="divPostingDepartment" runat="server">
+                                        <label class="form-label">Department / Office / Cell</label>
+                                        <asp:DropDownList ID="ddlPostingDepartment" runat="server" CssClass="form-select"></asp:DropDownList>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 mb-3" id="divAreaBoardZone" runat="server">
+                                        <label class="form-label">Area Board / Zone</label>
+                                        <asp:DropDownList ID="ddlAreaBoardZone" runat="server" CssClass="form-select" AutoPostBack="true" OnSelectedIndexChanged="ddlAreaBoardZone_SelectedIndexChanged"></asp:DropDownList>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 mb-3" id="divCircle" runat="server">
+                                        <label class="form-label">Circle</label>
+                                        <asp:DropDownList ID="ddlCircle" runat="server" CssClass="form-select" AutoPostBack="true" OnSelectedIndexChanged="ddlCircle_SelectedIndexChanged"></asp:DropDownList>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 mb-3" id="divDivision" runat="server">
+                                        <label class="form-label">Division</label>
+                                        <asp:DropDownList ID="ddlDivision" runat="server" CssClass="form-select" AutoPostBack="true" OnSelectedIndexChanged="ddlDivision_SelectedIndexChanged"></asp:DropDownList>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 mb-3" id="divSubdivision" runat="server">
+                                        <label class="form-label">Subdivision</label>
+                                        <asp:DropDownList ID="ddlSubdivision" runat="server" CssClass="form-select" AutoPostBack="true" OnSelectedIndexChanged="ddlSubdivision_SelectedIndexChanged"></asp:DropDownList>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 mb-3" id="divSection" runat="server">
+                                        <label class="form-label">Section</label>
+                                        <asp:DropDownList ID="ddlSection" runat="server" CssClass="form-select"></asp:DropDownList>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Save -->
 
                         <div class="col-12 mt-3">
