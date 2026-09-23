@@ -79,7 +79,7 @@ private void LoadEmployee(string empID)
 }
 private void BindCompany(string selected)
 {
-    System.Data.DataTable dt=DB().GetDataTable("SELECT ID,CompanyName,CompanyAlias FROM CompanyMaster ORDER BY CompanyName");
+    System.Data.DataTable dt=DB().GetDataTable("SELECT CompanyID,CompanyName,CompanyAlias FROM CompanyMaster ORDER BY CompanyName");
     ddlCompany.Items.Clear();ddlCompany.Items.Add(new System.Web.UI.WebControls.ListItem("Select Company",""));
     foreach(System.Data.DataRow r in dt.Rows){string name=System.Convert.ToString(r["CompanyName"]);string alias=System.Convert.ToString(r["CompanyAlias"]);ddlCompany.Items.Add(new System.Web.UI.WebControls.ListItem(string.IsNullOrWhiteSpace(alias)?name:name+" ("+alias+")",name));}
     if(ddlCompany.Items.FindByValue(selected)!=null)ddlCompany.SelectedValue=selected;
@@ -97,7 +97,7 @@ private void BindList(System.Web.UI.WebControls.DropDownList ddl,string sql,stri
     foreach(System.Data.DataRow r in dt.Rows)ddl.Items.Add(new System.Web.UI.WebControls.ListItem(System.Convert.ToString(r[field]),System.Convert.ToString(r[field])));
     if(ddl.Items.FindByValue(selected)!=null)ddl.SelectedValue=selected;
 }
-private int CompanyID(){object v=DB().ExecuteScalar("SELECT TOP 1 ID FROM CompanyMaster WHERE CompanyName=@Company OR CompanyAlias=@Company",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@Company",ddlCompany.SelectedValue)});int id;return v!=null&&int.TryParse(System.Convert.ToString(v),out id)?id:0;}
+private string CompanyID(){object v=DB().ExecuteScalar("SELECT TOP 1 CompanyID FROM CompanyMaster WHERE CompanyName=@Company OR CompanyAlias=@Company",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@Company",ddlCompany.SelectedValue)});return v==null?"":System.Convert.ToString(v);}
 private bool HqOnly(){return ddlCompany.SelectedValue.Equals("BSPHCL",StringComparison.OrdinalIgnoreCase)||ddlCompany.SelectedValue.Equals("BSPGCL",StringComparison.OrdinalIgnoreCase);}
 private void ClearList(System.Web.UI.WebControls.DropDownList ddl,string first){ddl.Items.Clear();ddl.Items.Add(new System.Web.UI.WebControls.ListItem(first,""));}
 private void BindPostingPlaceOptions(string selected)
@@ -117,35 +117,35 @@ private void BindDepartment(string selected)
 }
 private void BindZone(string selected)
 {
-    ClearList(ddlAreaBoardZone,"Select Area Board / Zone");int cid=CompanyID();if(cid<=0)return;
+    ClearList(ddlAreaBoardZone,"Select Area Board / Zone");string cid=CompanyID();if(string.IsNullOrWhiteSpace(cid))return;
     System.Data.DataTable dt=DB().GetDataTable("SELECT ZoneID,ZoneName FROM ZoneMaster WHERE CompanyID=@CompanyID ORDER BY ZoneName",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@CompanyID",cid)});
     foreach(System.Data.DataRow r in dt.Rows)ddlAreaBoardZone.Items.Add(new System.Web.UI.WebControls.ListItem(System.Convert.ToString(r["ZoneName"]),System.Convert.ToString(r["ZoneID"])));
     SelectByText(ddlAreaBoardZone,selected);
 }
 private void BindCircle(string selected)
 {
-    ClearList(ddlCircle,"Select Circle");int cid=CompanyID(),zid; if(cid<=0||!int.TryParse(ddlAreaBoardZone.SelectedValue,out zid))return;
+    ClearList(ddlCircle,"Select Circle");string cid=CompanyID();int zid; if(string.IsNullOrWhiteSpace(cid)||!int.TryParse(ddlAreaBoardZone.SelectedValue,out zid))return;
     System.Data.DataTable dt=DB().GetDataTable("SELECT CircleID,CircleName FROM CircleMaster WHERE CompanyID=@CompanyID AND ZoneID=@ZoneID ORDER BY CircleName",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlParameter("@CompanyID",cid),new System.Data.SqlParameter("@ZoneID",zid)});
     foreach(System.Data.DataRow r in dt.Rows)ddlCircle.Items.Add(new System.Web.UI.WebControls.ListItem(System.Convert.ToString(r["CircleName"]),System.Convert.ToString(r["CircleID"])));
     SelectByText(ddlCircle,selected);
 }
 private void BindDivision(string selected)
 {
-    ClearList(ddlDivision,"Select Division");int cid=CompanyID(),zid,cirid;if(cid<=0||!int.TryParse(ddlAreaBoardZone.SelectedValue,out zid)||!int.TryParse(ddlCircle.SelectedValue,out cirid))return;
+    ClearList(ddlDivision,"Select Division");string cid=CompanyID();int zid,cirid;if(string.IsNullOrWhiteSpace(cid)||!int.TryParse(ddlAreaBoardZone.SelectedValue,out zid)||!int.TryParse(ddlCircle.SelectedValue,out cirid))return;
     System.Data.DataTable dt=DB().GetDataTable("SELECT DivisionID,DivisionName FROM DivisionMaster WHERE CompanyID=@CompanyID AND ZoneID=@ZoneID AND CircleID=@CircleID ORDER BY DivisionName",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlParameter("@CompanyID",cid),new System.Data.SqlParameter("@ZoneID",zid),new System.Data.SqlParameter("@CircleID",cirid)});
     foreach(System.Data.DataRow r in dt.Rows)ddlDivision.Items.Add(new System.Web.UI.WebControls.ListItem(System.Convert.ToString(r["DivisionName"]),System.Convert.ToString(r["DivisionID"])));
     SelectByText(ddlDivision,selected);
 }
 private void BindSubdivision(string selected)
 {
-    ClearList(ddlSubdivision,"Select Subdivision");int cid=CompanyID(),zid,cirid,divid;if(cid<=0||!int.TryParse(ddlAreaBoardZone.SelectedValue,out zid)||!int.TryParse(ddlCircle.SelectedValue,out cirid)||!int.TryParse(ddlDivision.SelectedValue,out divid))return;
+    ClearList(ddlSubdivision,"Select Subdivision");string cid=CompanyID();int zid,cirid,divid;if(string.IsNullOrWhiteSpace(cid)||!int.TryParse(ddlAreaBoardZone.SelectedValue,out zid)||!int.TryParse(ddlCircle.SelectedValue,out cirid)||!int.TryParse(ddlDivision.SelectedValue,out divid))return;
     System.Data.DataTable dt=DB().GetDataTable("SELECT SubdivisionID,SubdivisionName FROM SubdivisionMaster WHERE CompanyID=@CompanyID AND ZoneID=@ZoneID AND CircleID=@CircleID AND DivisionID=@DivisionID ORDER BY SubdivisionName",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@CompanyID",cid),new System.Data.SqlParameter("@ZoneID",zid),new System.Data.SqlParameter("@CircleID",cirid),new System.Data.SqlParameter("@DivisionID",divid)});
     foreach(System.Data.DataRow r in dt.Rows)ddlSubdivision.Items.Add(new System.Web.UI.WebControls.ListItem(System.Convert.ToString(r["SubdivisionName"]),System.Convert.ToString(r["SubdivisionID"])));
     SelectByText(ddlSubdivision,selected);
 }
 private void BindSection(string selected)
 {
-    ClearList(ddlSection,"Select Section");int cid=CompanyID(),zid,cirid,divid,subid;if(cid<=0||!int.TryParse(ddlAreaBoardZone.SelectedValue,out zid)||!int.TryParse(ddlCircle.SelectedValue,out cirid)||!int.TryParse(ddlDivision.SelectedValue,out divid)||!int.TryParse(ddlSubdivision.SelectedValue,out subid))return;
+    ClearList(ddlSection,"Select Section");string cid=CompanyID();int zid,cirid,divid,subid;if(string.IsNullOrWhiteSpace(cid)||!int.TryParse(ddlAreaBoardZone.SelectedValue,out zid)||!int.TryParse(ddlCircle.SelectedValue,out cirid)||!int.TryParse(ddlDivision.SelectedValue,out divid)||!int.TryParse(ddlSubdivision.SelectedValue,out subid))return;
     System.Data.DataTable dt=DB().GetDataTable("SELECT SectionID,SectionName FROM SectionMaster WHERE CompanyID=@CompanyID AND ZoneID=@ZoneID AND CircleID=@CircleID AND DivisionID=@DivisionID AND SubdivisionID=@SubdivisionID ORDER BY SectionName",new System.Data.SqlClient.SqlParameter[]{new System.Data.SqlClient.SqlParameter("@CompanyID",cid),new System.Data.SqlParameter("@ZoneID",zid),new System.Data.SqlParameter("@CircleID",cirid),new System.Data.SqlParameter("@DivisionID",divid),new System.Data.SqlParameter("@SubdivisionID",subid)});
     foreach(System.Data.DataRow r in dt.Rows)ddlSection.Items.Add(new System.Web.UI.WebControls.ListItem(System.Convert.ToString(r["SectionName"]),System.Convert.ToString(r["SectionID"])));
     SelectByText(ddlSection,selected);
